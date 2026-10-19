@@ -202,7 +202,11 @@ node scripts/preflight-dist.mjs --dir dist
 node scripts/preflight-dist.mjs --dir dist --deny "corp\\.example\\.com"
 ```
 
-会拦截开发接口、源码坐标、批注数据路径、本机绝对路径、localhost、source map、私钥与常见凭据。Harness 部署 skill 在新环境下的检测机制与引导建议见 [docs/deploy-skill-review.md](./docs/deploy-skill-review.md)。
+会拦截开发接口、源码坐标、批注数据路径、本机绝对路径、localhost、source map、私钥与常见凭据。Harness 部署 skill 在新环境下的检测机制与引导建议见 [docs/deploy-skill-review.md](./docs/deploy-skill-review.md)；该评审附隔离式端到端测试（假 CLI、假 registry、假 fetch、临时 HOME）：
+
+```bash
+DEPLOY_SKILL=/path/to/deploy.mjs npm run test:deploy-skill
+```
 
 ## 配置
 

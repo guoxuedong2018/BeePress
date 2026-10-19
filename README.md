@@ -258,7 +258,12 @@ node scripts/preflight-dist.mjs --dir dist --deny "corp\\.example\\.com"
 It fails on dev endpoints, source anchors, review data paths, absolute home
 paths, localhost URLs, source maps, private keys and common credential patterns.
 See [docs/deploy-skill-review.md](./docs/deploy-skill-review.md) for the
-new-environment detection review of a Harness deploy skill.
+new-environment detection review of a Harness deploy skill. The review is
+reproducible with an isolated E2E harness (fake CLI, registry, fetch and HOME):
+
+```bash
+DEPLOY_SKILL=/path/to/deploy.mjs npm run test:deploy-skill
+```
 
 ## Configuration
 

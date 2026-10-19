@@ -20,6 +20,9 @@
   endpoints, source anchors, local paths, source maps and common secrets.
 - **Deploy skill review** — `docs/deploy-skill-review.md` covers new-environment
   detection and user guidance.
+- **Isolated deploy-skill E2E** — `scripts/test-deploy-skill-e2e.mjs` runs the real
+  Harness skill against a fake CLI, registry, `fetch` and `HOME`, reproducing new
+  machine, binding mismatch, offline, leaky artifact and stale-verification states.
 - Fixed a Vite Less edge case where an `@import` in a comment triggered URL
   rebasing.
 

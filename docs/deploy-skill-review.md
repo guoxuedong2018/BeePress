@@ -216,7 +216,61 @@ A real deploy requires `--yes`. `--dry-run` is the default for agents that are
 not certain the human has confirmed.
 ```
 
-## 6. Bottom line
+## 6. Isolated end-to-end test
+
+The review above is reproducible without touching the hosting platform. The
+script [`scripts/test-deploy-skill-e2e.mjs`](../scripts/test-deploy-skill-e2e.mjs)
+copies the real `deploy.mjs` and the paths module into a throwaway project, then
+replaces every external dependency:
+
+| Real dependency | Test double |
+|---|---|
+| `appwrite-cf` | temp executable: prints an `Email:` line only when `E2E_LOGIN=ok` |
+| internal npm registry / hosting CLI | temp `npx` that logs its args and returns fake URLs |
+| deployed site (`fetch`) | preloaded fetch patch that returns a matching or stale index |
+| `web/` app | tiny build script that emits clean output or deliberate leaks |
+| user home | temp directory, so the home-path scan has a stable value |
+
+Run it from this repository:
+
+```bash
+npm run test:deploy-skill
+# or point at another copy of the skill:
+DEPLOY_SKILL=/path/to/deploy.mjs npm run test:deploy-skill
+```
+
+Verified results (all scenarios passed against the Harness skill as written):
+
+| # | Scenario | Observed result | Detection quality |
+|---|---|---|---|
+| A | new machine, no binding, no CLI | stops at **missing binding** before mentioning the CLI | Weak: the first message hides the real install step |
+| B | binding present, CLI absent | stops with the `appwrite-cf` install command | Good |
+| C | binding present, CLI not logged in | stops with the `login-ks` instruction | Good |
+| D | logged in, no binding | stops with the “first deploy / new machine” message | Partial: cannot distinguish new machine from new project |
+| E | `--dry-run`, no binding, no login | builds and scans cleanly, exits 0 | Good |
+| F | clean deploy | prints latest URL, pinned URL and next action | Good |
+| G | deploy CLI arguments | only `deploy --dir ./dist`; no project id / repo identity | Confirms the mismatch risk |
+| H | leaky artifact (`data-loc`, `/__proto_review`) | stops before the CLI runs | Good for known patterns |
+| I | registry unreachable | stops with the raw CLI error | Weak: no `offline` state |
+| J | stale online index | exits 0 with “线上首页还不是这次的构建” | Partial: warning only, no hard failure |
+| K | copied binding from another project | **deploys successfully, no mismatch error** | None |
+| L | copied binding, CLI arguments | no project id or binding comparison reaches the CLI | None |
+
+The two most important findings are reproduced, not just reasoned about:
+
+1. **The first gate is the binding file, not the environment.** A fresh machine
+   with no CLI and no binding sees “本机没有部署绑定” and may start creating a
+   binding before it discovers that the CLI is missing.
+2. **A copied binding is accepted.** The script only reads `domain` from the
+   binding after the deploy, for verification. It never checks the current
+   repository or passes a project id to the CLI, so a binding copied from another
+   project can publish this project's build into that project.
+
+The test is intentionally outside `npm run check`: it needs an external skill
+path and is a review aid, not a package test. It exits 2 with instructions when
+the skill cannot be found.
+
+## 7. Bottom line
 
 The skill is **safe by accident, not safe by design** in a new environment:
 

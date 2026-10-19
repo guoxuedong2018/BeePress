@@ -71,6 +71,7 @@
   ],
   "scripts": {
     "check": "node scripts/check.mjs && node scripts/check-ui-spec.mjs",
+    "test:deploy-skill": "node scripts/test-deploy-skill-e2e.mjs",
     "demo": "node scripts/demo.mjs",
     "build:demo": "node scripts/demo.mjs build",
     "preflight": "node scripts/preflight-dist.mjs",
