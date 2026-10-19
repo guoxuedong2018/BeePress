@@ -326,7 +326,7 @@ npm install
 npm run check
 ```
 
-`npm run check` syntax-checks every `.js`/`.mjs` file, imports the path resolver, and exercises the CLI help path. It is intentionally dependency-free so it works before `npm install`.
+`npm run check` syntax-checks every `.js`/`.mjs` file, imports the path resolver, exercises the CLI help path, runs the UI spec gate, and verifies that every manifest and lockfile entry resolves from `https://registry.npmjs.org`. The repository pins that registry in `.npmrc`, so a global or proxy registry cannot silently change what is installed.
 
 ## Design notes
 

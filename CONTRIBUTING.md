@@ -11,9 +11,11 @@ npm install
 npm run check
 ```
 
-`npm run check` runs syntax checks and the Tool UI Spec gate
-(`scripts/check-ui-spec.mjs`). Run the demo with `npm run demo` and build it with
-`npm run build:demo`.
+`npm run check` runs syntax checks, the Tool UI Spec gate
+(`scripts/check-ui-spec.mjs`) and the public dependency guard
+(`scripts/check-public-deps.mjs`). The guard rejects private registries,
+`file:`/`link:` specs and non-npmjs lockfile URLs. Run the demo with
+`npm run demo` and build it with `npm run build:demo`.
 
 ## Scope
 

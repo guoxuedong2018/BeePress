@@ -292,6 +292,15 @@ CLI 需要实现 `docs-gateway.mjs` 顶部注明的 JSON 协议。没有它，�
 
 知识库侧同理：产品内容全在 `docs/kb/` 的几份配置里，套件不含一个产品词。
 
+## 开发
+
+```bash
+npm install
+npm run check
+```
+
+`npm run check` 会做语法检查、路径解析导入、CLI help、UI 规范门禁，并校验 package.json 与 package-lock.json 中的所有依赖都来自 `https://registry.npmjs.org`。仓库已在 `.npmrc` 固定公共 registry，避免本机全局或代理源悄悄改变安装来源。
+
 ## 更多文档
 
 - [架构与三层锚点](./docs/architecture.md)

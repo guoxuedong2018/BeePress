@@ -407,7 +407,7 @@ async function readPrototypeUrl(frs) {
     const { domain } = await readJson(DEPLOY_BINDING);
     if (!domain) return null;
     const origin = domain.startsWith("http") ? domain : `https://${domain}`;
-    // 路由是 hash 模式，链接必须带 #，否则深层链接在 frontend-cloud 上 404
+    // 路由是 hash 模式，链接必须带 #，否则深层链接在静态托管上 404
     return `${origin.replace(/\/$/, "")}/#${route}`;
   } catch {
     return null;

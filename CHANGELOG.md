@@ -23,6 +23,11 @@
 - **Isolated deploy-skill E2E** — `scripts/test-deploy-skill-e2e.mjs` runs the real
   Harness skill against a fake CLI, registry, `fetch` and `HOME`, reproducing new
   machine, binding mismatch, offline, leaky artifact and stale-verification states.
+- **Public dependency guard** — `.npmrc` pins `registry.npmjs.org` and
+  `scripts/check-public-deps.mjs` rejects private registries, local specs and
+  non-npmjs lockfile URLs.
+- **Public docs cleanup** — genericized private deploy CLI names in the deploy
+  review and removed an internal host name from an export comment.
 - Fixed a Vite Less edge case where an `@import` in a comment triggered URL
   rebasing.
 

@@ -70,7 +70,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "check": "node scripts/check.mjs && node scripts/check-ui-spec.mjs",
+    "check": "node scripts/check.mjs && node scripts/check-ui-spec.mjs && node scripts/check-public-deps.mjs",
     "test:deploy-skill": "node scripts/test-deploy-skill-e2e.mjs",
     "demo": "node scripts/demo.mjs",
     "build:demo": "node scripts/demo.mjs build",

@@ -3,7 +3,7 @@
  * Isolated end-to-end test for a "deploy prototype" skill.
  *
  * The skill under test is copied into a throwaway project with:
- *   - a fake `appwrite-cf` (login / no-login)
+ *   - a fake auth CLI (login / no-login), named from the skill source
  *   - a fake `npx` that stands in for the hosting CLI
  *   - a fake `fetch` that stands in for the deployed site
  *   - a tiny `web/` project whose build can emit clean or leaking output
@@ -59,6 +59,14 @@ await fs.mkdir(path.join(HOME, ".npm-global/bin"), { recursive: true });
 await fs.copyFile(path.join(ROOT, "pipeline/lib/paths.mjs"), path.join(APP, "builder-kit/pipeline/lib/paths.mjs"));
 await fs.copyFile(SKILL, path.join(APP, ".agent/skills/deploy-prototype/deploy.mjs"));
 
+const skillSource = await fs.readFile(SKILL, "utf8");
+// CLI names and the host marker are details of the skill under test. Derive them
+// so this harness does not need to embed any private tooling name.
+const AUTH_CLI = skillSource.match(/run\("([^"]+)",\s*\["whoami"\]\)/)?.[1] ?? "deploy-auth";
+const HOST_MARKER = skillSource.match(/match\(\/https:[^\n]*?\+([a-z0-9-]+)\[/i)?.[1] ?? "hosting";
+const DOMAIN = `fixture-project.${HOST_MARKER}.example`;
+const OTHER_DOMAIN = `other-project.${HOST_MARKER}.example`;
+
 await fs.writeFile(
   path.join(WEB, "package.json"),
   JSON.stringify({ name: "deploy-e2e-fixture", private: true, type: "module", scripts: { build: "node build.mjs" } }, null, 2),
@@ -77,7 +85,7 @@ await writeFile(
 `,
 );
 await fs.writeFile(
-  path.join(BIN, "appwrite-cf"),
+  path.join(BIN, AUTH_CLI),
   `#!/usr/bin/env node
 if (process.env.E2E_LOGIN === "ok") console.log("Email: e2e@example.com");
 else { console.log("not logged in"); process.exit(1); }
@@ -93,8 +101,8 @@ if (process.env.E2E_DEPLOY === "fail") {
   console.error("npm error 404 Not Found - registry unreachable (simulated)");
   process.exit(1);
 }
-console.log("https://fixture-project.frontend-cloud.example/");
-console.log("https://fixture-project-abc123.frontend-cloud.example/");
+console.log("https://" + process.env.E2E_DOMAIN + "/");
+console.log("https://fixture-project-abc123." + process.env.E2E_HOST_MARKER + ".example/");
 `,
   { mode: 0o755 },
 );
@@ -103,7 +111,7 @@ await fs.writeFile(
   `const original = globalThis.fetch;
 globalThis.fetch = async (url, opts) => {
   const href = String(url);
-  if (href.includes("frontend-cloud.example")) {
+  if (href.includes(".example")) {
     const stale = process.env.E2E_VERIFY_STALE === "1";
     const html = stale
       ? '<script src="/assets/index-old.js"></script>'
@@ -126,6 +134,8 @@ function envFor({ login = false, deploy = "ok", leak = false, stale = false, noC
     E2E_LEAK: leak ? "1" : "0",
     E2E_VERIFY_STALE: stale ? "1" : "0",
     E2E_DEPLOY_LOG: DEPLOY_LOG,
+    E2E_DOMAIN: DOMAIN,
+    E2E_HOST_MARKER: HOST_MARKER,
     NODE_OPTIONS: `--require ${path.join(APP, "patch-fetch.cjs")}`,
   };
 }
@@ -175,16 +185,16 @@ await reset();
 check("A. new machine: no binding is reported first", runSkill([], envFor({ noCli: true })), {
   status: 1,
   includes: ["本机没有部署绑定"],
-  excludes: ["appwrite-cf"],
+  excludes: [AUTH_CLI],
 });
 
-await reset({ binding: { domain: "fixture-project.frontend-cloud.example" } });
+await reset({ binding: { domain: DOMAIN } });
 check("B. binding present, no deploy CLI", runSkill([], envFor({ noCli: true })), {
   status: 1,
-  includes: ["本机没有 appwrite-cf"],
+  includes: ["本机没有", AUTH_CLI],
 });
 
-await reset({ binding: { domain: "fixture-project.frontend-cloud.example" } });
+await reset({ binding: { domain: DOMAIN } });
 check("C. CLI present, not logged in", runSkill([], envFor({ login: false })), {
   status: 1,
   includes: ["还没登录部署平台"],
@@ -202,7 +212,7 @@ check("E. dry-run works in a new environment", runSkill(["--dry-run"], envFor({ 
   includes: ["构建通过、产物干净", "这次没有部署"],
 });
 
-await reset({ binding: { domain: "fixture-project.frontend-cloud.example" } });
+await reset({ binding: { domain: DOMAIN } });
 check("F. clean deploy", runSkill([], envFor({ login: true })), {
   status: 0,
   includes: ["已部署", "最新版", "本次固定版"],
@@ -214,25 +224,25 @@ check("G. deploy CLI received only --dir", { status: cleanCalls.length ? 0 : 1, 
   excludes: ["--project-id", "--project-name"],
 });
 
-await reset({ binding: { domain: "fixture-project.frontend-cloud.example" } });
+await reset({ binding: { domain: DOMAIN } });
 check("H. leaky artifact stops before deploy", runSkill([], envFor({ login: true, leak: true })), {
   status: 1,
   includes: ["评审层的源码坐标", "批注落盘接口"],
 });
 
-await reset({ binding: { domain: "fixture-project.frontend-cloud.example" } });
+await reset({ binding: { domain: DOMAIN } });
 check("I. registry / CLI failure stops", runSkill([], envFor({ login: true, deploy: "fail" })), {
   status: 1,
   includes: ["部署失败", "registry unreachable"],
 });
 
-await reset({ binding: { domain: "fixture-project.frontend-cloud.example" } });
+await reset({ binding: { domain: DOMAIN } });
 check("J. stale verification is reported", runSkill([], envFor({ login: true, stale: true })), {
   status: 0,
   includes: ["线上首页还不是这次的构建"],
 });
 
-await reset({ binding: { domain: "other-project.frontend-cloud.example" } });
+await reset({ binding: { domain: OTHER_DOMAIN } });
 const mismatch = runSkill([], envFor({ login: true }));
 const mismatchCalls = await deployLog();
 check("K. copied binding is NOT detected", mismatch, {

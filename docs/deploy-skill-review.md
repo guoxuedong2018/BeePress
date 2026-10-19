@@ -17,7 +17,7 @@ itself.
 ## 1. What triggers the skill
 
 The skill description includes phrases such as 「发一版」「推送到远程」「部署原型」
-「发到内网」「给别人看」「拿个链接」「deploy」. In a new environment the skill will
+「发布到私有环境」「给别人看」「拿个链接」「deploy」. In a new environment the skill will
 still be *selected* by the harness for those phrases; selection is semantic and
 does not depend on the local machine.
 
@@ -25,12 +25,12 @@ The first real gate is `deploy.mjs`:
 
 | Step | Check | New-environment outcome |
 |---|---|---|
-| 1 | `appwrite-cf` exists | Stops with install instructions if absent |
-| 2 | `appwrite-cf whoami` contains `Email` | Stops with an SSO login instruction |
+| 1 | `deploy-auth` exists | Stops with install instructions if absent |
+| 2 | `deploy-auth whoami` contains `Email` | Stops with an SSO login instruction |
 | 3 | `web/.static-site-deploy.json` exists | Stops and asks for full deploy parameters |
 | 4 | `npm run build` succeeds | Stops with the build tail; some failures are host-specific |
 | 5 | artifact scan | Catches a known list of dev leaks |
-| 6 | `npx -y --registry <internal> @scope/frontend-cloud-cli@latest deploy` | Fails outside the internal network / registry |
+| 6 | `npx -y --registry https://registry.example.com @scope/hosting-cli@latest deploy` | Fails outside the internal network / registry |
 | 7 | `verify(domain)` fetches the deployed index | Returns a warning rather than a hard failure |
 
 So the script **does** stop in most new environments, but it stops by *failing at
@@ -70,7 +70,7 @@ state: new-environment
   ✓ node 18+
   ✓ npm
   ✗ deploy CLI (install: …)
-  ✗ SSO session (run: appwrite-cf login-ks)
+  ✗ SSO session (run: deploy-auth login)
   ✗ project binding (this project has never been deployed here)
   → next: install CLI, log in, then run `deploy.mjs --project-id <id> --project-name "<name>" --dir ./dist`
 ```
@@ -129,7 +129,7 @@ generic and can sit in front of any hosting platform.
 
 ### 3.5 `@latest` is a supply-chain and reproducibility risk
 
-`npx -y --registry <internal> @scope/frontend-cloud-cli@latest` resolves at run
+`npx -y --registry https://registry.example.com @scope/hosting-cli@latest` resolves at run
 time. Pin a version (or an integrity hash) in the binding, and fail with a clear
 message if the pinned version is unavailable.
 
@@ -225,7 +225,7 @@ replaces every external dependency:
 
 | Real dependency | Test double |
 |---|---|
-| `appwrite-cf` | temp executable: prints an `Email:` line only when `E2E_LOGIN=ok` |
+| `deploy-auth` | temp executable: prints an `Email:` line only when `E2E_LOGIN=ok` |
 | internal npm registry / hosting CLI | temp `npx` that logs its args and returns fake URLs |
 | deployed site (`fetch`) | preloaded fetch patch that returns a matching or stale index |
 | `web/` app | tiny build script that emits clean output or deliberate leaks |
@@ -244,8 +244,8 @@ Verified results (all scenarios passed against the Harness skill as written):
 | # | Scenario | Observed result | Detection quality |
 |---|---|---|---|
 | A | new machine, no binding, no CLI | stops at **missing binding** before mentioning the CLI | Weak: the first message hides the real install step |
-| B | binding present, CLI absent | stops with the `appwrite-cf` install command | Good |
-| C | binding present, CLI not logged in | stops with the `login-ks` instruction | Good |
+| B | binding present, CLI absent | stops with the `deploy-auth` install command | Good |
+| C | binding present, CLI not logged in | stops with the `login` instruction | Good |
 | D | logged in, no binding | stops with the “first deploy / new machine” message | Partial: cannot distinguish new machine from new project |
 | E | `--dry-run`, no binding, no login | builds and scans cleanly, exits 0 | Good |
 | F | clean deploy | prints latest URL, pinned URL and next action | Good |
