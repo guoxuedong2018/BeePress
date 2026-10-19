@@ -236,6 +236,19 @@ npm run build:demo  # 生产构建
 
 包含源码坐标批注、内容检查队列、截图前后对比、Agent 上下文与指令、IME 守卫的命令面板、带重试的异步弹窗、深色模式、发布面板，以及完整的 UI 规范页：基础令牌、组件实时状态、组合模式、无障碍说明和可搜索的 Token 表。所有视觉值都来自与套件相同的令牌。
 
+## Agent Host 试验：DeepSeek Harness + MCP
+
+[`integrations/`](./integrations) 是一个只读的 Phase 0 试验，用来验证 Bee Press 与 Agent runtime 的接缝：
+
+- [`integrations/host`](./integrations/host) — `@beepress/dsh-bundle`，包含 DeepSeek Harness 插件和 `beepress-mcp` stdio 入口，可接 Cursor、Claude、Codex 或其他 MCP 客户端。
+- 两个入口共用同一个无依赖的工作区读取器，项目文件仍是契约。
+
+```bash
+npm run test:integrations
+```
+
+这一版只验证接缝，不写文件、不抓媒体、不发布。详见 [integrations/README.md](./integrations/README.md)。
+
 ## 发布前检查
 
 发布是对外动作，先扫产物：

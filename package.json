@@ -66,6 +66,7 @@
     "examples/react-tailwind/vite.config.js",
     "examples/react-tailwind/docs/features",
     "examples/react-tailwind/docs/kb",
+    "integrations",
     "pipeline",
     "server",
     "ui-spec",
@@ -77,9 +78,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "check": "node scripts/check.mjs && node scripts/check-ui-spec.mjs && node scripts/check-public-deps.mjs",
+    "check": "node scripts/check.mjs && node scripts/check-ui-spec.mjs && node scripts/check-public-deps.mjs && node integrations/test-integrations.mjs",
     "test:deploy-skill": "node scripts/test-deploy-skill-e2e.mjs",
     "test:publish-gateway": "node scripts/test-publish-gateway.mjs",
+    "test:integrations": "node integrations/test-integrations.mjs",
     "demo": "node scripts/demo.mjs",
     "build:demo": "node scripts/demo.mjs build",
     "preflight": "node scripts/preflight-dist.mjs",

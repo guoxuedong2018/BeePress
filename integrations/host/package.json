@@ -1,0 +1,27 @@
+{
+  "name": "@beepress/dsh-bundle",
+  "version": "0.0.0-spike",
+  "private": true,
+  "type": "module",
+  "description": "Bee Press host spike: DeepSeek Harness domain bundle plus MCP entrypoint.",
+  "main": "src/dsh.mjs",
+  "exports": {
+    ".": "./src/dsh.mjs",
+    "./mcp": "./src/mcp.mjs",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "beepress-mcp": "./src/mcp.mjs"
+  },
+  "files": [
+    "src",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}

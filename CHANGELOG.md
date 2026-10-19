@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **DeepSeek Harness + MCP spike** — added `integrations/` with a read-only
+  `@beepress/dsh-bundle` that exposes both a dsh plugin and a `beepress-mcp`
+  stdio entrypoint over one shared workspace reader, plus mock-harness /
+  JSON-RPC protocol tests. The spike exposes `beepress_status`,
+  `beepress_context` and `beepress_review_open`; it does not write, capture
+  media or publish yet.
+
 ## 0.4.0
 
 - **Bee Press brand** — the product is now **Bee Press**, with the positioning
