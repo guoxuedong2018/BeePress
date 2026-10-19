@@ -72,10 +72,33 @@ and existing component APIs, but its values now come from the spec.
 - The studio already used a container query for its main column; this is now
   part of the checked rules.
 - The React adapter and the demo use the canonical React components.
+- `cn` registers the custom font-size roles with `tailwind-merge`. Without this,
+  `text-body` / `text-prose` and `text-primary` are treated as the same group
+  and the font size is silently dropped.
+- Dialogs use an explicit `data-autofocus` marker. Destructive footers put it
+  on Cancel, so the initial focus never lands on the destructive action.
+
+## Demo spec page
+
+`#/ui-spec` in the React demo is the living reference page. It is intentionally
+more than a swatch board:
+
+- **Foundations** — semantic color (light and dark values), the eight type
+  roles, the 4px spacing grid, radius roles, elevation, motion and icons.
+- **Components** — live buttons (5 variants × 4 sizes), inputs and fields,
+  segmented control, badges, cards, dialog, table, empty state, code block,
+  composer and messages.
+- **Patterns** — review toolbar, metric row and settings panel.
+- **Accessibility** — focus, keyboard, reduced motion and semantics.
+- **Tokens** — a searchable semantic-token table plus the component contracts
+  and change protocol.
+
+The page imports `ui-spec/tokens.json` directly, so the displayed values cannot
+drift from the spec.
 
 ## Conformance check
 
-`npm run check` runs two layers:
+`npm run check` runs three layers:
 
 - `scripts/check.mjs` — syntax and import smoke checks;
 - `scripts/check-ui-spec.mjs` — a subset of SELF-CHECK A1–A8 across `client/`
@@ -86,6 +109,8 @@ and existing component APIs, but its values now come from the spec.
   - arbitrary radius / font-size values;
   - `outline: none` without a focus compensation;
   - icon-only buttons without `aria-label`.
+- `scripts/check-public-deps.mjs` — every manifest and lockfile entry resolves
+  from `https://registry.npmjs.org`.
 
 The canonical components under `ui-spec/impl` are not re-linted; they are the
 reference implementation.

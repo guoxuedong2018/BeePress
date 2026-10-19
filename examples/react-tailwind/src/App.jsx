@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Badge, Button, Card, EmptyState, Input, SegmentedControl, Table, TableWrap, TBody, TD, TH, THead, TR } from "builder-kit/ui";
+import { Badge, Button, Card, EmptyState, SegmentedControl, Table, TableWrap, TBody, TD, TH, THead, TR } from "builder-kit/ui";
 
 import { ActivityTable } from "./components/ActivityTable";
 import { CommandPalette } from "./components/CommandPalette";
@@ -9,6 +9,7 @@ import { MetricCard } from "./components/MetricCard";
 import { NewExperimentDialog } from "./components/NewExperimentDialog";
 import { ReviewCanvas } from "./components/ReviewCanvas";
 import { Sidebar } from "./components/Sidebar";
+import { SpecView } from "./components/SpecView";
 import { Toast } from "./components/Toast";
 import { Topbar } from "./components/Topbar";
 import { EXPERIMENTS, METRICS, THREADS } from "./data";
@@ -245,68 +246,6 @@ function Reviews({ onToast }) {
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function SpecView() {
-  return (
-    <div className="flex max-w-[760px] flex-col gap-6">
-      <div>
-        <h1 className="text-title font-semibold text-primary wrap-balance">Tool UI Spec · applied</h1>
-        <p className="mt-1 text-body text-secondary wrap-pretty">
-          One accent, four surfaces, role-based radii and tokenized motion. This demo consumes the same tokens as the Builder Kit UI.
-        </p>
-      </div>
-
-      <Card static>
-        <h2 className="text-heading font-semibold text-primary">Surfaces and accent</h2>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {["surface-0", "surface-1", "surface-2", "surface-3"].map((token) => (
-            <div key={token} className="rounded-lg border border-subtle p-3" style={{ background: `var(--${token})` }}>
-              <span className="text-caption text-tertiary">{token}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {["accent", "success", "warning", "danger"].map((token) => (
-            <div key={token} className="flex items-center gap-2 rounded-lg bg-surface-3 p-2">
-              <span className="size-4 rounded-sm" style={{ background: `var(--${token})` }} aria-hidden="true" />
-              <span className="text-caption text-secondary">{token}</span>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      <Card static>
-        <h2 className="text-heading font-semibold text-primary">Type scale</h2>
-        <div className="mt-3 flex flex-col gap-2">
-          <p className="text-display font-normal text-primary">Display 32 / 40</p>
-          <p className="text-title font-semibold text-primary">Title 20 / 28</p>
-          <p className="text-heading font-semibold text-primary">Heading 15 / 20</p>
-          <p className="text-body-lg text-primary">Body large 15 / 22</p>
-          <p className="text-body text-primary">Body 14 / 20</p>
-          <p className="text-footnote text-secondary">Footnote 12 / 16</p>
-          <p className="text-caption text-tertiary">Caption 11 / 16</p>
-        </div>
-      </Card>
-
-      <Card static>
-        <h2 className="text-heading font-semibold text-primary">Controls</h2>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Button variant="primary">Primary</Button>
-          <Button variant="secondary">Secondary</Button>
-          <Button variant="ghost">Ghost</Button>
-          <Button variant="outline">Outline</Button>
-          <Button variant="danger">Danger</Button>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Badge tone="success">Passed</Badge>
-          <Badge tone="warning">Needs review</Badge>
-          <Badge tone="danger">Failed</Badge>
-          <Badge tone="info">Running</Badge>
-        </div>
-      </Card>
     </div>
   );
 }

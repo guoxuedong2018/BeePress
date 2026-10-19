@@ -30,6 +30,13 @@
   review and removed an internal host name from an export comment.
 - Fixed the content-menu trigger so its title, count and caret are vertically
   centered instead of sitting against the top of the 30px control.
+- **Full UI spec page** — the demo `#/ui-spec` route now documents foundations,
+  live component states, patterns, accessibility and a searchable token table.
+- **Type-scale merge fix** — `cn` registers the custom font-size roles with
+  `tailwind-merge`, so `text-body` / `text-prose` survive merging with
+  `text-primary`.
+- **Dialog focus** — destructive dialogs now focus an explicit
+  `data-autofocus` target (Cancel) instead of the last focusable button.
 - Fixed a Vite Less edge case where an `@import` in a comment triggered URL
   rebasing.
 

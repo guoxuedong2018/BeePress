@@ -242,8 +242,10 @@ npm run build:demo  # production build
 ```
 
 It includes source-anchored review comments, a persisted draft, an IME-safe
-command palette, an async dialog with retry, dark mode, a review queue and a UI
-spec page. Every value comes from the same tokens as the toolkit UI.
+command palette, an async dialog with retry, dark mode, a review queue and a
+full UI spec page with foundations, live component states, patterns,
+accessibility notes and a searchable token reference. Every value comes from
+the same tokens as the toolkit UI.
 
 ## Pre-deploy check
 

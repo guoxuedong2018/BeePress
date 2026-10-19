@@ -38,6 +38,8 @@ written to `examples/react-tailwind/docs/reviews/`.
 - **Dark mode** — the toggle persists to `localStorage` and re-maps the semantic
   tokens (it is not a filter).
 - **Views** — `#/overview`, `#/experiments`, `#/reviews`, `#/ui-spec`.
+- **UI spec** — `#/ui-spec` is the living reference page: foundations, live
+  component states, patterns, accessibility notes and a searchable token table.
 
 ## Stack
 

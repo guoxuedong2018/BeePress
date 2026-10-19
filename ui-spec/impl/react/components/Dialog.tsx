@@ -55,11 +55,8 @@ export function Dialog({
     const panel = panelRef.current;
     if (panel) {
       const first = panel.querySelector<HTMLElement>(FOCUSABLE);
-      // 危险操作：默认聚焦最后一个可交互元素（通常是「取消」）
-      const target =
-        tone === 'danger'
-          ? [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)].pop()
-          : first;
+      // 危险操作不要默认落在破坏性按钮上：由 footer 标记「取消」为初始焦点
+      const target = panel.querySelector<HTMLElement>('[data-autofocus]') ?? first;
       (target ?? panel).focus({ preventScroll: true });
     }
 
@@ -67,7 +64,7 @@ export function Dialog({
       document.body.style.overflow = prevOverflow;
       restoreFocusRef.current?.focus({ preventScroll: true });
     };
-  }, [open, tone]);
+  }, [open]);
 
   /* 键盘：Escape 关闭 + Tab 循环 */
   const onKeyDown = React.useCallback(
@@ -147,7 +144,7 @@ export function Dialog({
         <div className="mt-6 flex justify-end gap-2">
           {footer ?? (
             <>
-              <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              <Button variant="ghost" data-autofocus onClick={() => onOpenChange(false)}>
                 取消
               </Button>
               <Button
