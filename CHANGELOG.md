@@ -9,9 +9,10 @@
   workflow and loads the actual destination through
   `BUILDER_KIT_PUBLISH_GATEWAY`; `pipeline/destinations/docs-cli.mjs` is now a
   reference adapter, not core coupling. See `docs/publishing.md`.
-- **Destination integration guide** — added a Chinese, step-by-step
-  `docs/publishing.zh-CN.md` covering adapter layout, environment setup,
-  source handling, authentication, validation and troubleshooting.
+- **Content destination guide** — reframed publishing as content carriers, not
+  just document pages. Added a Chinese, step-by-step `docs/publishing.zh-CN.md`
+  covering content bundles, cards/assets, adapter layout, environment setup,
+  authentication, validation and troubleshooting.
 - **Content-check UX** — the studio opens with a guided review queue and
   page progress, shows requirement context on "needs confirmation" cards,
   hides AI/source-editing actions behind an advanced toggle, and disables

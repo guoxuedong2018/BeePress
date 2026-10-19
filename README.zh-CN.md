@@ -1,6 +1,6 @@
 # Builder Kit
 
-面向产品经理与研发的**本地优先**原型工具套件：在活的原型上圈选批注，再把「内容跟不跟得上原型」变成一份可执行的工作清单。
+面向产品经理与研发的**本地优先**原型工具套件：在活的原型上圈选批注，再把原型相关的内容生产成可发布、可校验、可投递到多个载体的内容资源。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
@@ -12,11 +12,23 @@
 | 套件 | 收什么 | 落到哪 |
 |---|---|---|
 | `client/review` | 对原型的**意见** —— 圈选批注 | `docs/reviews/<区域>.json` |
-| `client/studio` | 内容跟不跟得上原型的**确认** —— 内容检查台 | `docs/kb/_lock.json`（正文本身在 `docs/kb/*.md`） |
+| `client/studio` | 把原型变成可发布的**内容资源** —— 操作手册、上线通知、消息卡片、宣传图文 | `docs/kb/*.md` + `images/` + `media/` + 发布状态 |
 
 界面是 **React**，挂在 `<body>` 下独立的根上；原型保持自己的框架，不用装 React。**React 是主适配层**（`builder-kit/react`）；**Vue 2**（`builder-kit/vue2`）是可选的兼容适配层。换框架只需按 `client/core/host.js` 写一层很薄的适配。
 
 套件**只在 dev 生效**：入口组件的 `import.meta.env.DEV` 动态 import 在生产构建期被消除，产物里不留任何套件代码。
+
+## 内容生产定位
+
+Builder Kit 的核心不是“让模型写一篇文章”，而是把 Agent 放进可验证的原型环境：
+
+- Agent 能读源码、路由、组件、FRS 和页面 DOM，知道真实界面和真实文案，不靠猜。
+- Agent 能调用 Chrome/CDP 截图、录屏，调用 ffmpeg 生成 GIF/视频、裁剪和合成，媒体是可复现的构建产物。
+- 正文里的事实引用 `frs:` / `code:` 会在上游变化时进入待确认队列；内容不会发出去就失控。
+- 同一份内容资源可以生成长文、上线通知、消息卡片、宣传图文，通过统一发布层投递到飞书文档、腾讯文档、内部内容平台或 IM。
+- Markdown、媒体配方、事实和评审锁都留在仓库里，可 diff、可回滚、可继续由 Agent 编辑。
+
+一句话：**Builder Kit 是原型原生的内容生产与发布层，而不是通用文档编辑器或截图工具。**
 
 ## 为什么单独一层
 
@@ -184,7 +196,7 @@ import "builder-kit/tokens.css";
 |---|---|
 | ![Helix 演示，浅色](./docs/assets/demo-overview-light.png) | ![Helix 演示，深色](./docs/assets/demo-overview-dark.png) |
 
-![内容检查台](./docs/assets/demo-content-studio.png)
+![内容工作台](./docs/assets/demo-content-studio.png)
 
 
 ```bash
@@ -235,7 +247,7 @@ builderKit({
 | `BUILDER_KIT_PUBLISH_GATEWAY` | 发布目标适配器：路径、`file:` URL 或包名 | 未配置 |
 | `BUILDER_KIT_DOCS_CLI` | 内置 `docs-cli` 适配器的命令前缀 | `docs-cli` |
 
-## 内容检查台
+## 内容工作台
 
 **这条链路是一个内容构建系统。** 叙述是手写的源文件，截图录屏是按配方可复现的构建产物，事实是被校验的断言；「上游变了之后，这几句还成立吗」是唯一需要人判断的事。
 
@@ -249,11 +261,12 @@ builderKit({
 
 **早截断。** 页面源码变了 → 物料该重拍（按依赖闭包的内容哈希判，不看修改时间）；重拍之后画面没变 → 到此为止，不打扰任何文档。「画面没变」按 16×16 格比灰度，差异格不超过 8 个算没变；高倍截图里一条边线挪 1 个 CSS 像素会碰几百个格子，这类差异再逐像素核一遍。
 
-**审阅台只做三件事：摆出来、记下确认、把活派出去。** 入口在评审工具栏的「内容」，整屏打开：
+**内容工作台只做三件事：摆出来、记下确认、交给发布目的地。** 入口在评审工具栏的「内容」，整屏打开：
 
 - 顶栏的「内容」下拉是生产出来的全部篇目，带「几处要看 / 迭代中 / 几个格子待填 / 不发布」标记。
 - 文档页把「要看的 N 处」排在上面：截图并排「上次确认时」与「现在」，图下逐条写出变了什么。
 - 构成视图是同一份 md 的另一种看法：来源 → 素材与事实 → 章节，画布可缩放、可筛选、可折叠。
+- 发布是把选中的长文/物料交给宿主配置的载体；目的地适配器负责飞书、腾讯文档、内部平台等差异。
 
 **要 Agent 写的活交给 IDE 里的 Agent。** 审阅台不起后台写作 Agent：按钮都是「复制给 Agent」，复制一条指令，粘到 IDE 里的 Agent 对话。`agentPrompt` 可配置指令前缀。
 
@@ -281,15 +294,15 @@ npx builder-kit prd <KEY> --scope delta
 
 ## 发布
 
-发布是可选的。Builder Kit 只提供核心流程——变更判断、内容打包、计划确认、可续跑状态和审阅台 UI；**发布到哪里**由宿主自己的适配器决定：
+发布是可选的。Builder Kit 只提供核心流程——内容 bundle、计划确认、可续跑状态和内容工作台 UI；**投递到哪个载体**由宿主自己的适配器决定：
 
 ```bash
 BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx builder-kit kb-publish --dry-run
 ```
 
-适配器可以接内部 Wiki、CMS、文档服务或业务数据库。接口契约和最小示例见
+适配器可以接飞书文档、腾讯文档、内部 Wiki/CMS、IM 机器人等内容平台。发布物不只长文：操作手册、上线通知、消息卡片、截图/录屏/GIF/视频都可以走同一个接入层。接口契约和最小示例见
 [`docs/publishing.zh-CN.md`](./docs/publishing.zh-CN.md)（接口契约见 [publishing.md](./docs/publishing.md)）。未配置时发布功能关闭；要使用内置的
-[`docs-cli` 参考适配器，设置 `BUILDER_KIT_PUBLISH_GATEWAY=docs-cli`（它仍通过
+[`docs-cli` 参考适配器](./pipeline/destinations/docs-cli.mjs)，设置 `BUILDER_KIT_PUBLISH_GATEWAY=docs-cli`（它仍通过
 `BUILDER_KIT_DOCS_CLI` 接收外部 CLI 命令前缀）。完全不接发布目标时，本地批注、内容清单、截图录屏都照常可用。
 
 ## 边界规矩

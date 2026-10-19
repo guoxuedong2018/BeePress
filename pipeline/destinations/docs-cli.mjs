@@ -44,7 +44,8 @@ const DOCS_CLI = process.env.BUILDER_KIT_DOCS_CLI || "docs-cli";
 export const destination = {
   id: "docs-cli",
   label: "外部文档",
-  description: "通过可配置的 docs CLI 写入外部文档服务。",
+  description: "长文文档参考适配器：通过可配置的 docs CLI 写入外部文档服务。",
+  capabilities: ["document"],
 };
 
 /** Human-readable URL for a page. The core only passes opaque ids through. */

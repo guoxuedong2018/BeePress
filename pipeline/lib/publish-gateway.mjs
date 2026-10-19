@@ -107,5 +107,6 @@ export function publishDestinationInfo(gateway) {
     id: destination.id ?? gateway?.name ?? "custom",
     label: destination.label ?? "发布目标",
     description: destination.description ?? "",
+    capabilities: Array.isArray(destination.capabilities) ? destination.capabilities : [],
   };
 }

@@ -1,16 +1,45 @@
-# Publishing destinations
+# Content destinations
 
 中文操作说明见 [publishing.zh-CN.md](./publishing.zh-CN.md)。
 
-Builder Kit owns the **publishing workflow**: deciding which Markdown pages
-changed, packaging images, computing a plan, persisting resumable state, and
-showing the confirmation UI. It does **not** own the destination. A host that
-publishes to an internal wiki, a CMS, a docs service, or a product database
-provides a small destination adapter.
+Builder Kit has two sibling tools:
 
-The bundled `docs-cli` adapter is a reference implementation, not a requirement.
-Local review, content status, screenshots and clips work without any publishing
-destination.
+- **Review** captures feedback on the running prototype with source anchors.
+- **Studio** produces publishable content from the prototype: manuals, launch
+  notes, message cards, campaign copy, screenshots, GIFs and clips.
+
+Studio is a content pipeline, not a CMS. It keeps the source, facts, media
+recipes, review state and publishing workflow together. A **destination** is
+the carrier: Feishu Docs, Tencent Docs, an internal wiki, an IM bot, a CMS, or
+any other content platform.
+
+The core owns planning, packaging, confirmation, resumable state and the review
+UI. The destination adapter owns authentication, tenant/space selection,
+platform rendering, resource creation/update and external ids. The bundled
+`docs-cli` adapter is a reference implementation for long-form documents, not
+the whole destination model. Local review, content status, screenshots and
+clips work without any publishing destination.
+
+## What gets published
+
+One content bundle can produce more than a long document:
+
+| Resource | Examples | Typical carrier |
+| :-- | :-- | :-- |
+| Long-form document | Manual, PRD, release note, announcement | Feishu/Tencent Docs, internal wiki |
+| Notification | Version notice, risk alert, short update | IM, email, internal feed |
+| Message card | Structured card with fields, actions, links | Feishu/Lark bot, WeCom, internal IM |
+| Visual asset | Screenshot, GIF, clip, cover image | Document attachment, asset library, CDN |
+| Bundle | Document + assets + facts + metadata | Any carrier that supports the combination |
+
+A bundle carries the narrative blocks, structured card payload, assets, fact
+references and metadata. The adapter renders that bundle into the carrier's
+native format; cards and videos must not be forced into Markdown pages.
+
+The current long-form adapter contract below is the first supported subset.
+If a destination supports cards or asset libraries, add resource-level methods
+to that adapter rather than teaching the core about Feishu/Tencent-specific
+fields.
 
 ## Configure
 
@@ -54,7 +83,12 @@ type Source =
 
 interface PublishGateway {
   /** Shown in the studio. All fields are optional. */
-  destination?: { id?: string; label?: string; description?: string };
+  destination?: {
+    id?: string;
+    label?: string;
+    description?: string;
+    capabilities?: Array<"document" | "notification" | "message-card" | "image" | "gif" | "video">;
+  };
 
   /** Create a page. Must not be retried by the adapter; the core treats it as non-idempotent. */
   createDoc(input: {

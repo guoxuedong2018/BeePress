@@ -7,18 +7,38 @@
 
 [中文文档](./README.zh-CN.md)
 
-Builder Kit attaches two independent suites to a running prototype:
+Builder Kit attaches two independent tools to a running prototype:
 
 | Suite | What it collects | Where it lands |
 |---|---|---|
 | **Review** | Opinions about the prototype — select an element, leave a comment anchored to its source | `docs/reviews/<REGION>.json` |
-| **Studio** | Whether the documentation still matches the prototype — stale screenshots, unreviewed facts, content gaps | `docs/kb/_lock.json`, `docs/kb/*.md` |
+| **Studio** | Turns the prototype into publishable content — manuals, launch notes, message cards, campaign copy, screenshots and clips | `docs/kb/*.md`, `images/`, `media/`, publishing state |
 
 The UI is React and lives in an isolated root under `<body>`. A thin host adapter mounts it; the prototype keeps its own framework. **React is the primary adapter**; a **Vue 2** adapter is optional. Writing an adapter for Vue 3 or another framework is intentionally small (three responsibilities: layout slots, router bridge, host controls).
 
 The toolkit is **dev-only**. Production builds contain no Builder Kit code and no React.
 
 ---
+
+## Content positioning
+
+Builder Kit is not a generic AI writing tool. It puts an Agent inside a
+verifiable prototype environment:
+
+- the Agent reads source, routes, components, FRS and DOM state instead of
+  guessing the UI;
+- Chrome/CDP captures screenshots and recordings, and ffmpeg builds GIFs,
+  videos and composites; media is reproducible, not a manual attachment;
+- facts reference `frs:` / `code:` sources and re-enter review when upstream
+  changes;
+- one content bundle can become a manual, launch note, message card or campaign
+  asset, then go through a destination adapter to Feishu, Tencent Docs, an
+  internal platform or IM;
+- Markdown, media recipes, facts and review locks stay in the repository:
+  diffable, rollbackable and editable by the Agent.
+
+In one sentence: **Builder Kit is the prototype-native content production and
+publishing layer, not a generic document editor or screenshot tool.**
 
 ## Why this exists
 
@@ -316,16 +336,18 @@ The `check-ui`, `check-routes` and `check-frs` scripts are **reference host chec
 
 ## Publishing
 
-Publishing is optional. Builder Kit owns the core workflow — change detection,
-content packaging, plan/confirm, resumable state and the studio UI. The
-**destination** is an adapter owned by the host:
+Publishing is optional. Builder Kit owns the content bundle, plan/confirm,
+resumable state and the studio UI. The **destination** is an adapter owned by
+the host:
 
 ```bash
 BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx builder-kit kb-publish --dry-run
 ```
 
-The adapter can publish to an internal wiki, a CMS, a docs service, or a
-product database. The contract and a minimal example are in
+A destination can publish to Feishu Docs, Tencent Docs, an internal wiki/CMS,
+an IM bot, or another content platform. The payload is not limited to long-form
+documents: manuals, launch notes, message cards, screenshots, GIFs and clips
+can share the same integration layer. The contract and examples are in
 [`docs/publishing.md`](./docs/publishing.md). Publishing is disabled until a
 destination is configured. To use the bundled
 [`docs-cli` reference destination](./pipeline/destinations/docs-cli.mjs), set

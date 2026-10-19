@@ -53,7 +53,11 @@ Comments are written to `docs/reviews/<REGION>.json` by the dev middleware. The 
 
 ## Studio suite
 
-`client/studio/` is a full-screen content workspace. It does not decide what is stale; it calls `pipeline/lib/content-build.mjs`, the same module used by the CLI, so the terminal and the UI cannot disagree.
+`client/studio/` is a full-screen content production workspace. It turns
+prototype source, facts and media recipes into publishable content resources
+(manuals, launch notes, message cards, campaign assets). It does not decide what
+is stale; it calls `pipeline/lib/content-build.mjs`, the same module used by the
+CLI, so the terminal and the UI cannot disagree.
 
 The content model is described in [content-model.md](./content-model.md).
 
