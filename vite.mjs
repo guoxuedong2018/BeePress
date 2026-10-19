@@ -98,7 +98,7 @@ function hostBridge({ root, frsRegistry, barExtras, barLinks, agentPrompt }) {
 }
 
 /**
- * Builder Kit — one integration point for the prototype toolkit
+ * Bee Press — one integration point for the prototype toolkit
  * ==================================================================
  * Add one line to the host's `vite.config.js`:
  *

@@ -13,7 +13,7 @@ function render(app) {
 }
 
 if (import.meta.env.DEV) {
-  // Dev-only integration: production builds contain no Builder Kit code.
+  // Dev-only integration: production builds contain no Bee Press code.
   import("builder-kit/react").then(({ BuilderKitRoot }) => {
     render(
       <BuilderKitRoot router={router}>

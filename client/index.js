@@ -1,5 +1,5 @@
 /**
- * Builder Kit client entry
+ * Bee Press client entry
  * ==================================================================
  * The UI is React (core / review / studio) and does not know the host
  * framework. Hosts integrate through a thin adapter:

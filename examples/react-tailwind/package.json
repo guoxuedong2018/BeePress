@@ -1,9 +1,9 @@
 {
-  "name": "builder-kit-demo",
+  "name": "bee-press-demo",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "React + Tailwind demo prototype for Builder Kit",
+  "description": "React + Tailwind demo prototype for Bee Press",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

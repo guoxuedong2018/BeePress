@@ -20,7 +20,7 @@ export const OUTLINE = [
     overview: {
       title: "Anchors",
       kind: "concept",
-      lead: "How Builder Kit keeps a comment attached to the right element.",
+      lead: "How Bee Press keeps a comment attached to the right element.",
       pages: ["/overview"],
       frs: ["OVERVIEW"],
     },

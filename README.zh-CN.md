@@ -1,11 +1,15 @@
-# Builder Kit
+# Bee Press
 
-**原型原生的内容生产与发布层。** 把运行中的原型变成可评审、可校验、可持续更新的内容资源——操作手册、上线通知、消息卡片、宣传图文、截图/GIF/视频——并投递到任意内容载体。
+**蜂群协作，一个事实源。**
+
+Bee Press 是原型原生的内容生产与发布层。把运行中的原型变成可评审、可校验、可持续更新的内容资源——操作手册、上线通知、消息卡片、宣传图文、截图/GIF/视频——并投递到任意内容载体。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
 
-[English](./README.md)
+[English](./README.md) · [品牌说明](./docs/brand.md)
+
+> **命名：** Bee Press 是产品名。npm 包、导入路径、环境变量和 `bk` CLI 继续使用 `builder-kit` / `BUILDER_KIT_*`，保证兼容；`beepress` 是新增别名。
 
 两个平级工具，都挂在运行中的原型上：
 
@@ -20,7 +24,7 @@
 
 ## 内容生产定位
 
-Builder Kit 的核心不是“让模型写一篇文章”，而是把可验证的原型环境交给 Agent：
+Bee Press 的核心不是“让模型写一篇文章”，而是把可验证的原型环境交给 Agent：
 
 - Agent 能读源码、路由、组件、FRS 和页面 DOM，知道真实界面和真实文案，不靠猜。
 - Agent 能调用 Chrome/CDP 截图、录屏，调用 ffmpeg 生成 GIF/视频、裁剪和合成，媒体是可复现的构建产物。
@@ -28,13 +32,25 @@ Builder Kit 的核心不是“让模型写一篇文章”，而是把可验证�
 - 同一份内容资源可以生成长文、上线通知、消息卡片、宣传图文，通过统一发布层投递到飞书文档、腾讯文档、内部内容平台或 IM。
 - Markdown、媒体配方、事实和评审锁都留在仓库里，可 diff、可回滚、可继续由 Agent 编辑。
 
-Builder Kit 不内嵌后台写作 Agent：它把源码、页面、媒体配方、事实校验和发布状态组织成 Agent 可用的上下文，管线负责执行和核对。
+Bee Press 不内嵌后台写作 Agent：它把源码、页面、媒体配方、事实校验和发布状态组织成 Agent 可用的上下文，管线负责执行和核对。
 
-一句话：**Builder Kit 是原型原生的内容生产与发布层，而不是通用文档编辑器或截图工具。**
+一句话：**Bee Press 是原型原生的内容生产与发布层，而不是通用文档编辑器或截图工具。**
+
+### 为什么叫 Bee Press
+
+Bee Press 不是“人类和 AI 一起写文档”的聊天框，而是一个 Agent 蜂巢在共享工件上协作：
+
+- **工蜂角色** —— 读源码、看页面、截图录屏、写作、审阅、发布，都可以是不同的 Agent。
+- **共识主动性（stigmergy）** —— Agent 不靠聊天协调，而是通过仓库里的痕迹协作：事实引用、评审锁、媒体台账、发布状态。
+- **蜂蜜** —— 最终的内容 Bundle。
+- **授粉** —— 发布适配器把同一份 Bundle 送到文档、IM、素材库或内部平台。
+- **Press** —— 审阅和发布始终显式发生，不会自动发出去。
+
+蜜蜂不是“AI 魔法”的吉祥物，而是一种工作模型：许多小工蜂，一个事实源。
 
 ### 产出形态
 
-| 产出 | Builder Kit 提供什么 | 典型载体 |
+| 产出 | Bee Press 提供什么 | 典型载体 |
 | :-- | :-- | :-- |
 | 操作手册 / 功能说明 | 正文 + 真实截图 + 可核对步骤 | 飞书文档、腾讯文档、Wiki、站点 |
 | 上线通知 / 版本更新 | 发布事实 + 封面 + 跳转链接 | 文档、IM、邮件、内部信息流 |
@@ -45,7 +61,7 @@ Builder Kit 不内嵌后台写作 Agent：它把源码、页面、媒体配方�
 
 ## 为什么单独一层
 
-原型是产品资产，随业务演进、要整份交付研发；套件是跨原型复用的能力，生命周期完全不同。把套件寄居在原型源码里，后果是「删掉工具层还得动产品代码」。Builder Kit 把两者的边界收敛成宿主工程里的两行配置。
+原型是产品资产，随业务演进、要整份交付研发；套件是跨原型复用的能力，生命周期完全不同。把套件寄居在原型源码里，后果是「删掉工具层还得动产品代码」。Bee Press 把两者的边界收敛成宿主工程里的两行配置。
 
 ## 做工具时的几条判断
 
@@ -59,6 +75,7 @@ Builder Kit 不内嵌后台写作 Agent：它把源码、页面、媒体配方�
 
 ```bash
 npm install --save-dev builder-kit
+# CLI 别名：beepress、builder-kit、bk
 # 宿主还没有这些 peer 时
 npm install --save-dev vite less
 # 仅当宿主使用可选 Vue 2 适配层时
@@ -287,7 +304,7 @@ builderKit({
 
 ## 命令行
 
-安装后提供统一入口 `builder-kit`（别名 `bk`）：
+安装后提供统一入口，三个别名等价：`beepress`、`builder-kit`、`bk`。下面仍用 `builder-kit`，因为 npm 包名保持不变；`beepress` 行为完全一致。
 
 ```bash
 npx builder-kit kb status            # 哪些内容待确认、哪些图该重拍
@@ -309,7 +326,7 @@ npx builder-kit prd <KEY> --scope delta
 
 ## 发布
 
-发布是可选的。Builder Kit 只提供核心流程——内容 bundle、计划确认、可续跑状态和内容工作台 UI；**投递到哪个载体**由宿主自己的适配器决定：
+发布是可选的。Bee Press 只提供核心流程——内容 bundle、计划确认、可续跑状态和内容工作台 UI；**投递到哪个载体**由宿主自己的适配器决定：
 
 ```bash
 BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx builder-kit kb-publish --dry-run

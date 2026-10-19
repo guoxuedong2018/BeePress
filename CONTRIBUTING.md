@@ -19,7 +19,7 @@ npm run check
 
 ## Scope
 
-Builder Kit is intentionally small and local-first:
+Bee Press is intentionally small and local-first:
 
 - No hosted service, no telemetry, no account system.
 - Dev-only middleware; never ship the toolkit to production.

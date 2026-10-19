@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0
+
+- **Bee Press brand** — the product is now **Bee Press**, with the positioning
+  “a hive of agents. One source of truth.” The name reflects the operating
+  model: specialised agents coordinate through shared artifacts (fact refs,
+  review locks, media ledgers, publish state), not a human-in-the-loop chat.
+- **Compatible CLI aliases** — `beepress` is added alongside `builder-kit` and
+  `bk`. The npm package name, import paths and `BUILDER_KIT_*` environment
+  variables are unchanged.
+- **Brand guide** — added `docs/brand.md` covering naming, taglines, voice and
+  visual direction.
+- **Documentation and demo** — README, architecture, adapter, publishing and UI
+  spec docs now use the Bee Press name; the React demo title and copy follow.
+
 ## 0.3.0
 
 - **Tailwind 4 migration** — the demo, canonical components and docs now target

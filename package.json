@@ -1,7 +1,7 @@
 {
   "name": "builder-kit",
-  "version": "0.3.0",
-  "description": "Prototype-native content production and publishing layer: source-anchored review, Agent-ready content studio, reproducible media, and pluggable destinations.",
+  "version": "0.4.0",
+  "description": "Bee Press — a hive of agents for prototype-native content production and publishing: source-anchored review, Agent-ready content studio, reproducible media, and pluggable destinations.",
   "license": "MIT",
   "type": "module",
   "keywords": [
@@ -16,6 +16,8 @@
     "content",
     "publishing",
     "agent",
+    "agent-hive",
+    "bee-press",
     "screenshots"
   ],
   "repository": {
@@ -47,7 +49,8 @@
   },
   "bin": {
     "builder-kit": "./bin/builder-kit.mjs",
-    "bk": "./bin/builder-kit.mjs"
+    "bk": "./bin/builder-kit.mjs",
+    "beepress": "./bin/builder-kit.mjs"
   },
   "files": [
     "bin",

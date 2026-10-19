@@ -2,7 +2,7 @@
 
 中文操作说明见 [publishing.zh-CN.md](./publishing.zh-CN.md)。
 
-Builder Kit has two sibling tools:
+Bee Press has two sibling tools:
 
 - **Review** captures feedback on the running prototype with source anchors.
 - **Studio** produces publishable content from the prototype: manuals, launch

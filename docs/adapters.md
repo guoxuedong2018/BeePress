@@ -1,6 +1,6 @@
 # Adapters
 
-Builder Kit has two adapter layers:
+Bee Press has two adapter layers:
 
 1. **Host adapters** — mount the React UI into a prototype framework.
 2. **Pipeline adapters** — teach the screenshot/clip engine how to manipulate a particular stack.

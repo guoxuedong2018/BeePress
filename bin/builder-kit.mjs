@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * builder-kit CLI dispatcher.
+ * Bee Press CLI dispatcher.
  *
- * All pipeline scripts live in `pipeline/`. This entry point gives them a
- * single, stable command surface:
+ * The npm package is still `builder-kit`; `beepress`, `builder-kit` and `bk`
+ * are aliases for this entry point. All pipeline scripts live in `pipeline/`:
  *
- *   builder-kit kb status
- *   builder-kit review open
- *   builder-kit prd MY_FEATURE --scope delta
+ *   beepress kb status
+ *   beepress review open
+ *   beepress prd MY_FEATURE --scope delta
  *
  * Commands run with the current working directory as the host project root
  * (or `BUILDER_KIT_ROOT` when set).
@@ -43,10 +43,12 @@ const COMMANDS = {
 };
 
 function printHelp(code = 0) {
-  console.log(`builder-kit — prototype review & content workspace
+  console.log(`Bee Press — a hive of agents for prototype review & content
 
 Usage:
-  builder-kit <command> [options]
+  beepress <command> [options]
+  builder-kit <command> [options]   # compatibility alias
+  bk <command> [options]            # short compatibility alias
 
 Commands:
   kb                       Content workspace CLI (status / shoot / ack / check / new …)
@@ -78,7 +80,7 @@ Environment:
   BUILDER_KIT_PUBLISH_GATEWAY  Publish destination adapter (default: disabled)
   BUILDER_KIT_DOCS_CLI     Command prefix for the bundled docs-cli adapter
 
-Run \`builder-kit kb --help\` for command-specific options.`);
+Run \`beepress kb --help\` for command-specific options.`);
   process.exit(code);
 }
 

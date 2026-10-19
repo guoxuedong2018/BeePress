@@ -1,6 +1,6 @@
 # Architecture
 
-Builder Kit is a set of dev-only Vite plugins plus a React UI mounted in an isolated root. It has no runtime presence in production.
+Bee Press is a set of dev-only Vite plugins plus a React UI mounted in an isolated root. It has no runtime presence in production.
 
 ```text
 host prototype (Vue 2, React, …)

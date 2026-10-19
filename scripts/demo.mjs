@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Run the React + Tailwind demo from its own directory so Builder Kit's path
+ * Run the React + Tailwind demo from its own directory so the Bee Press path
  * resolver treats the demo as the host project (docs/, src/, package.json).
  */
 import { spawnSync } from "node:child_process";

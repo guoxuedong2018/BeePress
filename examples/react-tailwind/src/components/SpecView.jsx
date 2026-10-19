@@ -584,7 +584,7 @@ function SpecView() {
                 <Message role="user" meta="14:32 · product">
                   Can we show where a comment is anchored?
                 </Message>
-                <Message role="assistant" meta="14:33 · Builder Kit">
+                <Message role="assistant" meta="14:33 · Bee Press">
                   Yes. The composer shows the source coordinate, and the review queue keeps the anchor after a refresh.
                 </Message>
                 {lastPrompt && (

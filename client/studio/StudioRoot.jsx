@@ -130,7 +130,7 @@ function ReshootButton({ items, running }) {
 }
 
 /**
- * 内容检查台 —— 与评审套件平级的第二个工具层。
+ * Bee Press 内容检查台 —— 与评审套件平级的第二个工具层。
  *
  * 两块：顶栏的「内容」下拉是生产出来的全部篇目（按知识库大纲分组，能搜、能只看要处理的、能按话题新建）；
  * 下面是打开的那一篇（审阅 / 构成）。要 Agent 写的活复制成指令，交给 IDE 里的 Agent。
@@ -150,10 +150,10 @@ export function StudioRoot() {
       <DemoRecorder />
       <MediaLightbox />
       {snap.open && (
-        <section className="st-surface" data-review-ui role="dialog" aria-label="内容检查">
+        <section className="st-surface" data-review-ui role="dialog" aria-label="Bee Press 内容检查">
           <header className="st-bar">
-            <span className="st-brand">内容检查</span>
-            <span className="st-brand-sub">确认内容仍准确 · 不会自动发布</span>
+            <span className="st-brand">Bee Press</span>
+            <span className="st-brand-sub">内容检查 · 确认内容仍准确 · 不会自动发布</span>
             {s ? <ContentMenu /> : snap.loading ? <span className="st-muted">读取中…</span> : null}
 
             <div className="st-bar-right">

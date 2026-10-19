@@ -1,6 +1,6 @@
 # UI spec integration
 
-Builder Kit uses the **Tool UI Spec** kept in [`ui-spec/`](../ui-spec) as its
+Bee Press uses the **Tool UI Spec** kept in [`ui-spec/`](../ui-spec) as its
 design system. The spec is framework-agnostic at the principle and token
 layers; React is the canonical component implementation.
 

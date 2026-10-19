@@ -1,13 +1,22 @@
-# Builder Kit
+# Bee Press
 
-**Prototype-native content production and publishing layer.** Turn a running prototype into source-grounded manuals, launch notes, message cards, campaign copy, screenshots, GIFs and clips — review them in place, keep them fresh, and deliver them through a pluggable destination layer.
+**A hive of agents. One source of truth.**
+
+Bee Press is the prototype-native content production and publishing layer. Turn
+a running prototype into source-grounded manuals, launch notes, message cards,
+campaign copy, screenshots, GIFs and clips — review them in place, keep them
+fresh, and deliver them through a pluggable destination layer.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
 
-[中文文档](./README.zh-CN.md)
+[中文文档](./README.zh-CN.md) · [Brand guide](./docs/brand.md)
 
-Builder Kit attaches two independent tools to a running prototype:
+> **Name:** Bee Press is the product name. The package, import paths,
+> environment variables and `bk` CLI keep the `builder-kit` /
+> `BUILDER_KIT_*` names for compatibility; `beepress` is an alias.
+
+Bee Press attaches two independent tools to a running prototype:
 
 | Tool | What it does | Where it lands |
 |---|---|---|
@@ -16,13 +25,13 @@ Builder Kit attaches two independent tools to a running prototype:
 
 The UI is React and lives in an isolated root under `<body>`. A thin host adapter mounts it; the prototype keeps its own framework. **React is the primary adapter**; a **Vue 2** adapter is optional. Writing an adapter for Vue 3 or another framework is intentionally small (three responsibilities: layout slots, router bridge, host controls).
 
-The toolkit is **dev-only**. Production builds contain no Builder Kit code and no React.
+The toolkit is **dev-only**. Production builds contain no Bee Press code and no React.
 
 ---
 
 ## Content positioning
 
-Builder Kit is not a generic AI writing tool. It gives an Agent a verifiable
+Bee Press is not a generic AI writing tool. It gives an Agent a verifiable
 prototype environment to work from:
 
 - the Agent reads source, routes, components, FRS and DOM state instead of
@@ -37,8 +46,26 @@ prototype environment to work from:
 - Markdown, media recipes, facts and review locks stay in the repository:
   diffable, rollbackable and editable by the Agent.
 
-In one sentence: **Builder Kit is the prototype-native content production and
+In one sentence: **Bee Press is the prototype-native content production and
 publishing layer, not a generic document editor or screenshot tool.**
+
+## Why the hive
+
+Bee Press is not a chat box with a human in the middle. It is a hive of
+specialised agents working on shared artifacts:
+
+- **Worker roles** — reading source, inspecting pages, capturing screenshots and
+  clips, writing, reviewing and publishing can be separate agents.
+- **Stigmergy** — agents coordinate through the repository, not a conversation.
+  Fact references, review locks, media ledgers and publish state are the traces
+  they leave for each other.
+- **Honey** — the content bundle is the shared output.
+- **Pollination** — destination adapters carry the same bundle to docs, IM,
+  asset libraries or internal platforms.
+- **Press** — human review and publishing stay explicit, never automatic.
+
+The bee is not a mascot for "AI magic". It is an operating model: many small
+workers, one source of truth.
 
 ## Why this exists
 
@@ -48,7 +75,7 @@ manuals, launch notes and screenshots are copied by hand from the prototype and
 are stale almost immediately. Generic AI writing tools cannot close that gap
 because they cannot see the running product or verify what they wrote.
 
-Builder Kit treats both as first-class:
+Bee Press treats both as first-class:
 
 - **Review** makes every comment addressable. The Vite plugin injects
   `file:line:column` into Vue template elements and JSX elements; after the
@@ -64,7 +91,7 @@ Builder Kit treats both as first-class:
 
 ## What it produces
 
-| Output | What Builder Kit contributes | Typical carrier |
+| Output | What Bee Press contributes | Typical carrier |
 | :-- | :-- | :-- |
 | Operation manual / feature guide | Narrative + real screenshots + verified steps | Feishu Docs, Tencent Docs, wiki, site |
 | Launch note / version update | Release facts + cover image + links | Docs, IM, email, internal feed |
@@ -84,7 +111,7 @@ Builder Kit treats both as first-class:
   topic-based scaffolding and plain-language confirmation cards.
 - **Agent-ready context**: `kb context` and “copy for Agent” commands give an
   IDE Agent the page refs, available media recipes, requirements and source
-  locations it needs; Builder Kit does not run the writing Agent itself.
+  locations it needs; Bee Press does not run the writing Agent itself.
 - **Media pipeline**: Chrome DevTools Protocol for screenshots and recordings,
   ffmpeg for GIF/video composition — reproducible recipes, no Playwright
   dependency.
@@ -109,6 +136,7 @@ Builder Kit treats both as first-class:
 
 ```bash
 npm install --save-dev builder-kit
+# CLI aliases: beepress, builder-kit, bk
 # peers, if the host does not already have them
 npm install --save-dev vite less
 # add the optional Vue 2 adapter peer only if the host uses it
@@ -117,7 +145,7 @@ npm install --save-dev vue@2.7
 
 ## Project layout
 
-Builder Kit reads and writes a small, conventional directory tree in the host project:
+Bee Press reads and writes a small, conventional directory tree in the host project:
 
 ```text
 my-prototype/
@@ -309,7 +337,7 @@ Long-form content is implemented end-to-end today. Message cards and asset
 libraries use the same destination layer; the adapter exposes resource-level
 methods for those carriers instead of forcing them into Markdown.
 
-Builder Kit does **not** run a hidden writing Agent. It makes the IDE Agent
+Bee Press does **not** run a hidden writing Agent. It makes the IDE Agent
 precise by supplying source context, executable media recipes, freshness checks
 and a human review gate.
 
@@ -383,7 +411,7 @@ Environment variables:
 
 ## CLI
 
-The package installs one dispatcher with two aliases (`builder-kit` and `bk`):
+The package installs one dispatcher with three aliases (`beepress`, `builder-kit` and `bk`). The examples below use `builder-kit` because the npm package name is unchanged; `beepress` behaves identically.
 
 ```bash
 npx builder-kit kb status
@@ -403,7 +431,7 @@ The `check-ui`, `check-routes` and `check-frs` scripts are **reference host chec
 
 ## Publishing
 
-Publishing is optional. Builder Kit owns the content bundle, plan/confirm,
+Publishing is optional. Bee Press owns the content bundle, plan/confirm,
 resumable state and the studio UI. The **destination** is an adapter owned by
 the host:
 
