@@ -7,7 +7,7 @@
 .cm-btn {
   display: flex;
   gap: @space-8;
-  align-items: baseline;
+  align-items: center;
   max-width: 560px;
   height: 30px;
   padding: 0 @space-12;
@@ -19,9 +19,9 @@
   &:hover, &.is-open { border-color: @color-primary; }
 }
 
-.cm-btn-title { overflow: hidden; font-size: @bk-fs-md; font-weight: 600; color: @color-heading; text-overflow: ellipsis; white-space: nowrap; }
-.cm-btn-sum { flex: 0 0 auto; font-size: @bk-fs-xs; color: @color-text-weak; }
-.cm-caret { flex: 0 0 auto; font-size: @bk-fs-xs; color: @color-text-secondary; }
+.cm-btn-title { overflow: hidden; font-size: @bk-fs-md; font-weight: 600; line-height: 1; color: @color-heading; text-overflow: ellipsis; white-space: nowrap; }
+.cm-btn-sum { flex: 0 0 auto; font-size: @bk-fs-xs; line-height: 1; color: @color-text-weak; }
+.cm-caret { flex: 0 0 auto; font-size: @bk-fs-xs; line-height: 1; color: @color-text-secondary; }
 
 .cm-pop {
   position: absolute;

@@ -28,6 +28,8 @@
   non-npmjs lockfile URLs.
 - **Public docs cleanup** — genericized private deploy CLI names in the deploy
   review and removed an internal host name from an export comment.
+- Fixed the content-menu trigger so its title, count and caret are vertically
+  centered instead of sitting against the top of the 30px control.
 - Fixed a Vite Less edge case where an `@import` in a comment triggered URL
   rebasing.
 
