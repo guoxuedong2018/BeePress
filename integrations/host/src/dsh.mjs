@@ -1,11 +1,11 @@
 import { readContext, readOpenReviews, readStatus } from "./project.mjs";
 
 export const name = "beepress";
-export const inject = ["tools"];
+export const inject = ["tools", "workingDirectory"];
 
 const rootParameter = {
   type: "string",
-  description: "Bee Press workspace root. Defaults to the dsh working directory.",
+  description: "Bee Press workspace root. Defaults to the session working directory.",
 };
 
 function jsonTool({ name, description, parameters = {}, execute }) {
@@ -30,12 +30,24 @@ function jsonTool({ name, description, parameters = {}, execute }) {
 export function apply(ctx, config = {}) {
   const fallbackRoot = config.root || undefined;
 
+  async function resolveToolRoot(args, exec) {
+    if (args.root) return args.root;
+    if (exec?.agent && ctx.workingDirectory) {
+      try {
+        return await ctx.workingDirectory.ensure(exec.agent, exec.signal);
+      } catch {
+        // Fall through to the configured root when the session directory is unavailable.
+      }
+    }
+    return fallbackRoot;
+  }
+
   ctx.tools.register(
     jsonTool({
       name: "beepress_status",
       description:
         "Inspect a Bee Press workspace: content pages, open review comments, feature specs, prototype dev script and publish configuration.",
-      execute: (args) => readStatus(args.root || fallbackRoot),
+      execute: async (args, exec) => readStatus(await resolveToolRoot(args, exec)),
     }),
   );
 
@@ -48,7 +60,8 @@ export function apply(ctx, config = {}) {
         topic: { type: "string", description: "Optional topic or path fragment." },
         limit: { type: "integer", minimum: 1, maximum: 20, description: "Maximum pages to return." },
       },
-      execute: (args) => readContext(args.root || fallbackRoot, { topic: args.topic, limit: args.limit }),
+      execute: async (args, exec) =>
+        readContext(await resolveToolRoot(args, exec), { topic: args.topic, limit: args.limit }),
     }),
   );
 
@@ -56,7 +69,7 @@ export function apply(ctx, config = {}) {
     jsonTool({
       name: "beepress_review_open",
       description: "List unresolved prototype review comments from docs/reviews, including anchors and reply counts.",
-      execute: (args) => readOpenReviews(args.root || fallbackRoot),
+      execute: async (args, exec) => readOpenReviews(await resolveToolRoot(args, exec)),
     }),
   );
 }

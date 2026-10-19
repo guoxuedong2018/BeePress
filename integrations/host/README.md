@@ -73,7 +73,7 @@ Cursor / Claude configuration:
   dsh packages at build time.
 - Tools are registered through `ctx.tools`; Cordis unregisters them when the
   plugin unloads.
-- The workspace root defaults to the dsh working directory or `BEEPRESS_ROOT`.
+- The workspace root defaults to the dsh session working directory, then `BEEPRESS_ROOT`.
   Pass `root` to a tool when you need another workspace.
 - The package is `private` and versioned as a spike. The dsh package is
   `0.2.1-rc.2`; pin a compatible version before publishing.

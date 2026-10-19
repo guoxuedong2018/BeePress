@@ -8,6 +8,10 @@
   JSON-RPC protocol tests. The spike exposes `beepress_status`,
   `beepress_context` and `beepress_review_open`; it does not write, capture
   media or publish yet.
+- **dsh session directory** — the dsh tools now resolve the active session
+  working directory through `ctx.workingDirectory.ensure()` instead of the
+  Harness process cwd, so selecting a project workspace gives the correct
+  `docs/` tree.
 
 ## 0.4.0
 

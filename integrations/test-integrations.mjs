@@ -88,16 +88,30 @@ async function testCore(root) {
 
 async function testDshPlugin(root) {
   const tools = [];
-  applyDshPlugin({ tools: { register: (tool) => tools.push(tool) } }, { root });
+  let ensured = 0;
+  applyDshPlugin(
+    {
+      tools: { register: (tool) => tools.push(tool) },
+      workingDirectory: {
+        ensure: async () => {
+          ensured += 1;
+          return root;
+        },
+      },
+    },
+    {},
+  );
   assert.deepEqual(
     tools.map((tool) => tool.name).sort(),
     ["beepress_context", "beepress_review_open", "beepress_status"],
   );
 
   const statusTool = tools.find((tool) => tool.name === "beepress_status");
-  const value = await statusTool.execute({}, { signal: new AbortController().signal });
+  const value = await statusTool.execute({}, { agent: {}, signal: new AbortController().signal });
   const status = JSON.parse(value);
+  assert.equal(status.root, root);
   assert.equal(status.docs.reviews.open, 1);
+  assert.equal(ensured, 1);
   assert.equal(statusTool.output.schema.type, "string");
   assert.equal(statusTool.parameters.additionalProperties, false);
 }
