@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 — 2026-10-19
 
 - **DeepSeek Harness + MCP integration** — added `integrations/` with
   `@beepress/dsh-bundle`, a dsh plugin, a right-sidebar Bee Press panel and a

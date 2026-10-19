@@ -1,7 +1,7 @@
 {
   "name": "builder-kit",
-  "version": "0.4.0",
-  "description": "Bee Press — a hive of agents for prototype-native content production and publishing: source-anchored review, Agent-ready content studio, reproducible media, and pluggable destinations.",
+  "version": "0.5.0",
+  "description": "Bee Press — a hive of agents for prototype-native content production and publishing: source-anchored review, Agent-ready content studio, a DeepSeek Harness host plugin, an MCP bridge, reproducible media, and pluggable destinations.",
   "license": "MIT",
   "type": "module",
   "keywords": [
@@ -18,15 +18,18 @@
     "agent",
     "agent-hive",
     "bee-press",
+    "deepseek-harness",
+    "dsh",
+    "mcp",
     "screenshots"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/guoxuedong2018/builder-kit.git"
+    "url": "git+https://github.com/guoxuedong2018/BeePress.git"
   },
-  "homepage": "https://github.com/guoxuedong2018/builder-kit#readme",
+  "homepage": "https://github.com/guoxuedong2018/BeePress#readme",
   "bugs": {
-    "url": "https://github.com/guoxuedong2018/builder-kit/issues"
+    "url": "https://github.com/guoxuedong2018/BeePress/issues"
   },
   "engines": {
     "node": ">=18"

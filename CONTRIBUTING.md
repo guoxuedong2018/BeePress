@@ -5,8 +5,8 @@ Thanks for taking the time to contribute.
 ## Setup
 
 ```bash
-git clone https://github.com/guoxuedong2018/builder-kit.git
-cd builder-kit
+git clone https://github.com/guoxuedong2018/BeePress.git
+cd BeePress
 npm install
 npm run check
 ```

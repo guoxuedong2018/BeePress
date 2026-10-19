@@ -35,7 +35,7 @@ workers, one source of truth.
 | Review capability | Bee Review |
 | Content capability | Bee Studio |
 | Publishing capability | Bee Publish |
-| Repository | `builder-kit` until the compatibility window closes |
+| Repository | [BeePress](https://github.com/guoxuedong2018/BeePress) |
 
 Use **Bee Press** in prose and headings. Use `beepress` for package-like
 identifiers and commands. Do not write `BeePress` in prose.
