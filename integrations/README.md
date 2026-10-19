@@ -1,9 +1,8 @@
 # Bee Press integrations
 
-This directory is the **Phase 0 spike** for running Bee Press beside an agent
-runtime instead of inside a prototype. It is intentionally read-only: the goal
-is to validate the workspace contract before adding writes, media capture or
-publishing.
+This directory is the integration layer for running Bee Press beside an agent
+runtime instead of inside a prototype. The dsh plugin now has a right-sidebar
+panel and review write tools; the MCP entrypoint remains read-only.
 
 ## Pieces
 
@@ -27,6 +26,13 @@ Both hosts expose the same three read tools:
 - `beepress_context`
 - `beepress_review_open`
 
+The dsh host adds:
+
+- `beepress_review_add`
+- `beepress_review_resolve`
+- a **Bee Press** right-sidebar tab with workspace status, content pages,
+  open reviews and in-place resolution
+
 The workspace is the contract, not the agent runtime. That is what keeps the
 kit usable with an external IDE agent and with a bundled Bee Press Desktop.
 
@@ -36,9 +42,10 @@ kit usable with an external IDE agent and with a bundled Bee Press Desktop.
 npm run test:integrations
 ```
 
-The test creates a temporary Bee Press workspace, exercises the shared reader,
-registers the dsh plugin against a mock `ctx.tools`, and drives the MCP server
-over newline-delimited JSON-RPC.
+The test creates a temporary Bee Press workspace, exercises the shared reader
+and review writes, registers the dsh plugin against a mock `ctx.tools` and HTTP
+route, validates the client bundle factory, and drives the MCP server over
+newline-delimited JSON-RPC.
 
 ## Model setup
 
@@ -50,15 +57,15 @@ that before treating them as a full-lifecycle agent.
 
 ## Status
 
-The integration contract and MCP protocol are tested. A real `dsh web` boot is
-the next verification step on a machine where the dsh package can be installed;
-the current environment blocks remote npm package installation.
+The dsh bundle is installed and verified in dsh `0.2.1-rc.2`: the plugin loads,
+the Bee Press guide entry opens a right-sidebar tab, the tab resolves the
+Session workspace, and the agent can call the read/write review tools. The MCP
+protocol is tested separately.
 
 ## What comes next
 
 1. A `ctx.beepress` service instead of direct filesystem reads in tools.
-2. Write tools for review resolution and content confirmation.
-3. A client UI panel in dsh.
-4. Media capture through dsh `browser-use` / `computer-use`.
-5. Publish planning through the existing destination gateway.
-6. A thin downstream desktop shell; do not patch the dsh core.
+2. Content confirmation tools backed by the review lock.
+3. Media capture through dsh `browser-use` / `computer-use`.
+4. Publish planning through the existing destination gateway.
+5. A thin downstream desktop shell; do not patch the dsh core.

@@ -364,23 +364,28 @@ dark mode, a publishing panel and a full UI spec page with foundations, live
 component states, patterns, accessibility notes and a searchable token
 reference. Every value comes from the same tokens as the toolkit UI.
 
-## Agent host spike: DeepSeek Harness + MCP
+## Agent host integration: DeepSeek Harness + MCP
 
-[`integrations/`](./integrations) contains a read-only Phase 0 spike for running
-Bee Press beside an agent runtime:
+[`integrations/`](./integrations) runs Bee Press beside an agent runtime:
 
 - [`integrations/host`](./integrations/host) — `@beepress/dsh-bundle`, with a
-  DeepSeek Harness plugin and a `beepress-mcp` stdio entrypoint for Cursor,
-  Claude, Codex or another MCP client.
-- Both entrypoints share the same dependency-free workspace reader, so the
-  project files stay the contract.
+  DeepSeek Harness plugin, a right-sidebar Bee Press panel, review write tools
+  and a `beepress-mcp` stdio entrypoint for Cursor, Claude, Codex or another MCP
+  client.
+- All faces share the same dependency-free workspace reader, so the project
+  files stay the contract.
 
 ```bash
 npm run test:integrations
 ```
 
-The spike validates the integration seam only; it does not write files, capture
-media or publish. See [integrations/README.md](./integrations/README.md).
+The dsh plugin can inspect a workspace, list content and reviews, add review
+comments and resolve them. Media capture and publishing are still separate
+steps.
+
+![Bee Press panel in DeepSeek Harness](./docs/assets/dsh-bee-press-panel.png)
+
+See [integrations/README.md](./integrations/README.md).
 
 ## Pre-deploy check
 

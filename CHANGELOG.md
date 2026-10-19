@@ -2,12 +2,13 @@
 
 ## Unreleased
 
-- **DeepSeek Harness + MCP spike** — added `integrations/` with a read-only
-  `@beepress/dsh-bundle` that exposes both a dsh plugin and a `beepress-mcp`
-  stdio entrypoint over one shared workspace reader, plus mock-harness /
-  JSON-RPC protocol tests. The spike exposes `beepress_status`,
-  `beepress_context` and `beepress_review_open`; it does not write, capture
-  media or publish yet.
+- **DeepSeek Harness + MCP integration** — added `integrations/` with
+  `@beepress/dsh-bundle`, a dsh plugin, a right-sidebar Bee Press panel and a
+  `beepress-mcp` stdio entrypoint over one shared workspace reader. The dsh
+  host exposes `beepress_status`, `beepress_context`, `beepress_review_open`,
+  `beepress_review_add` and `beepress_review_resolve`; the panel reads the
+  current session workspace and can resolve reviews. MCP remains read-only.
+  Media capture and publishing are not included yet.
 - **dsh session directory** — the dsh tools now resolve the active session
   working directory through `ctx.workingDirectory.ensure()` instead of the
   Harness process cwd, so selecting a project workspace gives the correct

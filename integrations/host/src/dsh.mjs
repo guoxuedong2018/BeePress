@@ -1,4 +1,4 @@
-import { readContext, readOpenReviews, readStatus } from "./project.mjs";
+import { addReview, readContext, readOpenReviews, readStatus, resolveReview } from "./project.mjs";
 
 export const name = "beepress";
 export const inject = ["tools", "workingDirectory"];
@@ -25,6 +25,21 @@ function jsonTool({ name, description, parameters = {}, execute }) {
       return JSON.stringify(await execute(args, exec), null, 2);
     },
   };
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = "";
+    req.on("data", (chunk) => (data += chunk));
+    req.on("end", () => {
+      try {
+        resolve(data ? JSON.parse(data) : {});
+      } catch (error) {
+        reject(error);
+      }
+    });
+    req.on("error", reject);
+  });
 }
 
 export function apply(ctx, config = {}) {
@@ -72,4 +87,108 @@ export function apply(ctx, config = {}) {
       execute: async (args, exec) => readOpenReviews(await resolveToolRoot(args, exec)),
     }),
   );
+
+  ctx.tools.register(
+    jsonTool({
+      name: "beepress_review_add",
+      description: "Add an open prototype review comment. Use this for source-grounded feedback that should survive in docs/reviews.",
+      parameters: {
+        frs: { type: "string", description: "Feature/region key; defaults to APP_SHELL." },
+        route: { type: "string", description: "Prototype route the comment belongs to." },
+        body: { type: "string", description: "The review comment." },
+        author: { type: "string", description: "Comment author; defaults to Bee Press Agent." },
+        anchor: { type: "string", description: "Optional source location, e.g. src/App.jsx:42:3." },
+      },
+      execute: async (args, exec) =>
+        addReview(await resolveToolRoot(args, exec), {
+          frs: args.frs,
+          route: args.route,
+          body: args.body,
+          author: args.author,
+          anchor: args.anchor,
+        }),
+    }),
+  );
+
+  ctx.tools.register(
+    jsonTool({
+      name: "beepress_review_resolve",
+      description: "Resolve a prototype review comment by id, optionally appending a resolution note.",
+      parameters: {
+        id: { type: "string", description: "Review comment id." },
+        note: { type: "string", description: "Optional resolution note." },
+        author: { type: "string", description: "Resolver name; defaults to Bee Press Agent." },
+      },
+      execute: async (args, exec) =>
+        resolveReview(await resolveToolRoot(args, exec), {
+          id: args.id,
+          note: args.note,
+          author: args.author,
+        }),
+    }),
+  );
+
+  if (typeof ctx.inject === "function") {
+    ctx.inject(["webServer"], (webCtx) => {
+      webCtx.effect(
+        () =>
+          webCtx.webServer.register({
+            kind: "exact",
+            path: "/beepress/api/state",
+            async handler(req, res) {
+              res.setHeader("cache-control", "no-store");
+              if (req.method !== "GET") {
+                res.statusCode = 405;
+                res.end("Method Not Allowed");
+                return;
+              }
+              try {
+                const url = new URL(req.url || "/", "http://127.0.0.1");
+                const root = url.searchParams.get("root") || undefined;
+                const [status, reviews] = await Promise.all([readStatus(root), readOpenReviews(root)]);
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ status, reviews }, null, 2));
+              } catch (error) {
+                res.statusCode = 500;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+              }
+            },
+          }),
+        "beepress: http state",
+      );
+      webCtx.effect(
+        () =>
+          webCtx.webServer.register({
+            kind: "exact",
+            path: "/beepress/api/review/resolve",
+            async handler(req, res) {
+              res.setHeader("cache-control", "no-store");
+              if (req.method !== "POST") {
+                res.statusCode = 405;
+                res.end("Method Not Allowed");
+                return;
+              }
+              try {
+                const body = await readBody(req);
+                const result = await resolveReview(body.root, {
+                  id: body.id,
+                  note: body.note,
+                  author: body.author,
+                });
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ ok: true, ...result }, null, 2));
+              } catch (error) {
+                res.statusCode = 400;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+              }
+            },
+          }),
+        "beepress: http review resolve",
+      );
+    });
+  }
 }

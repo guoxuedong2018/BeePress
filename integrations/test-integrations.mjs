@@ -3,10 +3,11 @@ import { spawn } from "node:child_process";
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import vm from "node:vm";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 
-import { readContext, readOpenReviews, readStatus } from "./host/src/project.mjs";
+import { addReview, readContext, readOpenReviews, readStatus, resolveReview } from "./host/src/project.mjs";
 import { apply as applyDshPlugin } from "./host/src/dsh.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -86,9 +87,36 @@ async function testCore(root) {
   assert.equal(reviews.comments[0].anchor.loc, "src/App.jsx:42:3");
 }
 
+async function testReviewWrites(root) {
+  const added = await addReview(root, {
+    frs: "OVERVIEW",
+    route: "/overview",
+    body: "Added by the integration test.",
+    author: "Test",
+    anchor: "src/App.jsx:7:2",
+  });
+  assert.equal(added.comment.status, "open");
+  assert.equal((await readOpenReviews(root)).comments.length, 2);
+
+  const resolved = await resolveReview(root, { id: added.comment.id, note: "Checked." });
+  assert.equal(resolved.comment.status, "resolved");
+  assert.equal(resolved.comment.replies.length, 1);
+  assert.equal((await readOpenReviews(root)).comments.length, 1);
+}
+
 async function testDshPlugin(root) {
   const tools = [];
+  const routes = [];
   let ensured = 0;
+  const webCtx = {
+    effect: (fn) => fn(),
+    webServer: {
+      register: (route) => {
+        routes.push(route);
+        return () => {};
+      },
+    },
+  };
   applyDshPlugin(
     {
       tools: { register: (tool) => tools.push(tool) },
@@ -98,13 +126,17 @@ async function testDshPlugin(root) {
           return root;
         },
       },
+      inject: (services, callback) => {
+        if (services.includes("webServer")) callback(webCtx);
+      },
     },
     {},
   );
   assert.deepEqual(
     tools.map((tool) => tool.name).sort(),
-    ["beepress_context", "beepress_review_open", "beepress_status"],
+    ["beepress_context", "beepress_review_add", "beepress_review_open", "beepress_review_resolve", "beepress_status"],
   );
+  assert.deepEqual(routes.map((route) => route.path).sort(), ["/beepress/api/review/resolve", "/beepress/api/state"]);
 
   const statusTool = tools.find((tool) => tool.name === "beepress_status");
   const value = await statusTool.execute({}, { agent: {}, signal: new AbortController().signal });
@@ -114,6 +146,44 @@ async function testDshPlugin(root) {
   assert.equal(ensured, 1);
   assert.equal(statusTool.output.schema.type, "string");
   assert.equal(statusTool.parameters.additionalProperties, false);
+
+  let response = "";
+  const res = {
+    statusCode: 0,
+    headers: {},
+    setHeader(key, value) {
+      this.headers[key] = value;
+    },
+    end(value) {
+      response = value;
+    },
+  };
+  await routes[0].handler(
+    { method: "GET", url: `/beepress/api/state?root=${encodeURIComponent(root)}` },
+    res,
+  );
+  assert.equal(res.statusCode, 200);
+  const payload = JSON.parse(response);
+  assert.equal(payload.status.docs.kb.files, 2);
+  assert.equal(payload.reviews.comments.length, 1);
+}
+
+async function testClientBundle() {
+  const code = await fs.readFile(path.join(here, "host", "lib", "client.js"), "utf8");
+  let registration;
+  const sandbox = { window: { __ModuleLoader__: { load: (entry) => { registration = entry; } } } };
+  vm.runInNewContext(code, sandbox);
+  assert.equal(registration.id, "@beepress/dsh-bundle");
+  const exported = registration.factory(() => ({
+    createElement() {},
+    useState() {},
+    useEffect() {},
+    useCallback() {},
+    Fragment: {},
+  }));
+  assert.equal(exported.name, "beepress-client");
+  assert.equal(typeof exported.apply, "function");
+  assert.ok(exported.inject.includes("sidebarRightTabs"));
 }
 
 function startMcp(root) {
@@ -183,7 +253,9 @@ const root = await fixture();
 try {
   await testManifest();
   await testCore(root);
+  await testReviewWrites(root);
   await testDshPlugin(root);
+  await testClientBundle();
   await testMcp(root);
   console.log("✓ integration spike checks passed");
 } finally {

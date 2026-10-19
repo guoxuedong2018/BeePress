@@ -69,6 +69,63 @@ async function readComments(file) {
   throw new Error(`Unrecognized review file: ${file}`);
 }
 
+export async function addReview(inputRoot, { frs = "APP_SHELL", route = "/", body, author = "Bee Press Agent", anchor = null } = {}) {
+  const root = resolveRoot(inputRoot);
+  const text = String(body || "").trim();
+  if (!text) throw new Error("review body is required");
+  const dir = path.join(root, "docs", "reviews");
+  await fs.mkdir(dir, { recursive: true });
+  const safe = String(frs || "APP_SHELL").replace(/[^a-zA-Z0-9_-]/g, "_");
+  const file = path.join(dir, `${safe}.json`);
+  const comments = (await statSafe(file)) ? await readComments(file) : [];
+  const comment = {
+    id: `c_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
+    frs: safe,
+    route: String(route || "/"),
+    anchor: anchor ? { loc: String(anchor) } : undefined,
+    body: text,
+    author: String(author || "Bee Press Agent"),
+    status: "open",
+    createdAt: new Date().toISOString(),
+    replies: [],
+  };
+  comments.push(comment);
+  await writeJson(file, comments);
+  return { file: path.relative(root, file), comment };
+}
+
+export async function resolveReview(inputRoot, { id, note = "", author = "Bee Press Agent" } = {}) {
+  const root = resolveRoot(inputRoot);
+  const target = String(id || "").trim();
+  if (!target) throw new Error("review id is required");
+  const dir = path.join(root, "docs", "reviews");
+  const files = (await statSafe(dir)) ? await walk(dir, (_full, name) => name.endsWith(".json")) : [];
+  for (const file of files) {
+    const comments = await readComments(file).catch(() => null);
+    if (!comments) continue;
+    const comment = comments.find((item) => item && item.id === target);
+    if (!comment) continue;
+    const changed = comment.status !== "resolved" || String(note || "").trim();
+    if (changed) {
+      comment.status = "resolved";
+      comment.resolvedAt = new Date().toISOString();
+      if (String(note || "").trim()) {
+        comment.replies = Array.isArray(comment.replies) ? comment.replies : [];
+        comment.replies.push({ author: String(author || "Bee Press Agent"), body: String(note).trim(), at: comment.resolvedAt });
+      }
+      await writeJson(file, comments);
+    }
+    return { file: path.relative(root, file), comment };
+  }
+  throw new Error(`review not found: ${target}`);
+}
+
+async function writeJson(file, value) {
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
+  await fs.writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  await fs.rename(temp, file);
+}
+
 async function reviewSummary(root) {
   const dir = path.join(root, "docs", "reviews");
   const files = (await statSafe(dir)) ? await walk(dir, (_full, name) => name.endsWith(".json")) : [];
