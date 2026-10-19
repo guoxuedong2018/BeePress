@@ -1,0 +1,252 @@
+// 套件样式不 scoped：类名一律带前缀，靠前缀与宿主隔开
+@import "./z-index.less";
+@import "../core/kit.less";
+
+.st-surface {
+  position: fixed;
+  inset: 0;
+  z-index: @studio-z-surface;
+  display: flex;
+  flex-direction: column;
+  background: @color-page-bg;
+}
+
+.st-bar {
+  display: flex;
+  flex: 0 0 auto;
+  gap: @space-12;
+  align-items: center;
+  height: 44px;
+  padding: 0 @space-16;
+  background: @color-white;
+  border-bottom: 1px solid @color-border;
+}
+
+.st-brand {
+  font-size: @bk-fs-md;
+  font-weight: 600;
+  color: @color-heading;
+}
+
+.st-bar-right {
+  display: flex;
+  flex: 0 0 auto;
+  gap: @space-8;
+  align-items: center;
+  margin-left: auto;
+}
+
+// 日常维护（重拍、重新检查）和对外发布之间隔一道
+.st-bar-sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 @space-4;
+  background: @color-border;
+}
+
+.st-warn {
+  .bk-badge();
+}
+
+// 操作结果：冒在底部正中，不挤顶栏
+.st-toast-dock {
+  position: absolute;
+  right: 0;
+  bottom: @space-24;
+  left: 0;
+  z-index: @studio-z-menu + 1;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.st-toast {
+  display: flex;
+  gap: @space-12;
+  align-items: flex-start;
+  max-width: ~"min(640px, 80vw)";
+  padding: @space-8 @space-8 @space-8 @space-16;
+  font-size: @bk-fs-md;
+  line-height: 1.6;
+  color: @color-text;
+  pointer-events: auto;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-left: 3px solid @color-status-success;
+  border-radius: @bk-radius-sm;
+  box-shadow: @elevation-1;
+  animation: st-toast-in 0.16s ease-out;
+
+  &.is-info { border-left-color: @color-primary; }
+  &.is-error { border-left-color: @color-status-failed; background: @color-status-failed-bg; }
+}
+
+.st-toast-x {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-size: @bk-fs-xl;
+  line-height: 1;
+  color: @color-text-secondary;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: @bk-radius-sm;
+
+  &:hover { color: @color-heading; background: @color-bg-subtle; }
+}
+
+@keyframes st-toast-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+.st-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.st-main {
+  container-type: inline-size;
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.st-pane {
+  max-width: 980px;
+  padding: @space-16 @space-24;
+}
+
+.st-pane-head {
+  display: flex;
+  gap: @space-12;
+  align-items: center;
+  margin-bottom: @space-8;
+
+  h3 { flex: 1; margin: 0; font-size: @bk-fs-xl; color: @color-heading; }
+}
+
+// 按话题新建一页
+.st-new { max-width: 760px; }
+
+.st-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 @space-12;
+  font-size: @bk-fs-sm;
+  color: @color-text-secondary;
+
+  input, textarea { .bk-input(); }
+}
+
+.st-types { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: @space-8; }
+
+.st-type {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: @space-8;
+  text-align: left;
+  cursor: pointer;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-radius: @radius-control;
+
+  strong { font-size: @bk-fs-md; color: @color-heading; }
+  span { font-size: @bk-fs-sm; color: @color-text-secondary; }
+  em { font-size: @bk-fs-xs; font-style: normal; color: @color-text-weak; }
+  &:hover { border-color: @color-primary; }
+  &.is-on { background: @color-bg-subtle; border-color: @color-primary; box-shadow: 0 0 0 1px @color-primary; }
+}
+
+.st-blank {
+  max-width: 520px;
+  padding: 80px @space-40;
+  margin: 0 auto;
+  font-size: @bk-fs-md;
+  line-height: 1.7;
+  color: @color-text;
+}
+.st-surface {
+
+  .st-help {
+    margin: 4px 0 0;
+    font-size: @bk-fs-sm;
+    line-height: 1.7;
+    color: @color-text-secondary;
+
+    code { padding: 0 4px; font-family: @font-family-code; background: @color-bg-subtle; border-radius: @bk-radius-sm; }
+  }
+
+  .st-muted { color: @color-text-weak; }
+
+  .st-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-top: @space-8;
+  }
+
+  .st-md {
+    font-size: @bk-fs-md;
+    line-height: 1.75;
+    color: @color-text;
+
+    h1, h2, h3, h4 { margin: @space-16 0 @space-8; color: @color-heading; }
+    h2 { font-size: @bk-fs-xl; }
+    h3 { font-size: @bk-fs-lg; }
+    p { margin: 0 0 @space-8; }
+    ul, ol { padding-left: 20px; margin: 0 0 @space-8; }
+    figure { margin: 0 0 @space-12; }
+    img { display: block; max-width: 100%; cursor: zoom-in; border: 1px solid @color-divider; border-radius: @bk-radius-sm; }
+    img.is-open { outline: 3px solid @color-status-warning; outline-offset: 2px; }
+    table { width: 100%; margin: 0 0 @space-12; font-size: @bk-fs-sm; border-collapse: collapse; }
+    th, td { padding: 4px 6px; text-align: left; vertical-align: top; border: 1px solid @color-divider; }
+    th { background: @color-bg-thead; }
+    code { padding: 0 4px; font-family: @font-family-code; background: @color-bg-subtle; border-radius: @bk-radius-sm; }
+    pre { padding: @space-8; overflow: auto; background: @color-bg-subtle; border-radius: @radius-control; }
+    blockquote { padding: 0 @space-8; margin: 0 0 @space-8; color: @color-text-secondary; border-left: 3px solid @color-border; }
+    a { color: @color-link; }
+
+    // 事实：原样引用的原文。平时只是淡淡一条下划线，待审的才高亮
+    .md-fact { color: inherit; background: none; border-bottom: 1px dotted @color-border; }
+    .md-fact.is-open { background: @color-bg-subtle; border-bottom: 2px solid @color-status-warning; }
+
+    // 蓝图：意图是写给写的人看的一行提示，格子是还没拍 / 没画的物料。发布时都会剥掉
+    .md-intent {
+      font-size: @bk-fs-sm;
+      color: @color-text-secondary;
+
+      span { margin-right: @space-8; font-weight: 600; color: @color-link; }
+    }
+    .md-slot {
+      display: flex;
+      gap: @space-8;
+      align-items: baseline;
+      padding: @space-8 @space-12;
+      margin: 0 0 @space-12;
+      font-size: @bk-fs-sm;
+      color: @color-text-secondary;
+      cursor: pointer;
+      border: 1px dashed @color-border;
+      border-radius: @radius-control;
+
+      b { flex: 0 0 auto; color: @color-text; }
+      span { flex: 1 1 auto; }
+      &:hover { border-color: @color-link; }
+    }
+    .md-mermaid {
+      padding: @space-8;
+      text-align: center;
+      border: 1px solid @color-divider;
+      border-radius: @radius-control;
+
+      svg { max-width: 100%; height: auto; }
+      &.is-broken figcaption { margin-bottom: @space-8; font-size: @bk-fs-sm; color: @color-status-warning; text-align: left; }
+    }
+  }
+}

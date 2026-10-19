@@ -1,0 +1,280 @@
+// 套件样式不 scoped：类名一律带前缀，靠前缀与宿主隔开
+@import "../core/kit.less";
+@import "./diff-region.less";
+.fv {
+  max-width: 1240px;
+  padding: @space-16 @space-24 @space-48;
+
+  &.is-wide { max-width: none; }
+}
+
+// 正文一栏 + 目录一栏。正文区不够宽就收掉目录，正文不挤。
+// 按正文区（.st-main）的宽度判断，不按屏幕：左边的 Agent 窗口能拖宽，屏幕宽不代表正文宽
+.fv-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: @space-24;
+  align-items: start;
+}
+
+
+.fv-body { min-width: 0; }
+
+.fv-rail {
+  position: sticky;
+  top: @space-16;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 110px);
+  padding: @space-8 0;
+  overflow-y: auto;
+  border-left: 1px solid @color-divider;
+}
+
+// 必须写在 .fv-rail 之后：同样的优先级，后写的赢——写在前面时 display: flex 把它盖掉，窄屏下目录从来没收起过
+@container (max-width: 960px) {
+  .fv-layout { grid-template-columns: minmax(0, 1fr); }
+  .fv-rail { display: none; }
+}
+
+.fv-rail-title {
+  padding: 0 @space-12;
+  margin: 0 0 4px;
+  font-size: @bk-fs-xs;
+  font-weight: 600;
+  color: @color-text-weak;
+}
+
+.fv-toc {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 3px @space-12;
+  font-size: @bk-fs-sm;
+  line-height: 1.5;
+  color: @color-text-secondary;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+
+  span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  em { .bk-badge(); }
+  &:hover { color: @color-primary; }
+  &.is-h2 { font-weight: 600; color: @color-text; }
+  &.is-h3 { padding-left: @space-24; }
+  &.is-h4 { padding-left: 36px; font-size: @bk-fs-xs; }
+  &.is-top { margin-bottom: 6px; font-weight: 600; color: @color-status-warning; }
+}
+
+// 正文按段：悬停出「编辑」，编辑时左原文右预览
+.fv-blk {
+  position: relative;
+  padding: 2px @space-8;
+  margin: 0 calc(-1 * @space-8);
+  border-radius: @radius-control;
+  transition: box-shadow 0.2s;
+
+  &:hover { background: @color-bg-subtle; }
+  &:hover > .fv-edit,
+  &:focus-within > .fv-edit { .bk-revealed(); }
+  &.is-flash { box-shadow: 0 0 0 2px @color-primary-ring; }
+  &.is-editing { padding: @space-8; background: @color-white; box-shadow: 0 0 0 1px @color-primary; }
+}
+
+.fv-edit {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+  height: 22px;
+  padding: 0 @space-8;
+  font-size: @bk-fs-xs;
+  color: @color-primary;
+  cursor: pointer;
+  background: @color-white;
+  border: 1px solid @color-primary;
+  border-radius: @radius-control;
+  .bk-reveal();
+}
+
+.fv-editor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: @space-12;
+  align-items: start;
+}
+
+.fv-textarea {
+  .bk-input();
+  padding: @space-8;
+  font-family: @font-family-code;
+  font-size: @bk-fs-sm;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.fv-preview {
+  max-height: 70vh;
+  padding: @space-8;
+  overflow: auto;
+  background: @color-bg-subtle;
+  border-radius: @radius-control;
+}
+
+.fv-tabs {
+  .bk-seg();
+  margin-right: @space-8;
+}
+
+.fv-loading {
+  padding: @space-40;
+  color: @color-text-weak;
+}
+
+.fv-head {
+  display: flex;
+  gap: @space-16;
+  align-items: flex-start;
+  margin-bottom: @space-12;
+
+  h3 { margin: 0; font-size: @bk-fs-xxl; color: @color-heading; }
+}
+
+.fv-title { flex: 1; min-width: 0; }
+.fv-topic { margin: 2px 0 0; font-size: @bk-fs-sm; color: @color-text-secondary; }
+.fv-actions { flex: 0 0 auto; margin-top: 0; }
+
+.fv-banner {
+  padding: @space-8 @space-12;
+  margin: 0 0 @space-12;
+  font-size: @bk-fs-sm;
+  line-height: 1.7;
+  color: @color-text;
+  background: @color-bg-subtle;
+  border-left: 3px solid @color-status-info;
+}
+
+.fv-open h4,
+.fv-doc h4 {
+  margin: @space-16 0 @space-8;
+  font-size: @bk-fs-md;
+  color: @color-heading;
+}
+
+// 「要看的 N 处」和批量确认同一行：按钮就在它要确认的那几条正上方
+.fv-open-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: @space-4 @space-12;
+  align-items: center;
+  margin: @space-16 0 @space-8;
+
+  h4 { margin: 0; }
+  .st-muted { font-size: @bk-fs-xs; }
+}
+
+.fv-card {
+  padding: @space-12;
+  margin-bottom: @space-12;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-left: 3px solid @color-status-warning;
+  border-radius: @radius-control;
+
+  &.is-missing { border-left-color: @color-danger; }
+  &.is-unreviewed { border-left-color: @color-status-info; }
+}
+
+.fv-card-head {
+  display: flex;
+  gap: @space-8;
+  align-items: baseline;
+  font-size: @bk-fs-sm;
+}
+
+.fv-kind { min-width: 0; overflow: hidden; font-weight: 600; color: @color-heading; text-overflow: ellipsis; white-space: nowrap; }
+// 状态用浅底同色字的小标签，和左边框一个颜色：一眼分出「变了 / 找不到 / 新加的 / Agent 改的」
+.fv-state { .bk-badge(); align-self: center; font-weight: 500; }
+.is-missing .fv-state { color: @color-status-failed; background: @color-status-failed-bg; }
+.is-unreviewed .fv-state { color: @color-status-info; background: @color-status-info-bg; }
+.fv-line { flex: 0 0 auto; padding: 0; margin-left: auto; font-size: @bk-fs-sm; color: @color-link; cursor: pointer; background: none; border: 0; }
+
+.fv-reason {
+  margin: 4px 0 @space-8;
+  font-size: @bk-fs-sm;
+  color: @color-text-secondary;
+}
+
+.fv-media {
+  display: flex;
+  gap: @space-12;
+
+  figure { flex: 1; min-width: 0; margin: 0; }
+  figcaption { margin-bottom: 4px; font-size: @bk-fs-xs; color: @color-text-weak; }
+}
+
+// 图和框要同一个坐标系：包一层按图片实际大小收缩的盒子，框用百分比定位
+.fv-shot {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden; // 贴边的框（最小尺寸、外扩 3px）不能漏到图外、压在下面的正文上
+  vertical-align: top;
+  cursor: zoom-in;
+
+  img { display: block; max-width: 100%; max-height: 420px; border: 1px solid @color-divider; }
+}
+
+.fv-region { .diff-region(); }
+
+// 按画面清单比出来的变化，一条一句、按图上的先后排。悬停哪条，两张图上只框哪条
+.fv-changes {
+  margin: @space-8 0 0;
+  padding-left: 18px;
+  font-size: @bk-fs-sm;
+  color: @color-text;
+
+  li { padding: 1px 4px; border-radius: @bk-radius-sm; cursor: default; }
+  li.is-hot { background: @color-status-warning-bg; }
+}
+
+.fv-quote {
+  padding: 4px @space-8;
+  margin: 0 0 4px;
+  font-size: @bk-fs-md;
+  line-height: 1.7;
+  color: @color-text;
+  white-space: pre-wrap;
+  background: @color-bg-subtle;
+  border-left: 3px solid @color-border;
+
+  &.is-now { border-left-color: @color-status-success; }
+}
+
+.fv-note { font-size: @bk-fs-xs; }
+
+.fv-clean {
+  padding: @space-8 @space-12;
+  font-size: @bk-fs-sm;
+  color: @color-status-success;
+  background: @color-bg-subtle;
+  border-radius: @radius-control;
+}
+
+.fv-doc {
+  padding-top: @space-8;
+  margin-top: @space-16;
+  border-top: 1px solid @color-divider;
+}
+
+// 物料的源码变过：一句说明 + 就地重拍
+.fv-banner.is-stale {
+  display: flex;
+  gap: @space-12;
+  align-items: center;
+  justify-content: space-between;
+  border-left-color: @color-status-warning;
+
+  > span { flex: 1; min-width: 0; }
+}

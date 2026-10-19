@@ -1,0 +1,291 @@
+// 构成视图。React Flow 自带的配色走它的 CSS 变量，这里全部接到设计 token 上：暗色主题跟着变
+@import "../core/kit.less";
+.sv {
+  display: flex;
+  gap: @space-16;
+  align-items: stretch;
+  height: calc(100vh - 150px);
+  min-height: 420px;
+}
+
+.sv-loading {
+  padding: @space-40;
+  color: @color-text-weak;
+}
+
+.sv-flow {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: @color-page-bg;
+  border: 1px solid @color-border;
+  border-radius: @radius-control;
+
+  .sv-canvas { position: relative; flex: 1; min-height: 0; }
+
+  .react-flow {
+    --xy-background-color: @color-page-bg;
+    --xy-background-pattern-color: @color-divider;
+    --xy-edge-stroke: @color-border;
+    --xy-edge-stroke-width: 1.2;
+    --xy-node-background-color: transparent;
+    --xy-node-border: none;
+    --xy-minimap-background-color: @color-white;
+    --xy-minimap-mask-background-color: @color-mask;
+    --xy-minimap-node-background-color: @color-bg-subtle;
+    --xy-minimap-node-stroke-color: @color-border;
+    --xy-controls-button-background-color: @color-white;
+    --xy-controls-button-background-color-hover: @color-bg-subtle;
+    --xy-controls-button-color: @color-text;
+    --xy-controls-button-color-hover: @color-primary;
+    --xy-controls-button-border-color: @color-border;
+    --xy-controls-box-shadow: @elevation-1;
+  }
+
+  // 节点外框由我们自己的 .sv-node 画，React Flow 的默认外框去掉
+  .react-flow__node { padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+  .react-flow__node.is-dim { opacity: 0.3; }
+  .react-flow__node.selected .sv-node { border-color: @color-primary; box-shadow: 0 0 0 2px @color-primary-ring; }
+
+  .react-flow__edge .react-flow__edge-path { stroke: @color-border; stroke-width: 1.2; transition: opacity 0.15s; }
+  .react-flow__edge.is-changed .react-flow__edge-path { stroke: @color-status-warning; }
+  .react-flow__edge.is-unreviewed .react-flow__edge-path { stroke: @color-status-info; }
+  .react-flow__edge.is-missing .react-flow__edge-path { stroke: @color-danger; stroke-dasharray: 4 3; }
+  .react-flow__edge.is-planned .react-flow__edge-path { stroke-dasharray: 3 3; }
+  .react-flow__edge.is-hot .react-flow__edge-path { stroke-width: 2.2; }
+  .react-flow__edge.is-dim { opacity: 0.12; }
+
+  .react-flow__minimap-node { fill: @color-bg-subtle; stroke: @color-border; }
+  .react-flow__minimap-node.mm-section { fill: @color-white; }
+  .react-flow__minimap-node.mm-source { fill: @color-bg-count; }
+  .react-flow__minimap-node.is-open { fill: @color-status-warning; }
+  .react-flow__minimap-node.mm-slot { fill: none; stroke-dasharray: 4 3; }
+}
+
+// 端口只是连线的挂点，不给人点
+.sv-port { width: 1px; min-width: 0; height: 1px; min-height: 0; background: transparent; border: 0; opacity: 0; }
+
+.sv-node {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  padding: 5px @space-8;
+  overflow: hidden;
+  text-align: left;
+  cursor: pointer;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-radius: @radius-control;
+
+  &:hover { border-color: @color-primary; }
+  &.is-changed { border-left: 3px solid @color-status-warning; }
+  &.is-unreviewed { border-left: 3px solid @color-status-info; }
+  &.is-missing { border-left: 3px solid @color-danger; }
+  &.is-broken { border-left: 3px solid @color-danger; }
+}
+
+.sv-node.is-source { min-height: 58px; background: @color-bg-subtle; }
+.sv-node.is-group { min-height: 46px; }
+
+.sv-node.is-media {
+  flex-direction: row;
+  gap: @space-8;
+  align-items: center;
+  min-height: 62px;
+
+  img { flex: 0 0 76px; width: 76px; height: 48px; object-fit: cover; object-position: left top; border: 1px solid @color-divider; }
+}
+
+.sv-node.is-section {
+  flex-direction: row;
+  gap: 6px;
+  align-items: center;
+  height: 32px;
+  padding: 0 0 0 @space-8;
+  cursor: default;
+
+  &.is-h2 .sv-label { font-weight: 600; color: @color-heading; }
+  &.is-h3 { height: 28px; }
+  &.is-h3 .sv-label, &.is-h4 .sv-label { font-size: @bk-fs-xs; }
+  &.is-h4 { height: 26px; }
+  // 标题下面多一行意图：这一节要回答读者的什么问题
+  &.has-intent { height: 32px + 16px; }
+  &.is-h3.has-intent { height: 28px + 16px; }
+  &.is-h4.has-intent { height: 26px + 16px; }
+  > .sv-text { flex: 1; min-width: 0; }
+  .sv-label { flex: 1; min-width: 0; }
+  .sv-add { .bk-reveal(); }
+  &:hover .sv-add,
+  &:focus-within .sv-add { .bk-revealed(); }
+}
+
+.sv-node.is-slot {
+  min-height: 50px;
+  background: transparent;
+  border-style: dashed;
+
+  .sv-label { color: @color-text-secondary; }
+}
+
+.sv-text { display: flex; flex-direction: column; min-width: 0; }
+.sv-intent { overflow: hidden; font-size: @bk-fs-xs; font-weight: 400; color: @color-text-weak; text-overflow: ellipsis; white-space: nowrap; }
+.sv-todo {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  font-size: @bk-fs-xs;
+  line-height: 14px;
+  color: @color-text-secondary;
+  border: 1px dashed @color-border;
+  border-radius: @bk-radius-pill;
+}
+.sv-kind { font-size: @bk-fs-xs; color: @color-text-weak; white-space: nowrap; }
+.sv-label { overflow: hidden; font-size: @bk-fs-sm; color: @color-text; text-overflow: ellipsis; white-space: nowrap; }
+.sv-meta { font-size: @bk-fs-xs; color: @color-text-secondary; }
+.sv-folded { flex: 0 0 auto; font-size: @bk-fs-xs; color: @color-text-weak; }
+
+.sv-badge { .bk-badge(); line-height: 14px; }
+
+.sv-add {
+  flex: 0 0 auto;
+  align-self: stretch;
+  padding: 0 @space-8;
+  font-size: @bk-fs-xs;
+  color: @color-primary;
+  cursor: pointer;
+  background: @color-bg-subtle;
+  border: 0;
+  border-left: 1px solid @color-divider;
+}
+
+// 话题条：这篇讲什么、属于哪一类、讲哪几屏，规划与填充的入口
+.sv-topic {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 4px @space-12;
+  align-items: center;
+  padding: @space-8;
+  background: @color-white;
+  border-bottom: 1px solid @color-divider;
+}
+
+.sv-topic-main { display: flex; flex: 1 1 360px; gap: @space-8; align-items: baseline; min-width: 0; }
+.sv-topic-side { display: flex; flex: 0 0 auto; gap: @space-8; align-items: center; }
+.sv-topic-q { overflow: hidden; font-size: @bk-fs-md; font-weight: 600; color: @color-heading; text-overflow: ellipsis; white-space: nowrap; }
+.sv-topic-pages { flex: 0 0 auto; font-size: @bk-fs-xs; color: @color-text-weak; }
+.sv-topic-todo { font-size: @bk-fs-xs; color: @color-text-secondary; }
+
+.sv-type {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  font-size: @bk-fs-xs;
+  line-height: 18px;
+  color: @color-primary;
+  background: @color-bg-subtle;
+  border: 1px solid @color-primary;
+  border-radius: @bk-radius-pill;
+
+  &.is-none { color: @color-text-weak; border-color: @color-border; }
+}
+
+// 画布上方的显示控制
+.sv-toolbar {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
+  padding: 6px @space-8;
+  background: @color-white;
+  border-bottom: 1px solid @color-border;
+}
+
+.sv-toolbar-hint { margin-left: auto; font-size: @bk-fs-xs; color: @color-text-weak; }
+
+.sv-toolbar-label { font-size: @bk-fs-xs; color: @color-text-weak; }
+.sv-toolbar-sep { width: 1px; height: 16px; background: @color-divider; }
+
+.sv-chip { .bk-chip(); }
+
+// 详情占满画布右边剩下的宽度：截图、录屏要看得清
+.sv-detail {
+  flex: 0 1 420px;
+  min-width: 320px;
+  padding: @space-12;
+  overflow-y: auto;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-radius: @radius-control;
+
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: @space-8; }
+}
+
+.sv-big { display: block; width: 100%; margin-bottom: @space-8; background: @color-white; border: 1px solid @color-divider; }
+.sv-big.is-zoom { cursor: zoom-in; }
+.sv-title { margin: 0 0 4px; font-size: @bk-fs-md; font-weight: 600; color: @color-heading; }
+.sv-warn { margin: @space-8 0 0; font-size: @bk-fs-sm; color: @color-status-warning; }
+.sv-broken {
+  margin: @space-8 0 0;
+  padding: @space-8;
+  font-size: @bk-fs-sm;
+  color: @color-text;
+  background: @color-status-failed-bg;
+  border-radius: @radius-control;
+
+  b { color: @color-danger; }
+  ul { margin: 4px 0; padding-left: 18px; }
+}
+
+.sv-facts,
+.sv-files {
+  max-height: 360px;
+  padding-left: 0;
+  margin: @space-8 0;
+  overflow: auto;
+  font-size: @bk-fs-sm;
+  line-height: 1.6;
+  list-style: none;
+
+  li { padding: 2px 0; color: @color-text; border-bottom: 1px dashed @color-divider; }
+  li.is-open { color: @color-status-warning; }
+  em { display: block; font-size: @bk-fs-xs; font-style: normal; color: @color-status-warning; }
+}
+
+.sv-files li { font-family: @font-family-code; font-size: @bk-fs-xs; color: @color-text-secondary; }
+.sv-facts li.is-planned { color: @color-text-secondary; border-bottom-style: dotted; }
+
+.sv-quote { padding-left: @space-8; margin: 0 0 @space-8; font-size: @bk-fs-sm; color: @color-text-secondary; border-left: 3px solid @color-border; }
+
+// 调整蓝图：改意图、加格子、加一节。都写回 md 里的蓝图标记
+.sv-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: @space-8 0;
+  border-top: 1px dashed @color-divider;
+}
+
+.sv-form-title { font-size: @bk-fs-sm; font-weight: 600; color: @color-heading; }
+.sv-field { display: flex; flex-direction: column; gap: 4px; font-size: @bk-fs-sm; color: @color-text-secondary; }
+.sv-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
+.sv-check { display: flex; gap: 6px; align-items: center; font-size: @bk-fs-sm; color: @color-text-secondary; }
+
+.sv-input,
+.sv-field textarea { .bk-input(); padding: 4px @space-8; font-size: @bk-fs-sm; }
+
+.sv-field textarea { resize: vertical; }
+
+.sv-line {
+  padding: 0;
+  margin-right: 6px;
+  font-size: @bk-fs-xs;
+  color: @color-link;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}

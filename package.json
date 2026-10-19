@@ -1,0 +1,87 @@
+{
+  "name": "builder-kit",
+  "version": "0.1.0",
+  "description": "Local-first toolkit for prototype reviews, source-anchored comments, and a content workspace that keeps documentation in sync with the prototype.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "prototype",
+    "review",
+    "comments",
+    "documentation",
+    "vite",
+    "vue",
+    "react",
+    "product-management"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guoxuedong2018/builder-kit.git"
+  },
+  "homepage": "https://github.com/guoxuedong2018/builder-kit#readme",
+  "bugs": {
+    "url": "https://github.com/guoxuedong2018/builder-kit/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "exports": {
+    ".": "./client/index.js",
+    "./vite": "./vite.mjs",
+    "./core": "./client/core/mount.jsx",
+    "./vue2": "./client/adapters/vue2.js",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "builder-kit": "./bin/builder-kit.mjs",
+    "bk": "./bin/builder-kit.mjs"
+  },
+  "files": [
+    "bin",
+    "build",
+    "client",
+    "docs",
+    "pipeline",
+    "server",
+    "vite.mjs",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "prepublishOnly": "npm run check"
+  },
+  "peerDependencies": {
+    "less": ">=3",
+    "vite": ">=5",
+    "vue": "^2.7.0"
+  },
+  "peerDependenciesMeta": {
+    "less": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.11.6",
+    "mermaid": "^11.17.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "valtio": "^2.3.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue2": "^2.3.4",
+    "less": "^4.9.1",
+    "vite": "^5.4.21",
+    "vue": "^2.7.16"
+  }
+}

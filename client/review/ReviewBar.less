@@ -1,0 +1,70 @@
+// 套件样式不 scoped：类名一律带前缀，靠前缀与宿主隔开
+.review-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 36px;
+  flex: none;
+  padding: 0 16px;
+  background: @color-page-bg;
+  border-bottom: 1px solid @color-border;
+}
+
+.rb-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rb-label {
+  font-size: 11px;
+  color: @color-text-weak;
+  letter-spacing: 0.4px;
+}
+
+.rb-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.rb-link {
+  font-size: 11px;
+  color: @color-text-secondary;
+
+  &:hover {
+    color: @color-primary;
+  }
+}
+
+.rb-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: @color-status-warning;
+}
+
+.rb-count {
+  padding: 1px 8px;
+  font-size: 11px;
+  color: @color-on-primary;
+  background: @color-primary;
+  border-radius: 10px;
+}
+
+.rb-extras {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+
+  &:empty { display: none; }
+}
+
+.rb-link {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  text-decoration: none;
+}

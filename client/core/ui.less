@@ -1,0 +1,72 @@
+// 套件基础件。类名一律 bk- 前缀：套件样式不 scoped，靠前缀与宿主隔开
+@import "./kit.less";
+
+// 键盘焦点环：套件自己定义，不指望宿主有全局规则（换一个宿主未必有）。
+// 用 :focus-visible——鼠标点不出现，键盘导航才出现；颜色宽度取宿主 token，亮暗都过 AA
+.bk-root :focus-visible {
+  outline: @focus-ring-width solid @focus-ring-color;
+  outline-offset: @focus-ring-offset;
+}
+
+// 系统开了「减少动态效果」：闪烁的进度点、过渡一律停下
+@media (prefers-reduced-motion: reduce) {
+  .bk-root *,
+  .bk-root *::before,
+  .bk-root *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+.bk-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  align-items: center;
+  height: 24px;
+  padding: 0 @space-8;
+  font-size: @bk-fs-sm;
+  line-height: 1;
+  color: @color-text;
+  white-space: nowrap;
+  cursor: pointer;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-radius: @radius-control;
+
+  &:hover:not(:disabled) { color: @color-primary; border-color: @color-primary; }
+  &:disabled { color: @color-text-disabled; cursor: not-allowed; }
+
+  &.is-primary {
+    color: @color-on-primary;
+    background: @color-primary;
+    border-color: @color-primary;
+
+    &:hover:not(:disabled) { color: @color-on-primary; opacity: 0.9; }
+    &:disabled { opacity: 0.5; }
+  }
+
+  &.is-ghost { background: none; border-color: transparent; }
+  &.is-danger { color: @color-danger; }
+  &.is-sm { height: 22px; padding: 0 6px; font-size: @bk-fs-xs; }
+  &.is-lg { height: 28px; padding: 0 @space-12; }
+}
+
+.bk-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  font-size: @bk-fs-xs;
+  color: @color-text-secondary;
+  white-space: nowrap;
+  background: @color-bg-subtle;
+  border: 1px solid @color-border;
+  border-radius: @radius-tag;
+
+  &.is-primary { color: @color-primary; border-color: @color-primary; }
+  &.is-success { color: @color-status-success; border-color: @color-status-success; }
+}
+
+.bk-icon { flex: 0 0 auto; vertical-align: -2px; }

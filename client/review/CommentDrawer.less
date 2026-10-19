@@ -1,0 +1,326 @@
+// 套件样式不 scoped：类名一律带前缀，且**除根节点外都嵌在 .cd-root 下**。
+// 只靠前缀不够：宿主也可能用同一个前缀——产品的 CaseDetailBody 就用了 cd-body / cd-title / cd-empty，
+// 这里的全局 .cd-empty（64px 内边距、居中）在 dev 下漏进了 Case 详情抽屉，空的一节被撑成 150px 高（2026-09-24）。
+// 抽屉里没有 transfer 出去的浮层，全部内容都在 .cd-root 里，嵌套不会漏掉任何一条。
+.cd-root {
+  display: flex;
+  flex-direction: column;
+  width: 360px;
+  flex: none;
+  height: 100%;
+  background: @color-page-bg;
+  border-left: 1px solid @color-border;
+}
+
+.cd-root {
+  .cd-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid @color-border;
+  }
+
+  .cd-head-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cd-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: @color-heading;
+  }
+
+  .cd-close {
+    padding: 2px 6px;
+    font-size: 18px;
+    color: @color-text-weak;
+    background: transparent;
+    border: 0;
+    border-radius: 3px;
+    cursor: pointer;
+
+    &:hover {
+      background: @color-hover-bg;
+    }
+  }
+
+  .cd-section-label {
+    margin-bottom: 6px;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    color: @color-text-weak;
+  }
+
+  .cd-frs {
+    padding: 10px 16px;
+    border-bottom: 1px solid @color-divider;
+  }
+
+  .cd-frs-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .cd-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 16px;
+  }
+
+  .cd-filters {
+    display: inline-flex;
+    padding: 2px;
+    background: @color-hover-bg;
+    border-radius: 4px;
+  }
+
+  .cd-filter {
+    padding: 3px 8px;
+    font-size: 12px;
+    color: @color-text-weak;
+    background: transparent;
+    border: 0;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .cd-filter-active {
+    background: @color-white;
+    color: @color-heading;
+    box-shadow: @elevation-1;
+  }
+
+  .cd-author {
+    width: 80px;
+    height: 28px;
+    padding: 0 8px;
+    font-size: 12px;
+    color: @color-heading;
+    border: 1px solid @color-border;
+    border-radius: 3px;
+    outline: none;
+
+    &:focus {
+      border-color: @color-primary;
+    }
+  }
+
+  .cd-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 12px 16px;
+  }
+
+  .cd-empty {
+    padding: 64px 12px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.8;
+    color: @color-text-weak;
+  }
+
+  .cd-card {
+    margin-bottom: 8px;
+    padding: 12px;
+    background: @color-white;
+    border: 1px solid @color-border;
+    border-radius: 4px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .cd-card-active {
+    border-color: @color-primary;
+    background: @color-primary-ring;
+  }
+
+  .cd-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .cd-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex: none;
+    font-size: 11px;
+    font-weight: 600;
+    color: @color-on-primary;
+    background: @color-primary;
+    border-radius: 50%;
+
+    &.is-resolved { background: @color-status-success; }
+  }
+
+  .cd-anchor {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: @color-text;
+  }
+
+  .cd-src {
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: @color-text-weak;
+  }
+
+  .cd-hint {
+    margin-bottom: 6px;
+    font-size: 11px;
+    line-height: 1.6;
+    color: @color-status-warning;
+  }
+
+  .cd-body {
+    margin: 0;
+    white-space: pre-wrap;
+    font-size: 13px;
+    color: @color-heading;
+  }
+
+  .cd-meta {
+    margin-top: 4px;
+    font-size: 11px;
+    color: @color-text-weak;
+  }
+
+  .cd-replies {
+    margin-top: 8px;
+    padding-left: 10px;
+    border-left: 2px solid @color-border;
+  }
+
+  .cd-reply {
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+
+  .cd-reply-body {
+    color: @color-heading;
+  }
+
+  .cd-reply-meta {
+    margin-left: 4px;
+    color: @color-text-weak;
+  }
+
+  .cd-reply-box {
+    margin-top: 8px;
+  }
+
+  .cd-reply-input {
+    width: 100%;
+    height: 56px;
+    padding: 8px;
+    resize: none;
+    font-size: 12px;
+    color: @color-heading;
+    border: 1px solid @color-border;
+    border-radius: 3px;
+    outline: none;
+
+    &:focus {
+      border-color: @color-primary;
+    }
+  }
+
+  .cd-reply-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .cd-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .cd-act {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 6px;
+    font-size: 12px;
+    color: @color-text;
+    background: transparent;
+    border: 0;
+    border-radius: 3px;
+    cursor: pointer;
+
+    &:hover {
+      background: @color-hover-bg;
+    }
+  }
+
+  .cd-act-danger {
+    color: @color-danger;
+  }
+
+  .cd-other {
+    padding: 8px 12px;
+    border-top: 1px solid @color-border;
+  }
+
+  .cd-other-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 8px;
+    text-align: left;
+    font-size: 12px;
+    color: @color-text;
+    background: transparent;
+    border: 0;
+    border-radius: 3px;
+    cursor: pointer;
+
+    &:hover {
+      background: @color-hover-bg;
+    }
+  }
+
+  .cd-other-route {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: Menlo, Consolas, monospace;
+  }
+
+  .cd-other-count {
+    margin-left: 8px;
+    flex: none;
+    padding: 0 6px;
+    font-size: 11px;
+    color: @color-on-primary;
+    background: @color-primary;
+    border-radius: 10px;
+  }
+
+  .cd-warn {
+    padding: 8px 16px;
+    font-size: 11px;
+    line-height: 1.7;
+    color: @color-status-warning;
+    border-top: 1px solid @color-divider;
+  }
+}

@@ -1,0 +1,28 @@
+// 截图上「这里变了」的框。审阅台卡片与全屏预览共用，只被 studio/ 下的组件 @import。
+//
+// - 颜色跟「有变化」一档（status-warning），不用红：变化要人对照，不是出错；
+// - 框套在改动外面、四周留 4px，不压住改动本身；
+// - 极小的改动（一个勾选框缩到缩略图里只剩两三个像素）把框撑到 14px，从中心往四周撑，
+//   不从左上角往右下撑——那样会盖住旁边的字（2026-10-08 每行一个框压在人名上）；
+// - 外圈一道白描边，压在深色内容上也看得清。
+// 位置尺寸由内联的百分比给（见 FileView / MediaLightbox 的 box()），这里只管长相。
+.diff-region() {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+
+  &::after {
+    flex: none;
+    box-sizing: border-box;
+    width: calc(100% + 8px);
+    min-width: 14px;
+    height: calc(100% + 8px);
+    min-height: 14px;
+    content: "";
+    border: 2px solid @color-status-warning;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px @color-white;
+  }
+}

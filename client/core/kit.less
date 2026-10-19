@@ -1,0 +1,116 @@
+// 套件的样式约定：字号刻度与几种反复出现的控件。
+// 只放变量和带括号的 mixin——@import 进来不产出任何 CSS，每个组件的 less 放心引。
+// 颜色、间距、圆角、焦点环、等宽字体一律取宿主 token（宿主 vite 的 less additionalData 注入），这里不另起一套。
+
+// ── 字号 ─────────────────────────────────────────────
+// 工具界面偏密，但不低于 11px：再小中文笔画就糊了（审查前有 8 处 10px）
+@bk-fs-xs: 11px;  // 次要信息：路径、时间、计数、角标
+@bk-fs-sm: 12px;  // 默认：按钮、列表、说明
+@bk-fs-md: 13px;  // 正文、输入框、区块标题
+@bk-fs-lg: 14px;
+@bk-fs-xl: 15px;
+@bk-fs-xxl: 16px; // 一篇文档的标题
+
+// ── 圆角 ─────────────────────────────────────────────
+// 控件、卡片、浮层用宿主的 @radius-*；这两档是套件自己的
+@bk-radius-sm: 2px;     // 行内代码、图片描边
+@bk-radius-pill: 999px; // 药丸开关、数字徽标：两头全圆，不随高度算半径
+
+// ── 输入框与多行文本 ─────────────────────────────────
+// 聚焦只换边框色；键盘焦点环交给 .bk-root 的 :focus-visible，不抹掉（审查前 6 处 outline: none）
+.bk-input() {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px @space-8;
+  font: inherit;
+  font-size: @bk-fs-md;
+  color: @color-text;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-radius: @radius-control;
+
+  &::placeholder { color: @color-text-weak; }
+  &:focus { border-color: @color-primary; }
+  &:disabled { color: @color-text-disabled; cursor: not-allowed; background: @color-bg-subtle; }
+}
+
+// ── 药丸开关：可多选的筛选、预设、类型 ───────────────
+// 选中是浅底描边；互斥的几种看法用下面的 .bk-seg
+.bk-chip() {
+  max-width: 100%;
+  height: 22px;
+  padding: 0 @space-8;
+  overflow: hidden;
+  font-size: @bk-fs-xs;
+  color: @color-text-secondary;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: 1px solid @color-border;
+  border-radius: @bk-radius-pill;
+
+  &:hover:not(:disabled) { color: @color-primary; border-color: @color-primary; }
+  &:disabled { color: @color-text-disabled; cursor: not-allowed; }
+  &.is-on { color: @color-primary; background: @color-bg-subtle; border-color: @color-primary; }
+}
+
+// ── 分段切换：同一件事互斥的几种看法（审阅 / 构成、全部 / 要处理、这一篇 / 全库）──
+// 挂在容器上，按钮是直接子元素；选中是实心主色，和药丸开关的浅底区分开
+.bk-seg() {
+  display: inline-flex;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid @color-border;
+  border-radius: @radius-control;
+
+  > button {
+    flex: 0 1 auto;
+    min-width: 0;
+    height: 24px;
+    padding: 0 @space-12;
+    overflow: hidden;
+    font-size: @bk-fs-sm;
+    color: @color-text-secondary;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    background: none;
+    border: 0;
+
+    & + button { border-left: 1px solid @color-border; }
+    &:hover:not(:disabled):not(.is-on) { color: @color-primary; }
+    &:disabled { color: @color-text-disabled; cursor: not-allowed; }
+    &.is-on { color: @color-on-primary; background: @color-primary; }
+    // 焦点环画在里面：外面一圈会被容器的 overflow 裁掉
+    &:focus-visible { outline-offset: -3px; }
+  }
+}
+
+// ── 数字徽标：这里有几处要看 ─────────────────────────
+// 浅橙底橙字，和宿主 StatusTag 一个路数。不用「实心橙底 + @color-white」：
+// @color-white 的语义是卡片面，暗色下是深色，碰巧达标也是碰巧（见 theme.less 里 on-primary 那段）
+.bk-badge() {
+  flex: 0 0 auto;
+  min-width: 18px;
+  padding: 0 5px;
+  font-size: @bk-fs-xs;
+  font-weight: 600;
+  font-style: normal;
+  line-height: 16px;
+  color: @color-status-warning;
+  text-align: center;
+  background: @color-status-warning-bg;
+  border-radius: @bk-radius-pill;
+}
+
+// ── 悬停才出现的次要按钮 ─────────────────────────────
+// 用透明度藏，不用 visibility：visibility: hidden 的元素键盘 Tab 不到，键盘用户就用不了这个功能。
+// 用法：按钮上 .bk-reveal()；父元素悬停或里面有焦点时 .bk-revealed()
+.bk-reveal() {
+  opacity: 0;
+  transition: opacity 0.12s;
+
+  &:focus-visible { opacity: 1; }
+}
+.bk-revealed() { opacity: 1; }

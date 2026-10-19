@@ -1,0 +1,182 @@
+// 套件样式不 scoped：类名一律带前缀，靠前缀与宿主隔开
+@import "./z-index.less";
+@import "../core/kit.less";
+
+.dr {
+  position: fixed;
+  bottom: @space-24;
+  left: 50%;
+  z-index: @studio-z-dialog;
+  transform: translateX(-50%);
+}
+
+.dr-bar {
+  display: flex;
+  gap: @space-12;
+  align-items: center;
+  max-width: calc(100vw - 48px);
+  padding: @space-8 @space-12;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-radius: @radius-overlay;
+  box-shadow: @elevation-1;
+}
+
+.dr-dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  background: @color-text-weak;
+  border-radius: 50%;
+
+  &.is-rec { background: @color-danger; animation: dr-blink 1.2s ease-in-out infinite; }
+}
+
+@keyframes dr-blink {
+  50% { opacity: 0.35; }
+}
+
+.dr-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: @bk-fs-sm;
+  line-height: 1.5;
+
+  strong { color: @color-heading; }
+  span { overflow: hidden; color: @color-text-secondary; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.dr-btn {
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 @space-12;
+  font-size: @bk-fs-sm;
+  color: @color-text;
+  white-space: nowrap;
+  cursor: pointer;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-radius: @radius-control;
+
+  &:hover:not(:disabled) { color: @color-primary; border-color: @color-primary; }
+  &:disabled { color: @color-text-disabled; cursor: not-allowed; }
+  &.is-primary { color: @color-on-primary; background: @color-primary; border-color: @color-primary; &:hover:not(:disabled) { color: @color-on-primary; opacity: 0.9; } }
+}
+
+.dr-panel {
+  display: flex;
+  flex-direction: column;
+  gap: @space-8;
+  width: 720px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 96px);
+  padding: @space-16;
+  overflow: auto;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-radius: @radius-overlay;
+  box-shadow: @elevation-1;
+}
+
+.dr-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: @bk-fs-md;
+
+  strong { color: @color-heading; }
+}
+
+.dr-muted { font-size: @bk-fs-sm; color: @color-text-weak; }
+
+.dr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: @bk-fs-sm;
+  color: @color-text-secondary;
+}
+
+.dr-input { .bk-input(); height: 28px; padding: 0 @space-8; font-size: @bk-fs-sm; }
+
+.dr-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 20px;
+  margin: 0;
+  font-size: @bk-fs-sm;
+
+  li { display: grid; grid-template-columns: 1fr auto; gap: 2px @space-8; align-items: center; }
+  .dr-input { grid-column: 1; }
+  .dr-x { grid-row: 1; grid-column: 2; }
+  code, .dr-typed { grid-column: 1 / span 2; font-size: @bk-fs-xs; color: @color-text-weak; }
+  code { font-family: @font-family-code; word-break: break-all; }
+  code.is-fragile { color: @color-status-warning; }
+}
+
+.dr-x {
+  padding: 0;
+  font-size: @bk-fs-sm;
+  color: @color-link;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+.dr-check {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: @bk-fs-sm;
+  color: @color-text;
+}
+
+.dr-progress {
+  display: flex;
+  gap: @space-8;
+  padding: 0;
+  margin: 0;
+  font-size: @bk-fs-sm;
+  list-style: none;
+
+  li { padding: 2px @space-8; color: @color-text-weak; background: @color-bg-subtle; border-radius: @radius-tag; }
+  li.is-now { color: @color-primary; }
+  li.is-done { color: @color-status-success; }
+  li.is-failed { color: @color-danger; }
+}
+
+.dr-log {
+  max-height: 180px;
+  padding: @space-8;
+  margin: 0;
+  overflow: auto;
+  font-family: @font-family-code;
+  font-size: @bk-fs-xs;
+  line-height: 1.5;
+  color: @color-text;
+  white-space: pre-wrap;
+  background: @color-bg-subtle;
+  border-radius: @radius-control;
+}
+
+.dr-foot {
+  display: flex;
+  gap: @space-8;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+// 框截图范围时悬停的那一块
+.dr-pick {
+  position: fixed;
+  z-index: @studio-z-dialog;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: @color-primary-ring;
+  border: 2px solid @color-primary;
+  border-radius: @bk-radius-sm;
+}
+
+.dr-btn.is-on { color: @color-primary; background: @color-bg-subtle; border-color: @color-primary; }

@@ -1,0 +1,87 @@
+// 套件样式不 scoped：类名一律带前缀，靠前缀与宿主隔开
+@import "./z-index.less";
+@import "../core/kit.less";
+
+.pb {
+  display: inline-flex;
+}
+
+.bk-btn.is-running {
+  color: @color-status-warning;
+  border-color: @color-status-warning;
+}
+
+.pb-mask {
+  position: fixed;
+  inset: 0;
+  z-index: @studio-z-dialog;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: @color-mask;
+}
+
+.pb-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 720px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 96px);
+  padding: @space-16 18px;
+  background: @color-white;
+  border-radius: @radius-overlay;
+  box-shadow: @elevation-1;
+}
+
+.pb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: @bk-fs-lg;
+  color: @color-heading;
+}
+
+.pb-lead {
+  margin: 0;
+  font-size: @bk-fs-md;
+  line-height: 20px;
+  color: @color-text;
+}
+
+.pb-warn {
+  padding: @space-8 10px;
+  margin: 0;
+  font-size: @bk-fs-sm;
+  line-height: 19px;
+  color: @color-text;
+  background: @color-bg-subtle;
+  border-left: 3px solid @color-status-warning;
+  border-radius: @radius-control;
+}
+
+.pb-log {
+  flex: 0 1 auto;
+  max-height: 220px;
+  padding: 10px @space-12;
+  margin: 0;
+  overflow: auto;
+  font-family: @font-family-code;
+  font-size: @bk-fs-sm;
+  line-height: 18px;
+  color: @color-text;
+  white-space: pre-wrap;
+  background: @color-bg-subtle;
+  border-radius: @radius-control;
+
+  &.is-tall {
+    flex: 1 1 auto;
+    max-height: none;
+  }
+}
+
+.pb-foot {
+  display: flex;
+  gap: @space-8;
+  justify-content: flex-end;
+}

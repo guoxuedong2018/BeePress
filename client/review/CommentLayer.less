@@ -1,0 +1,88 @@
+// 套件样式不 scoped：类名一律带前缀，靠前缀与宿主隔开
+@import "./z-index.less";
+
+.cl-hover {
+  position: fixed;
+  z-index: @review-z-base;
+  pointer-events: none;
+  border-radius: 3px;
+  outline: 2px solid @color-primary;
+  outline-offset: 1px;
+  background: @color-primary-ring;
+}
+
+.cl-pin {
+  position: fixed;
+  z-index: @review-z-pin;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: @color-on-primary;
+  cursor: pointer;
+  background: @color-primary;
+  border: 2px solid @color-white;
+  border-radius: 50%;
+  box-shadow: @elevation-1;
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+
+  &:hover { transform: translate(-50%, -50%) scale(1.12); }
+  // 非精确定位：位置是推断出来的
+  &.is-approx { border-style: dashed; border-color: @color-status-warning; }
+  &.is-active { outline: 3px solid @color-primary-ring; }
+  &.is-dim { opacity: 0.55; }
+}
+
+.cl-composer {
+  position: fixed;
+  z-index: @review-z-composer;
+  width: 288px;
+  padding: 12px;
+  background: @color-white;
+  border: 1px solid @color-border;
+  border-radius: 6px;
+  box-shadow: @elevation-1;
+}
+
+.cl-anchor-label,
+.cl-anchor-src {
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: @color-text-weak;
+}
+
+.cl-anchor-src {
+  font-family: Menlo, Consolas, monospace;
+  font-size: 11px;
+}
+
+.cl-textarea {
+  width: 100%;
+  height: 80px;
+  padding: 8px;
+  resize: none;
+  font-size: 13px;
+  color: @color-heading;
+  border: 1px solid @color-border;
+  border-radius: 4px;
+  outline: none;
+
+  &:focus {
+    border-color: @color-primary;
+  }
+}
+
+.cl-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}

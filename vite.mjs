@@ -1,0 +1,159 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { anchorLoc as anchorLocPlugin } from "./build/anchor-loc.js";
+import { reviewServer } from "./server/review-server.js";
+import { studioServer } from "./server/studio-server.js";
+
+const KIT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const CLIENT_DIR = path.join(KIT_DIR, "client");
+const KIT_MODULES = path.join(KIT_DIR, "node_modules");
+/** Runtime dependencies of the toolkit UI (see package.json). Hosts don't install them. */
+const KIT_ALIASES = [
+  ["react", "react"],
+  ["react/jsx-runtime", "react/jsx-runtime.js"],
+  ["react/jsx-dev-runtime", "react/jsx-dev-runtime.js"],
+  ["react-dom", "react-dom"],
+  ["react-dom/client", "react-dom/client.js"],
+  ["@xyflow/react", "@xyflow/react"],
+  ["@xyflow/react/dist/style.css", "@xyflow/react/dist/style.css"],
+  ["valtio", "valtio"],
+  // Flow chart preview in the studio (Mermaid code blocks in the content).
+  ["mermaid", "mermaid/dist/mermaid.core.mjs"],
+];
+const KIT_PREBUNDLE = ["react", "react/jsx-runtime", "react/jsx-dev-runtime", "react-dom", "react-dom/client", "@xyflow/react", "valtio", "mermaid"];
+
+
+/**
+ * Host wiring virtual module.
+ *
+ * The toolkit needs two things from the host: the requirement-region registry
+ * and host controls on the toolbar. Both are business data and must not be
+ * hard-coded here. This plugin generates a virtual module from the options in
+ * `vite.config.js`; the toolkit only imports the fixed virtual name.
+ *
+ * In other words, coupling lives in one integration line.
+ */
+const HOST_ID = "virtual:builder-kit/host";
+const HOST_RESOLVED = `\0${HOST_ID}`;
+
+/** Absolute paths outside Vite's root must go through /@fs/ in dev. */
+function fsSpec(abs) {
+  return `/@fs/${abs.split(path.sep).join("/").replace(/^\//, "")}`;
+}
+
+function hostBridge({ root, frsRegistry, barExtras, barLinks, agentPrompt }) {
+  return {
+    name: "builder-kit:host-bridge",
+    apply: "serve",
+    resolveId(id) {
+      return id === HOST_ID ? HOST_RESOLVED : null;
+    },
+    load(id) {
+      if (id !== HOST_RESOLVED) return null;
+      const lines = [];
+
+      // Requirement region registry. Without wiring it stays empty and every
+      // review comment is filed under APP_SHELL.
+      if (frsRegistry) {
+        lines.push(`export { FRS_REGISTRY } from ${JSON.stringify(fsSpec(path.resolve(root, frsRegistry)))};`);
+      } else {
+        lines.push("export const FRS_REGISTRY = [];");
+      }
+
+      // Host controls injected into the review toolbar.
+      barExtras.forEach((p, i) => {
+        lines.push(`import __extra${i} from ${JSON.stringify(fsSpec(path.resolve(root, p)))};`);
+      });
+      lines.push(`export const barExtras = [${barExtras.map((_, i) => `__extra${i}`).join(", ")}];`);
+
+      // Host links on the toolbar (e.g. a design-system page).
+      lines.push(`export const barLinks = ${JSON.stringify(barLinks)};`);
+
+      // Optional prefix for prompts copied by the studio, e.g. "/content-draft".
+      lines.push(`export const AGENT_PROMPT = ${JSON.stringify(agentPrompt)};`);
+
+      return lines.join("\n");
+    },
+  };
+}
+
+/**
+ * Builder Kit — one integration point for the prototype toolkit
+ * ==================================================================
+ * Add one line to the host's `vite.config.js`:
+ *
+ *   builderKit({ root, ... })
+ *
+ * and the host gets:
+ *
+ *   build/anchor-loc     dev-time source coordinates (data-loc / data-use / data-comp)
+ *   server/review-server dev middleware persisting review comments
+ *   server/studio-server dev middleware for the content workspace
+ *   client/review        review UI — select elements, leave comments
+ *   client/studio        content workspace — what needs review, what to reshoot, publishing
+ *
+ * Both suites are peers: review collects opinions about the prototype, the
+ * studio tracks whether the documentation keeps up with it. The UI is React;
+ * a thin host adapter mounts it (`builder-kit/vue2` for Vue 2).
+ *
+ * @param {object}   options
+ * @param {string}   [options.root]          host app root (source paths are relative to it)
+ * @param {string}   [options.frsRegistry]   requirement-region registry module, relative to root
+ * @param {string[]} [options.barExtras]     host components injected into the review toolbar, relative to root
+ * @param {{label: string, route: object, title?: string}[]} [options.barLinks]
+ *                                           host links on the right side of the toolbar
+ * @param {string}   [options.reviewsDir]    comment directory, defaults to `<project>/docs/reviews`
+ * @param {boolean}  [options.anchorLoc]     inject Vue 2 source anchors, default true
+ * @param {string}   [options.agentPrompt]   optional prompt prefix for "copy for Agent" buttons
+ */
+export function builderKit({
+  root = process.cwd(),
+  frsRegistry,
+  barExtras = [],
+  barLinks = [],
+  reviewsDir,
+  anchorLoc = true,
+  agentPrompt = "",
+} = {}) {
+  return [
+    {
+      name: "builder-kit:config",
+      config() {
+        return {
+          resolve: {
+            alias: [
+              // The host may import the toolkit by bare specifier.
+              { find: /^builder-kit$/, replacement: path.join(CLIENT_DIR, "index.js") },
+              // Toolkit runtime dependencies may be installed locally (vendored
+              // checkout) or hoisted by the host package manager. Alias only
+              // when the local copy exists, so hoisted installs still resolve.
+              ...KIT_ALIASES.filter(([, rel]) => existsSync(path.join(KIT_MODULES, rel))).map(([spec, rel]) => ({
+                find: new RegExp(`^${spec.replace(/[/.]/g, "\\$&")}$`),
+                replacement: path.join(KIT_MODULES, rel),
+              })),
+            ],
+          },
+          // React is CommonJS and must be pre-bundled.
+          optimizeDeps: {
+            include: KIT_PREBUNDLE,
+            // Toolkit entry points are source files with a virtual host module;
+            // pre-bundling them with esbuild would fail to resolve it.
+            exclude: ["builder-kit", "builder-kit/vue2", "builder-kit/core"],
+          },
+          // The toolkit UI is React (.jsx). The host may be Vue and have no .jsx.
+          esbuild: { jsx: "automatic", jsxImportSource: "react" },
+          server: {
+            // The toolkit lives outside the Vite root.
+            fs: { allow: [root, KIT_DIR] },
+          },
+        };
+      },
+    },
+    // Must run before plugin-vue2 to see the original SFC.
+    ...(anchorLoc ? [anchorLocPlugin({ root })] : []),
+    hostBridge({ root, frsRegistry, barExtras, barLinks, agentPrompt }),
+    reviewServer({ reviewsDir }),
+    studioServer(),
+  ];
+}

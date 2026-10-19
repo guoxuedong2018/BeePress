@@ -1,0 +1,20 @@
+// 评审层的层叠刻度。只被 review/ 下的组件 @import，不进产品样式。
+//
+// 为什么需要单独一档，而不是接着产品的小数值往上加：
+// 评审层是「压在原型之上的元批注工具」，必须高于原型里任何一个面。而 iView 3.5
+// 自带一整套内建 z-index，实测天花板是 2010：
+//
+//   .ivu-spin-fullscreen  2010   .ivu-loading-bar 2000
+//   .ivu-tooltip-popper   1060   .ivu-poptip-popper / *-transfer 1060
+//   .ivu-message/notice   1010   .ivu-modal-wrap  1000
+//   .ivu-menu             900    .ivu-select-dropdown 900
+//
+// 早先评审层用的是 70/71/80，低于上面每一项，后果是：
+// 圈选浮层会被侧边栏菜单（900）盖住，且**弹窗与抽屉里的元素完全无法批注**
+// （浮层压不过 modal 的 1000）——而那正是最需要批注的地方。
+//
+// 所以基线取 3000，把整个 iView 区间让在下面。改动前先确认 iView 没有引入更高的值：
+// 在页面上跑一遍遍历 document.styleSheets 取 z-index 最大值即可复核。
+@review-z-base: 3000; // 拾取高亮：贴在被指元素上，须让位给 Pin 与浮层
+@review-z-pin: 3010; // 评论 Pin：要能盖住高亮，但不挡输入
+@review-z-composer: 3020; // 输入气泡：评审层内最高，任何时候都不该被压住
