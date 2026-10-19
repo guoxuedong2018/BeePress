@@ -510,7 +510,7 @@ hover：translateY(-1.5px) + shadow-md + border-default，180ms ease-out
 ### 6.7 Table
 
 ```
-表头：bg surface-3，t-footnote，text-secondary，字重 600
+表头：bg surface-0，t-footnote，text-secondary，字重 600
 行：border-bottom 1px border-subtle，hover bg surface-0
 单元格：padding 12/16，t-body
 数字列：右对齐 + tabular-nums

@@ -54,6 +54,8 @@
   --code-text: #e8e6e1;
   --code-text-muted: #9a978f;
   --code-border: rgba(255, 255, 255, 0.08);
+  --code-hover: rgba(255, 255, 255, 0.10);
+  --code-ring: rgba(255, 255, 255, 0.30);
   --overlay: rgba(28, 27, 25, 0.32);
   --selection: rgba(201, 100, 66, 0.18);
 

@@ -23,15 +23,22 @@ function fileForFrs(dir, frs) {
 }
 
 async function readArray(file) {
+  let raw;
   try {
-    const raw = await fs.readFile(file, "utf8");
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed && Array.isArray(parsed.comments)) return parsed.comments;
-    return [];
-  } catch {
-    return [];
+    raw = await fs.readFile(file, "utf8");
+  } catch (err) {
+    if (err?.code === "ENOENT") return [];
+    throw err;
   }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`评论文件损坏，拒绝覆盖：${file}`);
+  }
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed && Array.isArray(parsed.comments)) return parsed.comments;
+  throw new Error(`评论文件格式不认识，拒绝覆盖：${file}`);
 }
 
 function readBody(req) {
@@ -71,12 +78,16 @@ export function reviewServer({ reviewsDir = DEFAULT_REVIEWS_DIR } = {}) {
           if (req.method === "GET" && url.startsWith("/__proto_review/all")) {
             const files = await fs.readdir(storeDir).catch(() => []);
             const comments = [];
+            const skipped = [];
             for (const f of files) {
-              if (f.endsWith(".json")) {
+              if (!f.endsWith(".json")) continue;
+              try {
                 comments.push(...(await readArray(path.join(storeDir, f))));
+              } catch (err) {
+                skipped.push({ file: f, error: err instanceof Error ? err.message : String(err) });
               }
             }
-            return sendJson(res, 200, { comments });
+            return sendJson(res, 200, { comments, skipped });
           }
 
           if (req.method === "POST" && url.startsWith("/__proto_review/upsert")) {

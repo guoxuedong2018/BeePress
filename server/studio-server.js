@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { promises as fs, createReadStream } from "node:fs";
 import path from "node:path";
 
@@ -57,6 +58,40 @@ const MIME = {
   ".mp4": "video/mp4",
   ".srt": "text/plain; charset=utf-8",
 };
+
+const PUBLISH_TOKEN_TTL = 15 * 60 * 1000;
+const publishTokens = new Map();
+
+function isTrustedRequest(req) {
+  const site = req.headers["sec-fetch-site"];
+  if (site && site !== "same-origin" && site !== "none") return false;
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  try {
+    return new URL(origin).host === req.headers.host;
+  } catch {
+    return false;
+  }
+}
+
+function issuePublishToken() {
+  const now = Date.now();
+  for (const [token, expires] of publishTokens) if (expires <= now) publishTokens.delete(token);
+  const token = randomUUID();
+  publishTokens.set(token, now + PUBLISH_TOKEN_TTL);
+  return token;
+}
+
+function hasPublishToken(token) {
+  const expires = publishTokens.get(token);
+  return Boolean(expires) && expires > Date.now();
+}
+
+function takePublishToken(token) {
+  if (!hasPublishToken(token)) return false;
+  publishTokens.delete(token);
+  return true;
+}
 
 function readBody(req) {
   return new Promise((resolve) => {
@@ -141,6 +176,7 @@ export function studioServer() {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url || "";
         if (!url.startsWith(PREFIX)) return next();
+        if (req.method === "POST" && !isTrustedRequest(req)) return sendJson(res, 403, { error: "forbidden" });
         const u = new URL(url, "http://localhost");
         const seg = u.pathname.slice(PREFIX.length).split("/").filter(Boolean);
 
@@ -282,8 +318,16 @@ export function studioServer() {
             const body = await readBody(req);
             // 重拍到一半就发，云端会拿到一半新一半旧的图
             if (!body.dryRun && busyWith()) return sendJson(res, 409, { error: `${busyWith()}，等它跑完再发布` });
-            if (!startJob("publish", "kb-publish.mjs", body.dryRun ? ["--dry-run"] : [])) return sendJson(res, 409, { error: "已经有一次发布在跑", job: jobs.publish });
-            return sendJson(res, 200, { job: { ...jobs.publish, dryRun: !!body.dryRun } });
+            if (!body.dryRun && !hasPublishToken(body.confirmToken)) {
+              return sendJson(res, 403, { error: "发布确认已过期，请重新打开发布面板算一次计划" });
+            }
+            const dryRun = !!body.dryRun;
+            if (!startJob("publish", "kb-publish.mjs", dryRun ? ["--dry-run"] : [])) return sendJson(res, 409, { error: "已经有一次发布在跑", job: jobs.publish });
+            if (!dryRun) takePublishToken(body.confirmToken);
+            return sendJson(res, 200, {
+              job: { ...jobs.publish, dryRun },
+              ...(dryRun ? { confirmToken: issuePublishToken() } : {}),
+            });
           }
 
           if (req.method === "GET" && seg[0] === "job") {

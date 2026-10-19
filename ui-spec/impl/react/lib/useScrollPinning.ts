@@ -51,6 +51,10 @@ export function useScrollPinning(deps: unknown[] = []) {
       top: el.scrollHeight,
       behavior: smooth ? 'smooth' : 'auto',
     });
+    // 已经在底部时不会触发 scroll 事件，不能把标记留给下一次用户滚动。
+    requestAnimationFrame(() => {
+      programmaticScroll.current = false;
+    });
     setIsPinned(true);
     setShowJump(false);
   }, []);

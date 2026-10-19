@@ -31,7 +31,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   outline:
     'bg-transparent text-primary border border-strong hover:bg-surface-hover',
   danger:
-    'bg-danger text-white border-0 hover:opacity-90 active:opacity-100',
+    'bg-danger text-inverse border-0 hover:opacity-90 active:opacity-100',
 };
 
 export interface ButtonProps

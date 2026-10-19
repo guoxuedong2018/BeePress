@@ -60,7 +60,7 @@ export function anchorLocReact({ root = process.cwd() } = {}) {
     enforce: "pre",
     async transform(code, id) {
       const [file] = id.split("?");
-      if (!/\.(?:jsx|tsx)$/.test(file) || file.includes("node_modules")) return null;
+      if (!/\.(?:js|jsx|tsx)$/.test(file) || file.includes("node_modules")) return null;
 
       const rel = path.relative(root, file).split(path.sep).join("/");
       if (!rel || rel.startsWith("..")) return null;

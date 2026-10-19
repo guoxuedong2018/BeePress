@@ -17,6 +17,15 @@ const esc = (s) =>
 
 const flat = (s) => String(s ?? "").replace(/\s+/g, " ").trim();
 
+/** 只允许普通链接协议；javascript: / data: / vbscript: 一律降级为 #。 */
+function safeHref(href) {
+  const value = String(href ?? "").trim();
+  if (!value) return null;
+  if (/^(?:https?:|mailto:|tel:)/i.test(value)) return value;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return null;
+  return value;
+}
+
 /** 相对目标页的图片路径 → 相对 docs/kb/ 的路径 → 媒体回源 URL */
 function resolveAsset(src, basePage) {
   if (/^(https?:)?\/\//.test(src) || src.startsWith("/__builder_studio/")) return src;
@@ -67,7 +76,10 @@ function decorate(s, ctx) {
     const url = resolveAsset(src, ctx.basePage) + (ctx.bust ? `?v=${encodeURIComponent(ctx.bust)}` : "");
     return `<img alt="${alt}" src="${esc(url)}" data-key="${esc(key)}" class="${open ? "is-open" : ""}" loading="lazy" />`;
   });
-  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, t, href) => `<a href="${esc(href)}" target="_blank" rel="noopener">${t}</a>`);
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, t, href) => {
+    const target = safeHref(href);
+    return `<a href="${esc(target ?? "#")}" target="_blank" rel="noopener">${t}</a>`;
+  });
   s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
   return s;

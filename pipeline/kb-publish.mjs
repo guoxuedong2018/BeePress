@@ -48,7 +48,7 @@ import { stripFactMarks } from "./lib/content-build.mjs";
 import { planOf, stripPlanMarks } from "./lib/plan-marks.mjs";
 import { compareMedia, hashMedia, storeBlob } from "./lib/media-ledger.mjs";
 
-import { createDoc, fetchOutline, setIntent, updateJsonml, writeDoc } from "./lib/docs-gateway.mjs";
+import { createDoc, fetchOutline, setIntent, shellQuote, updateJsonml, writeDoc } from "./lib/docs-gateway.mjs";
 
 const STATE_FILE = path.join(KB_DIR, "_published.json");
 const TMP_DIR = path.join(os.tmpdir(), "builder-kit-publish");
@@ -147,7 +147,7 @@ async function packSource(relPath, text) {
   if (refs.length === 0) {
     const file = path.join(TMP_DIR, relPath.replace(/\//g, "__"));
     await fs.writeFile(file, text);
-    return `--content-file "${file}"`;
+    return `--content-file ${shellQuote(file)}`;
   }
 
   const stage = path.join(TMP_DIR, `zip-${relPath.replace(/\W/g, "_")}`);
@@ -159,6 +159,14 @@ async function packSource(relPath, text) {
   for (const ref of new Set(refs)) {
     const src = path.resolve(path.dirname(path.join(KB_DIR, relPath)), ref);
     const dst = path.resolve(path.dirname(mdIn), ref);
+    const srcRel = path.relative(KB_DIR, src);
+    const dstRel = path.relative(stage, dst);
+    if (!srcRel || srcRel.startsWith("..") || path.isAbsolute(srcRel)) {
+      throw new Error(`${relPath} 引用的图片越出了 docs/kb：${ref}`);
+    }
+    if (!dstRel || dstRel.startsWith("..") || path.isAbsolute(dstRel)) {
+      throw new Error(`${relPath} 引用的图片越出了发布暂存目录：${ref}`);
+    }
     await fs.mkdir(path.dirname(dst), { recursive: true });
     await fs.copyFile(src, dst).catch(() => {
       throw new Error(`${relPath} 引用的图片不存在：${ref}`);
@@ -171,9 +179,10 @@ async function packSource(relPath, text) {
     const p = spawn("zip", ["-q", "-r", zip, "."], { cwd: stage, stdio: ["ignore", "ignore", "pipe"] });
     let e = "";
     p.stderr.on("data", (d) => (e += d));
+    p.on("error", (err) => reject(new Error(`启动不了 zip：${err.message}`)));
     p.on("exit", (c) => (c === 0 ? resolve() : reject(new Error(`zip 失败：${e}`))));
   });
-  return `--content-zip "${zip}"`;
+  return `--content-zip ${shellQuote(zip)}`;
 }
 
 /** 旧版指纹：正文 + 引用媒体的原始字节揉成一个值。只用来认出还没记 fp 的老条目 */

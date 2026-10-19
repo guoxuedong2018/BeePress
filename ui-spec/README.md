@@ -33,7 +33,7 @@ ui-spec-kit/
 ├── ADAPTER-VUE.md     ← Vue 适配指南（映射表 + 代码示例 + 坑）
 └── impl/
     └── react/         ← React 参考实现（正典）
-        ├── tailwind.config.js     从 tokens.json 派生
+        ├── tailwind.config.cjs     从 tokens.json 派生
         ├── index.ts               统一导出
         ├── lib/
         │   ├── cn.ts              类名合并
@@ -190,7 +190,7 @@ function beforeCommit() {
 **Tailwind 配置派生**（避免令牌与工具类脱节）：
 
 ```js
-// tailwind.config.js
+// tailwind.config.cjs
 const t = require('./src/styles/tokens.json');
 
 module.exports = {

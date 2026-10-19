@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Dialog, Field, Input } from "builder-kit/ui";
 
 import { Icon } from "./Icons";
@@ -19,8 +19,10 @@ export function NewExperimentDialog({ open, onOpenChange, onCreated }) {
   const [description, setDescription] = useState("");
   const [state, setState] = useState("idle");
   const [error, setError] = useState("");
+  const submitSeq = useRef(0);
 
   useEffect(() => {
+    submitSeq.current += 1;
     if (!open) return;
     const draft = readDraft();
     setName(draft.name ?? "");
@@ -46,7 +48,9 @@ export function NewExperimentDialog({ open, onOpenChange, onCreated }) {
     }
     setState("loading");
     setError("");
+    const seq = ++submitSeq.current;
     await new Promise((resolve) => window.setTimeout(resolve, 900));
+    if (seq !== submitSeq.current) return;
     // Deterministic demo failure path: type "fail" to exercise the error state.
     if (/fail/i.test(name)) {
       setState("error");

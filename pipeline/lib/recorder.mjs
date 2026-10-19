@@ -316,7 +316,15 @@ export function startFrameRecording(session, outFile, { fps = 30, crf = 12 } = {
     { stdio: ["pipe", "ignore", "pipe"] },
   );
   let ffErr = "";
+  let spawnError = null;
   ff.stderr.on("data", (d) => (ffErr += d));
+  ff.on("error", (err) => {
+    spawnError = err;
+    ffErr += err.message;
+  });
+  ff.stdin?.on("error", (err) => {
+    spawnError ??= err;
+  });
 
   let startTs = null;
   let prevTs = null;
@@ -328,6 +336,7 @@ export function startFrameRecording(session, outFile, { fps = 30, crf = 12 } = {
     Math.max(0, Math.round((to - startTs) * fps) - Math.round((from - startTs) * fps));
 
   const push = (buf, n) => {
+    if (!ff.stdin) return;
     for (let i = 0; i < n; i += 1) ff.stdin.write(buf);
     written += n;
   };
@@ -369,8 +378,13 @@ export function startFrameRecording(session, outFile, { fps = 30, crf = 12 } = {
       off();
       // 收尾：最后一帧补足尾巴，否则画面在最后一次重绘处戛然而止
       if (prevBuf) push(prevBuf, Math.max(1, Math.round(tail * fps)));
-      ff.stdin.end();
-      const code = await new Promise((r) => ff.on("close", r));
+      const closed = new Promise((r) => {
+        ff.once("close", (code) => r(code ?? -1));
+        ff.once("error", () => r(-1));
+      });
+      ff.stdin?.end();
+      const code = await closed;
+      if (spawnError) throw new Error(`启动不了 ffmpeg：${spawnError.message}`);
       if (code !== 0) throw new Error(`ffmpeg 退出 ${code}: ${ffErr.slice(0, 400)}`);
       const seconds = written / fps;
       if (seconds > MAX_CLIP_SECONDS) {
@@ -500,6 +514,7 @@ function probeDuration(file) {
     ]);
     let out = "";
     p.stdout.on("data", (d) => (out += d));
+    p.on("error", () => resolve(0));
     p.on("exit", () => resolve(Number(out.trim()) || 0));
   });
 }
@@ -509,6 +524,7 @@ function run(cmd, args) {
     const p = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"] });
     let err = "";
     p.stderr.on("data", (d) => (err += d));
+    p.on("error", (e) => reject(new Error(`启动不了 ${cmd}：${e.message}`)));
     p.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`${cmd} 退出 ${code}: ${err.slice(0, 400)}`))));
   });
 }

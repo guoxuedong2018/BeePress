@@ -43,8 +43,8 @@ written to `examples/react-tailwind/docs/reviews/`.
 
 ## Stack
 
-- React 19 + Vite 5
-- Tailwind CSS 3.4 with [`ui-spec/impl/react/tailwind.config.js`](../../ui-spec/impl/react/tailwind.config.js)
+- React 19 + Vite 6
+- Tailwind CSS 3.4 with [`ui-spec/impl/react/tailwind.config.cjs`](../../ui-spec/impl/react/tailwind.config.cjs)
 - Tokens from [`ui-spec/tokens.css`](../../ui-spec/tokens.css)
 - Components from [`ui-spec/impl/react`](../../ui-spec/impl/react)
 - Builder Kit's React adapter (`client/adapters/react.jsx`)

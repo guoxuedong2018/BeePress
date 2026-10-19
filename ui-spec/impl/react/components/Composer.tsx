@@ -24,6 +24,8 @@ export interface ComposerProps {
   /** 右侧发送按钮之前的操作（如模型选择） */
   trailing?: React.ReactNode;
   className?: string;
+  /** 输入框的可访问名称；默认「Message input」 */
+  'aria-label'?: string;
 }
 
 export function Composer({
@@ -35,6 +37,7 @@ export function Composer({
   leading,
   trailing,
   className,
+  'aria-label': ariaLabel = 'Message input',
 }: ComposerProps) {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -89,6 +92,7 @@ export function Composer({
         onChange={(e) => onValueChange(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
+        aria-label={ariaLabel}
         disabled={disabled}
         rows={1}
         className={cn(

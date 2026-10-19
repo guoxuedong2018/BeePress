@@ -13,7 +13,7 @@ layers; React is the canonical component implementation.
 | Gate | [`ui-spec/SELF-CHECK.md`](../ui-spec/SELF-CHECK.md) | Manual and automated checks |
 | Tokens | [`ui-spec/tokens.json`](../ui-spec/tokens.json), [`ui-spec/tokens.css`](../ui-spec/tokens.css) | Single source of truth |
 | React reference | [`ui-spec/impl/react`](../ui-spec/impl/react) | Buttons, cards, dialogs, composer, table, empty state |
-| Tailwind config | [`ui-spec/impl/react/tailwind.config.js`](../ui-spec/impl/react/tailwind.config.js) | Maps tokens to Tailwind classes; package consumers can require `builder-kit/tailwind.config.cjs` |
+| Tailwind config | [`ui-spec/impl/react/tailwind.config.cjs`](../ui-spec/impl/react/tailwind.config.cjs) | Maps tokens to Tailwind classes; package consumers can require `builder-kit/tailwind.config.cjs` |
 
 ## How the toolkit consumes it
 

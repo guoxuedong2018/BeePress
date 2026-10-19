@@ -41,7 +41,7 @@ export function EmptyState({
         {icon}
       </div>
 
-      <p className="text-title font-semibold text-primary wrap-balance">{title}</p>
+      <h3 className="text-title font-semibold text-primary wrap-balance">{title}</h3>
 
       {description && (
         <p className="mt-2 max-w-[360px] text-body text-secondary wrap-pretty">

@@ -25,7 +25,7 @@ export function Message({ role, children, meta, className }: MessageProps) {
   return (
     <div
       className={cn(
-        'flex w-full flex-col',
+        'group flex w-full flex-col',
         isUser ? 'items-end' : 'items-start',
         className
       )}

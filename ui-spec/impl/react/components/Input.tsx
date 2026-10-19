@@ -53,18 +53,37 @@ export function Field({
   htmlFor?: string;
   children: React.ReactNode;
 }) {
+  const autoId = React.useId();
+  const childId = React.isValidElement(children) ? children.props.id : undefined;
+  const controlId = htmlFor ?? childId ?? autoId;
+  const hintId = hint ? `${controlId}-hint` : undefined;
+  const errorId = error ? `${controlId}-error` : undefined;
+  const describedBy = [React.isValidElement(children) ? children.props['aria-describedby'] : undefined, error ? errorId : hintId]
+    .filter(Boolean)
+    .join(' ');
+
+  const control = React.isValidElement(children)
+    ? React.cloneElement(children, {
+        id: childId ?? controlId,
+        ...(describedBy ? { 'aria-describedby': describedBy } : {}),
+        ...(error ? { 'aria-invalid': true } : {}),
+      })
+    : children;
+
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={htmlFor} className="text-footnote font-medium text-primary">
+      <label htmlFor={controlId} className="text-footnote font-medium text-primary">
         {label}
       </label>
-      {children}
+      {control}
       {error ? (
-        <p role="alert" className="text-footnote text-danger">
+        <p id={errorId} role="alert" className="text-footnote text-danger">
           {error}
         </p>
       ) : hint ? (
-        <p className="text-footnote text-tertiary">{hint}</p>
+        <p id={hintId} className="text-footnote text-tertiary">
+          {hint}
+        </p>
       ) : null}
     </div>
   );

@@ -40,6 +40,11 @@ const ENV = process.env;
 /** Command prefix; everything after it is the documented `word` protocol. */
 const DOCS_CLI = process.env.BUILDER_KIT_DOCS_CLI || "docs-cli";
 
+/** Quote one dynamic value for the generated bash script. */
+export function shellQuote(value) {
+  return `'${String(value ?? "").replace(/'/g, `'\\''`)}'`;
+}
+
 /** What the user confirmed in the publishing UI; kept for publisher implementations. */
 let intent = "";
 export function setIntent(text) {
@@ -173,7 +178,7 @@ async function once(command, timeoutMs) {
 /** 建文档。**不幂等**，不会自动重试 */
 export async function createDoc({ title, source, parentViewId }) {
   const res = await call(
-    `${DOCS_CLI} word +create --title "${title}" ${source} --parent-view-id "${parentViewId}"`,
+    `${DOCS_CLI} word +create --title ${shellQuote(title)} ${source} --parent-view-id ${shellQuote(parentViewId)}`,
   );
   const r = res.result ?? res;
   return { docId: r.docId, viewId: r.shortcutId ?? r.viewId, url: r.openDocUrl };
@@ -186,14 +191,14 @@ export async function createDoc({ title, source, parentViewId }) {
  * 内容会被写成双份——这里强制补上。
  */
 export function writeDoc({ docId, source, position = "REPLACE_ALL" }) {
-  return call(`${DOCS_CLI} word +write --doc-id "${docId}" ${source} --position ${position}`, {
+  return call(`${DOCS_CLI} word +write --doc-id ${shellQuote(docId)} ${source} --position ${shellQuote(position)}`, {
     idempotent: true,
   });
 }
 
 /** 取目录大纲（小响应，不用走 capture wrapper），返回 `[{id, type, text}]` */
 export async function fetchOutline(docId) {
-  const res = await call(`${DOCS_CLI} word +fetch-jsonml --doc-id "${docId}" --view outline`, {
+  const res = await call(`${DOCS_CLI} word +fetch-jsonml --doc-id ${shellQuote(docId)} --view outline`, {
     idempotent: true,
   });
   return (res.result ?? res).items ?? [];
@@ -201,20 +206,20 @@ export async function fetchOutline(docId) {
 
 /** JsonML 局部更新。原子操作，失败整体回滚，所以可安全重试。dryRun 只让服务端核对、不落 */
 export function updateJsonml({ docId, opsFile, dryRun = false }) {
-  return call(`${DOCS_CLI} word +update-jsonml --doc-id "${docId}" --ops-file "${opsFile}"${dryRun ? " --dry-run" : ""}`, {
+  return call(`${DOCS_CLI} word +update-jsonml --doc-id ${shellQuote(docId)} --ops-file ${shellQuote(opsFile)}${dryRun ? " --dry-run" : ""}`, {
     idempotent: true,
   });
 }
 
 /** 整篇 JsonML，返回 `{ body, version, docId }` */
 export async function fetchJsonml(docId) {
-  const res = await call(`${DOCS_CLI} word +fetch-jsonml --doc-id "${docId}"`, { idempotent: true });
+  const res = await call(`${DOCS_CLI} word +fetch-jsonml --doc-id ${shellQuote(docId)}`, { idempotent: true });
   return res.result ?? res;
 }
 
 /** 建一篇空文档（正文之后用 JsonML 写）。**不幂等**，不会自动重试 */
 export async function createBlankDoc({ title, viewModel = "A3" }) {
-  const res = await call(`${DOCS_CLI} word +create --title "${title.replace(/"/g, '\\"')}" --view-model ${viewModel}`);
+  const res = await call(`${DOCS_CLI} word +create --title ${shellQuote(title)} --view-model ${shellQuote(viewModel)}`);
   const r = res.result ?? res;
   return { docId: r.docId, url: r.openDocUrl };
 }
@@ -224,7 +229,7 @@ export async function createBlankDoc({ title, viewModel = "A3" }) {
  * 追上去的图是临时的，调用方要么整篇覆盖掉，要么自己删掉那几段
  */
 export async function appendImages({ docId, files }) {
-  const res = await call(`${DOCS_CLI} word +append-image --doc-id "${docId}" ${files.map((f) => `--image "${f}"`).join(" ")}`);
+  const res = await call(`${DOCS_CLI} word +append-image --doc-id ${shellQuote(docId)} ${files.map((f) => `--image ${shellQuote(f)}`).join(" ")}`);
   const list = [res.appendedImages, res.result?.appendedImages].find(Array.isArray);
   if (!list) throw new Error("追图的返回里没有 appendedImages，确认命令是否成功");
   return list.map((x) => x.imageId);
@@ -233,13 +238,13 @@ export async function appendImages({ docId, files }) {
 /** 上传媒体资源，拿 blobStoreKey。**不幂等**（每次产生新资源），失败如实抛 */
 export async function uploadSource({ docId, file, type = "image" }) {
   const res = await call(
-    `${DOCS_CLI} +source-upload --doc-id "${docId}" --file "${file}" --type ${type}`,
+    `${DOCS_CLI} +source-upload --doc-id ${shellQuote(docId)} --file ${shellQuote(file)} --type ${shellQuote(type)}`,
   );
   return (res.result ?? res).key;
 }
 
 /** 展开知识库节点 */
 export async function listWiki(viewId) {
-  const res = await call(` +list-wiki --view-id "${viewId}"`, { idempotent: true });
+  const res = await call(`${DOCS_CLI} +list-wiki --view-id ${shellQuote(viewId)}`, { idempotent: true });
   return (res.result ?? res).items ?? [];
 }

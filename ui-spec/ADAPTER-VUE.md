@@ -11,7 +11,7 @@
 | :-- | :-- | :-- |
 | `tokens.css` | ✅ 完全复用 | 纯 CSS 变量，与框架无关 |
 | `tokens.json` | ✅ 完全复用 | 纯数据，可喂给任何生成器 |
-| `tailwind.config.js` | ✅ 基本复用 | 仅 `content` 路径需改成 `./src/**/*.{vue,ts}` |
+| `tailwind.config.cjs` | ✅ 基本复用 | 仅 `content` 路径需改成 `./src/**/*.{vue,ts}` |
 | `UI-SPEC.md` | ✅ 完全复用 | 规则描述的是设计决策，不含框架 |
 | `AGENT-RULES.md` | ✅ 完全复用 | 同上 |
 | `SELF-CHECK.md` | ⚠️ 微调 | grep 的 `--include` 要加 `*.vue` |
@@ -45,7 +45,7 @@
 ## 3. 配置调整
 
 ```js
-// tailwind.config.js —— 只需改 content
+// tailwind.config.cjs —— 只需改 content
 module.exports = {
   content: [
     './index.html',

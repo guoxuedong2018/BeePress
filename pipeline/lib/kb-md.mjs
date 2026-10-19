@@ -21,8 +21,9 @@ export function slugify(heading) {
 }
 
 export function parseFrontMatter(text) {
-  const m = text.match(/^---\n([\s\S]*?)\n---\n?/);
-  if (!m) return { data: {}, body: text, raw: "" };
+  const normalized = String(text ?? "").replace(/\r\n/g, "\n").replace(/^\uFEFF/, "");
+  const m = normalized.match(/^---\n([\s\S]*?)\n---\n?/);
+  if (!m) return { data: {}, body: normalized, raw: "" };
   const data = {};
   for (const line of m[1].split("\n")) {
     const kv = line.match(/^([A-Za-z_][\w-]*):\s*(.*)$/);
@@ -34,7 +35,7 @@ export function parseFrontMatter(text) {
         ? v.slice(1, -1).split(",").map((s) => s.trim()).filter(Boolean)
         : v;
   }
-  return { data, body: text.slice(m[0].length), raw: m[0] };
+  return { data, body: normalized.slice(m[0].length), raw: m[0] };
 }
 
 export function renderFrontMatter(data) {

@@ -56,8 +56,8 @@ export function CodeBlock({ code, language = 'text', className }: CodeBlockProps
           aria-label={copied ? '已复制' : '复制代码'}
           className={cn(
             'rounded-sm px-1.5 py-0.5 text-caption transition-colors duration-fast ease-out',
-            'text-code-text-muted hover:bg-white/10 hover:text-code-text',
-            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30'
+            'text-code-text-muted hover:bg-code-hover hover:text-code-text',
+            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-code-ring'
           )}
         >
           {copied ? '✓ 已复制' : '复制'}

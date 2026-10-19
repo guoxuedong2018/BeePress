@@ -89,11 +89,11 @@ export function CommentLayer() {
     const onKeyDown = (e) => {
       if (e.key === "Meta" || e.key === "Control") setMetaHeld(true);
       if (e.key !== "Escape") return;
-      // Esc：先关输入气泡，否则退出评论模式
+      // Esc：先关输入气泡，否则退出评论模式。草稿留在 localStorage，
+      // 重新点同一个元素还能接着写；只有显式「取消」才丢弃。
       if (live.current.composer) {
         setComposer(null);
         setDraft("");
-        if (live.current.draftKey) writeDraft(live.current.draftKey, "");
       } else if (reviewState.commentMode) reviewState.commentMode = false;
     };
     const onKeyUp = (e) => {

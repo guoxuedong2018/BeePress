@@ -59,9 +59,10 @@ export async function loadAll() {
     if (!r.ok) return;
     const j = await r.json();
     // 旧版本落盘的 v1 锚点在这里统一升级，调用方只会看到 v2
-    reviewState.comments = (j.comments ?? []).map((c) => ({
+    reviewState.comments = (j.comments ?? []).filter(Boolean).map((c) => ({
       ...c,
       anchor: migrateAnchor(c.anchor),
+      replies: Array.isArray(c.replies) ? c.replies : [],
     }));
     reviewState.persistent = true;
   } catch {

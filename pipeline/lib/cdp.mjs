@@ -106,6 +106,10 @@ function readEndpoint(child) {
         resolve(`http://${match[1]}`);
       }
     });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(new Error(`Chrome 启动失败：${err.message}`));
+    });
     child.on("exit", (code) => {
       clearTimeout(timer);
       reject(new Error(`Chrome 退出，code=${code}`));

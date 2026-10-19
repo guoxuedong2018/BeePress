@@ -37,6 +37,18 @@
   `text-primary`.
 - **Dialog focus** — destructive dialogs now focus an explicit
   `data-autofocus` target (Cancel) instead of the last focusable button.
+- **Security hardening** — shell-quoted document CLI arguments, blocked
+  `docs/kb` path traversal in publishing, refused to overwrite corrupt review
+  files, and required a same-origin confirmation token for publishing.
+- **Compatibility and robustness** — CRLF front-matter, legacy comments without
+  `replies`, JSX in `.js` files, `<MessageActions>` hover, composer labelling,
+  missing ffmpeg/Chrome spawn errors, and publish modal focus handling.
+- **UI token cleanup** — danger buttons, code-block hover/focus, table headers
+  and segmented tracks now use their semantic roles.
+- **Dependency refresh** — Vite 6.4, Mermaid 12.2 and a patched
+  `postcss-selector-parser` override; the remaining audit findings are Tailwind
+  3's watch-only `braces` chain and the EOL Vue 2 runtime, both requiring a
+  breaking major upgrade to remove.
 - Fixed a Vite Less edge case where an `@import` in a comment triggered URL
   rebasing.
 

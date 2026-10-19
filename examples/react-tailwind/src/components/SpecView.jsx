@@ -99,7 +99,7 @@ const CONTRACTS = [
   ["Card", "radius panel · shadow sm · one border · 1.5px hover lift"],
   ["Dialog", "max 448px · radius 2xl · focus trap · return focus"],
   ["Composer", "min 88px / max 384px · radius composer · IME guard"],
-  ["Table", "surface-3 header · 12/16 cells · numeric right + tnum"],
+  ["Table", "surface-0 header · 12/16 cells · numeric right + tnum"],
   ["Empty state", "24px icon · title scale · one primary action required"],
   ["Segmented", "pill track · 32px height · 120ms snap indicator"],
   ["Code block", "radius xl · 36px header · copy feedback"],

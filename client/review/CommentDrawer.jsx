@@ -60,7 +60,7 @@ export function CommentDrawer() {
   const sendReply = (c) => {
     if (!replyDraft.trim()) return;
     const cur = real(c);
-    updateComment({ ...cur, replies: [...cur.replies, { author: reviewState.author, body: replyDraft.trim(), at: new Date().toISOString() }] });
+    updateComment({ ...cur, replies: [...(cur.replies ?? []), { author: reviewState.author, body: replyDraft.trim(), at: new Date().toISOString() }] });
     cancelReply();
   };
   /** 三层降级重定位，直接滚到元素本身而非整页区域 */
@@ -147,9 +147,9 @@ export function CommentDrawer() {
                 {c.author} · {timeLabel(c.createdAt)}
               </div>
 
-              {c.replies.length > 0 && (
+              {(c.replies ?? []).length > 0 && (
                 <div className="cd-replies">
-                  {c.replies.map((r, i) => (
+                  {(c.replies ?? []).map((r, i) => (
                     <div key={i} className="cd-reply">
                       <span className="cd-reply-body">{r.body}</span>
                       <span className="cd-reply-meta">

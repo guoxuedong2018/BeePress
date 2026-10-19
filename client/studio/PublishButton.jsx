@@ -28,9 +28,12 @@ export function PublishButton() {
   const [shown, setShown] = useState(false);
   const [planning, setPlanning] = useState(false);
   const [plan, setPlan] = useState("");
+  const [planToken, setPlanToken] = useState("");
   /** 打开时上一次正式发布的结局：没发完的话，计划上方说一句这次会接着发 */
   const [lastRun, setLastRun] = useState(null);
   const logRef = useRef(null);
+  const dialogRef = useRef(null);
+  const restoreFocusRef = useRef(null);
 
   const job = snap.publish;
   // 算计划也占同一个任务槽（dry-run），它在跑不算「发布中」
@@ -63,15 +66,51 @@ export function PublishButton() {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [job?.output]);
 
+  useEffect(() => {
+    if (!shown) return undefined;
+    restoreFocusRef.current = document.activeElement;
+    const panel = dialogRef.current;
+    const focusables = () =>
+      [...(panel?.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? [])];
+    focusables()[0]?.focus({ preventScroll: true });
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        setShown(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const items = focusables();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("keydown", onKey, true);
+      restoreFocusRef.current?.focus?.();
+    };
+  }, [shown]);
+
   const open = async () => {
     setShown(true);
     if (running) return;
     // 每次点开都重算：上次的结果留一句话，不挡着这一次
     if (done) setLastRun({ ok: job.code === 0, at: job.finishedAt });
     setPlanning(true);
+    setPlanToken("");
     try {
       const j = await publishPlan();
       setPlan(j.output || "");
+      setPlanToken(j.code === 0 ? j.confirmToken || "" : "");
     } catch (e) {
       setPlan(`算不出计划：${e.message}`);
     } finally {
@@ -81,9 +120,11 @@ export function PublishButton() {
 
   const confirm = async () => {
     const was = plan;
+    const token = planToken;
     setPlan("");
+    setPlanToken("");
     try {
-      await publishNow();
+      await publishNow(token);
     } catch (e) {
       setPlan(`${was}\n\n没有开始发布：${e.message}`);
     }
@@ -97,7 +138,7 @@ export function PublishButton() {
 
       {shown && (
         <div className="pb-mask" onClick={(e) => e.target === e.currentTarget && setShown(false)}>
-          <div className="pb-dialog" role="dialog" aria-label="发布到云文档">
+          <div ref={dialogRef} className="pb-dialog" role="dialog" aria-modal="true" aria-label="发布到云文档" tabIndex={-1}>
             <header className="pb-head">
               <strong>{running ? "正在发布" : done ? "发布结束" : "发布到云文档"}</strong>
               <Btn kind="ghost" size="sm" onClick={() => setShown(false)}>
@@ -136,7 +177,7 @@ export function PublishButton() {
             <footer className="pb-foot">
               <Btn onClick={() => setShown(false)}>{running || done ? "关闭" : "取消"}</Btn>
               {!running && !done && (
-                <Btn kind="primary" disabled={planning || !hasChanges} onClick={confirm}>
+                <Btn kind="primary" disabled={planning || !hasChanges || !planToken} onClick={confirm}>
                   {hasChanges ? "确认发布" : "没有要发布的改动"}
                 </Btn>
               )}

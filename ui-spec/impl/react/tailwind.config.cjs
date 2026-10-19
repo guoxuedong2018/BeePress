@@ -68,6 +68,8 @@ module.exports = {
         'code-text': 'var(--code-text)',
         'code-text-muted': 'var(--code-text-muted)',
         'code-border': 'var(--code-border)',
+        'code-hover': 'var(--code-hover)',
+        'code-ring': 'var(--code-ring)',
         overlay: 'var(--overlay)',
       },
 

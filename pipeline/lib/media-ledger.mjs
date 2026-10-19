@@ -173,6 +173,9 @@ function sameMargin(A, B, [top, right, bottom, left]) {
 }
 
 async function compareUncached(hashA, hashB, ext, inset) {
+  if (!HASH_RE.test(String(hashA ?? "")) || !HASH_RE.test(String(hashB ?? ""))) {
+    return { same: false, cells: null, reason: "缓存里的哈希不合法，比不了" };
+  }
   const [a, b] = await Promise.all([hashA, hashB].map((h) => fs.readFile(path.join(BLOB_DIR, `${h}${ext}`)).catch(() => null)));
   if (!a || !b) return { same: false, cells: null, reason: "缓存里缺一版，比不了" };
   const A = decodePng(a);
@@ -362,23 +365,35 @@ const WIDE_AREA = 0.3;
 const WIDE_COVER = 0.35;
 const SCATTERED_SPOTS = 12;
 
+const HASH_RE = /^[0-9a-f]{8,64}$/i;
+
 /** 某一版截图拍下时的画面清单（见 layout-snapshot.mjs）。这个功能之前拍的没有，返回 null */
 export async function loadLayout(hash) {
+  if (!HASH_RE.test(String(hash ?? ""))) return null;
   return fs
     .readFile(path.join(BLOB_DIR, `${hash}.layout.json`), "utf8")
     .then(JSON.parse)
     .catch(() => null);
 }
 
+/** 只允许 docs/kb 内的相对路径；越界路径一律视为不存在，避免 Markdown 引用读到仓库外。 */
+function insideKb(rel) {
+  const abs = path.resolve(KB_DIR, String(rel ?? ""));
+  const diff = path.relative(KB_DIR, abs);
+  return Boolean(diff) && !diff.startsWith("..") && !path.isAbsolute(diff);
+}
+
 /** 产物文件现在的内容哈希（纯读，不碰缓存）。按实际字节算，不信台账——有人手换一张图也瞒不过 */
 export async function hashMedia(rel) {
-  const buf = await fs.readFile(path.join(KB_DIR, rel)).catch(() => null);
+  if (!insideKb(rel)) return null;
+  const buf = await fs.readFile(path.resolve(KB_DIR, rel)).catch(() => null);
   return buf ? shaBuf(buf) : null;
 }
 
 /** 产物文件 → 内容哈希，并把这一版存进内容寻址缓存 */
 export async function storeBlob(rel) {
-  const abs = path.join(KB_DIR, rel);
+  if (!insideKb(rel)) return null;
+  const abs = path.resolve(KB_DIR, rel);
   const buf = await fs.readFile(abs).catch(() => null);
   if (!buf) return null;
   const hash = shaBuf(buf);
@@ -390,7 +405,7 @@ export async function storeBlob(rel) {
 
 /** 缓存里按哈希取回某一版产物的相对路径（相对 docs/kb），不存在返回 null */
 export async function blobPath(hash, ext) {
-  if (!hash) return null;
+  if (!HASH_RE.test(String(hash ?? ""))) return null;
   const rel = path.join("_blobs", `${hash}${ext}`);
   return fs.access(path.join(KB_DIR, rel)).then(() => rel, () => null);
 }
@@ -404,6 +419,7 @@ export async function blobPath(hash, ext) {
 export async function recordMedia(entries) {
   const ledger = await loadLedger();
   for (const { key, route, warnings, inset, layout } of entries) {
+    if (!insideKb(key)) throw new Error(`物料路径越界：${key}`);
     const sources = await sourcesForRoute(REPO_ROOT, route);
     const hash = await storeBlob(key);
     if (hash && layout) await fs.writeFile(path.join(BLOB_DIR, `${hash}.layout.json`), JSON.stringify(layout));
@@ -451,7 +467,8 @@ export async function staleMedia() {
   const ledger = await loadLedger();
   const out = [];
   for (const [key, meta] of Object.entries(ledger)) {
-    const exists = await fs.access(path.join(KB_DIR, key)).then(() => true, () => false);
+    if (!insideKb(key)) continue;
+    const exists = await fs.access(path.resolve(KB_DIR, key)).then(() => true, () => false);
     if (!exists) continue;
     const drift = await sourceDrift(meta);
     if (drift?.stale) out.push({ key, route: meta.route, capturedAt: meta.capturedAt, ...drift });

@@ -416,17 +416,18 @@ export async function pollPublish() {
 
 /** 算一遍这次会动哪些页，不碰云端。确认框里摆的就是它 */
 export async function publishPlan() {
-  await api("/publish", { method: "POST", body: { dryRun: true } });
+  const started = await api("/publish", { method: "POST", body: { dryRun: true } });
   for (let i = 0; i < 60; i += 1) {
     const job = await pollJob("publish");
-    if (job && !job.running) return job;
+    if (job && !job.running) return { ...job, confirmToken: started.confirmToken };
     await new Promise((r) => window.setTimeout(r, 300));
   }
   throw new Error("算发布计划超时");
 }
 
-export async function publishNow() {
-  await api("/publish", { method: "POST", body: {} });
+export async function publishNow(confirmToken) {
+  if (!confirmToken) throw new Error("发布确认已过期，请重新打开发布面板算一次计划");
+  await api("/publish", { method: "POST", body: { confirmToken } });
   notify("发布已开始，十几分钟，关掉审阅台也不影响", "info");
   return pollJob("publish");
 }
