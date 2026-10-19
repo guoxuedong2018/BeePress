@@ -8,6 +8,7 @@
   z-index: @studio-z-surface;
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
   background: @color-page-bg;
 }
 
@@ -22,6 +23,15 @@
   border-bottom: 1px solid @color-border;
 }
 
+.st-brand-sub {
+  margin-left: @space-8;
+  font-size: @bk-fs-xs;
+  color: @color-text-weak;
+}
+
+@container (max-width: 760px) {
+  .st-brand-sub { display: none; }
+}
 .st-brand {
   font-size: @bk-fs-md;
   font-weight: 600;

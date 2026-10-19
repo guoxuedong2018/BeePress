@@ -130,7 +130,7 @@ function ReshootButton({ items, running }) {
 }
 
 /**
- * 内容审阅台 —— 与评审套件平级的第二个工具层。
+ * 内容检查台 —— 与评审套件平级的第二个工具层。
  *
  * 两块：顶栏的「内容」下拉是生产出来的全部篇目（按知识库大纲分组，能搜、能只看要处理的、能按话题新建）；
  * 下面是打开的那一篇（审阅 / 构成）。要 Agent 写的活复制成指令，交给 IDE 里的 Agent。
@@ -150,9 +150,10 @@ export function StudioRoot() {
       <DemoRecorder />
       <MediaLightbox />
       {snap.open && (
-        <section className="st-surface" data-review-ui role="dialog" aria-label="内容审阅">
+        <section className="st-surface" data-review-ui role="dialog" aria-label="内容检查">
           <header className="st-bar">
-            <span className="st-brand">内容审阅</span>
+            <span className="st-brand">内容检查</span>
+            <span className="st-brand-sub">确认内容仍准确 · 不会自动发布</span>
             {s ? <ContentMenu /> : snap.loading ? <span className="st-muted">读取中…</span> : null}
 
             <div className="st-bar-right">
@@ -163,7 +164,7 @@ export function StudioRoot() {
               )}
               {snap.persistent && <ReshootButton items={reshootNow} running={shootRunning} />}
               <Btn kind="ghost" disabled={snap.loading} title="在编辑器里改了 md 或页面代码之后，重新比对每一篇的图与原文" onClick={refresh}>
-                {snap.loading ? "检查中…" : "重新检查"}
+                {snap.loading ? "检查中…" : "刷新检查"}
               </Btn>
               {snap.persistent && (
                 <>
@@ -187,8 +188,8 @@ export function StudioRoot() {
                 <div className="st-blank">读取中…</div>
               ) : (
                 <div className="st-blank">
-                  <p>从左上角的篇目下拉打开一篇；{todo.length ? `有 ${todo.length} 篇有要看的地方。` : "每一篇都看过了。"}</p>
-                  <p className="st-muted">正文就是 docs/kb 下的 md：小处在这里直接改，成段地写交给 IDE 里的 Agent。</p>
+                  <p>从左上角的篇目下拉打开一篇；{todo.length ? `有 ${todo.length} 篇待检查。` : "每一篇都检查完了。"}</p>
+                  <p className="st-muted">打开后先看「待确认」卡片：确认只记录这次检查，不会自动发布。</p>
                 </div>
               )}
             </main>

@@ -144,8 +144,13 @@ export function PublishButton() {
 
   return (
     <div className="pb">
-      <Btn className={cx(running && "is-running")} title={running ? "发布进行中，点开看进度" : `先列出这次会新建、更新${targetLabel}里的哪几篇，你确认了才发`} onClick={open}>
-        {running ? "发布中…" : "发布"}
+      <Btn
+        className={cx(running && "is-running")}
+        disabled={unconfigured}
+        title={unconfigured ? destination.description : running ? "发布进行中，点开看进度" : `先列出这次会新建、更新${targetLabel}里的哪几篇，你确认了才发`}
+        onClick={open}
+      >
+        {running ? "发布中…" : unconfigured ? "发布（未配置）" : "发布"}
       </Btn>
 
       {shown && (

@@ -201,8 +201,14 @@ export function makeResolver() {
 
       if (ref.type === "spec") {
         const frs = (await r.frs()).get(ref.key);
-        if (!frs) return { value: null, missing: true, reason: `挂靠的需求 ${ref.key} 不存在了` };
-        return { value: specFingerprint(ref.key, frs), status: frsStatus(frs) };
+        if (!frs) return { value: null, missing: true, reason: `关联的需求文档 ${ref.key} 不存在了` };
+        const summary = frs.goal || frs.background?.problem?.[0] || "";
+        return {
+          value: specFingerprint(ref.key, frs),
+          status: frsStatus(frs),
+          specTitle: frs.title ?? ref.key,
+          specSummary: String(typeof summary === "string" ? summary : summary?.text ?? "").trim(),
+        };
       }
       return { value: null, missing: true, reason: "未知引用" };
     },
@@ -326,7 +332,7 @@ function reasonOf(ref, state, visual) {
   if (ref.type === "shot" && visual?.reason) return `重拍后和上次确认的那版比不了：${visual.reason}`;
   if (ref.type === "clip") return "页面代码改过，录屏已重录，从头看一遍操作还对不对";
   if (ref.type === "shot") return "页面改过，重拍后画面和上次确认的那版不一样";
-  if (ref.type === "spec") return "这篇挂靠的需求改过了";
+  if (ref.type === "spec") return "这篇关联的需求文档更新了";
   if (ref.type === "fact") return "出处里的这句话改了";
   return "有变化";
 }

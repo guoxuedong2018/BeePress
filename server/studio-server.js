@@ -17,7 +17,7 @@ import { loadPublishGateway, publishDestinationInfo } from "../pipeline/lib/publ
 import { KB_DIR, PIPELINE_DIR, REPO_ROOT } from "../pipeline/lib/paths.mjs";
 
 /**
- * 内容审阅台 · 开发态服务
+ * 内容检查台 · 开发态服务
  * ------------------------------------------------------------------
  * 与评审套件的 review-server 同级：都只在 `vite dev` 挂载。
  *

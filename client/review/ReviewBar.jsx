@@ -76,7 +76,7 @@ export function ReviewBar({ tools }) {
           评论区{openCount > 0 ? ` · ${openCount}` : ""}
         </Btn>
 
-        {/* 同级套件（内容审阅台）的入口位：评审层不认识挂进来的是什么，由 App 组装 */}
+        {/* 同级套件（内容检查台）的入口位：评审层不认识挂进来的是什么，由 App 组装 */}
         {tools}
       </div>
     </div>

@@ -12,6 +12,7 @@ import {
   copyForAgent,
   focusSlot,
   notify,
+  openFile,
   openInEditor,
   openLightbox,
   refTitle,
@@ -24,6 +25,7 @@ import {
 import "./FileView.less";
 
 const flat = (s) => String(s ?? "").replace(/\s+/g, " ").trim();
+const GUIDE_KEY = "builder-kit:content-check-guide";
 const fmt = (iso) => {
   const d = new Date(iso);
   return `${d.getMonth() + 1}-${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
@@ -78,7 +80,7 @@ function agentGoalFor(r) {
   return `第 ${r.line} 行的${r.type === "clip" ? "录屏" : "截图"}「${r.caption || r.key}」：${r.reason}。对照现在的界面和需求规格，判断这张图旁边的正文还对不对：不对就改成一致的，对就不用动，并说明理由。`;
 }
 
-function RefCard({ f, r, busy, persistent, root, onEdit }) {
+function RefCard({ f, r, busy, persistent, root, onEdit, advanced }) {
   const changes = changesOf(r);
   // 悬停在某一条变化上：两张图上只框这一条
   const [hot, setHot] = useState(null);
@@ -87,11 +89,11 @@ function RefCard({ f, r, busy, persistent, root, onEdit }) {
   const v = r.state === "changed" ? r.visual : null;
   const listed = v?.basis === "layout";
   const media = r.type === "shot" || r.type === "clip";
-  const toAgent = (
-    <Btn kind="ghost" size="sm" title="复制一条说清这一处的指令，到 IDE 里的 Agent 对话里粘贴" onClick={() => copyForAgent(f.path, agentGoalFor(r))}>
-      复制给 Agent
+  const toAgent = advanced ? (
+    <Btn kind="ghost" size="sm" title="复制一条说清这一处的修改要求，交给 IDE 里的 AI" onClick={() => copyForAgent(f.path, agentGoalFor(r))}>
+      让 AI 修改
     </Btn>
-  );
+  ) : null;
   return (
     <article className={cx("fv-card", `is-${r.state}`)}>
       <header className="fv-card-head">
@@ -99,11 +101,21 @@ function RefCard({ f, r, busy, persistent, root, onEdit }) {
           {refTitle(r)}
         </span>
         <span className="fv-state">{REF_STATE_LABEL[r.state]}</span>
-        <button type="button" className="fv-line" title="在编辑器里定位到这一行" onClick={() => openInEditor(f.abs, r.line)}>
-          第 {r.line} 行
+        <button type="button" className="fv-line" title={`在编辑器里定位到第 ${r.line} 行`} onClick={() => openInEditor(f.abs, r.line)}>
+          查看原文
         </button>
       </header>
       <p className="fv-reason">{r.reason}</p>
+      {r.type === "spec" && (
+        <>
+          {r.specSummary && <p className="fv-quote is-now">{r.specSummary}</p>}
+          <p className="st-help">
+            {r.state === "changed"
+              ? "需求文档更新了：打开看变更，或让 AI 按新需求核对这篇。确认这处只表示这篇内容仍然成立。"
+              : "这篇关联了需求文档；先打开核对内容，再决定是否确认。"}
+          </p>
+        </>
+      )}
       {r.warnings?.length > 0 && <MediaWarnings list={r.warnings} />}
 
       {media && (
@@ -175,10 +187,10 @@ function RefCard({ f, r, busy, persistent, root, onEdit }) {
         {r.type === "fact" && r.adoptable ? (
           <>
             <Btn kind="primary" size="sm" disabled={busy} title="把正文里这句换成需求规格现在的写法" onClick={() => adoptFact(f.path, r.id)}>
-              换成新写法
+              采用新写法
             </Btn>
             <Btn size="sm" disabled={busy} title="规格的措辞变了，但这篇原来的说法仍然对：确认它，规格再变才会再提醒" onClick={() => ackRefs(f.path, [r.id])}>
-              保留原写法
+              保留现在的写法
             </Btn>
             {toAgent}
           </>
@@ -191,7 +203,7 @@ function RefCard({ f, r, busy, persistent, root, onEdit }) {
             )}
             {persistent && (
               <Btn size="sm" onClick={() => onEdit(r.line)}>
-                改这一段
+                编辑正文
               </Btn>
             )}
             {toAgent}
@@ -205,7 +217,7 @@ function RefCard({ f, r, busy, persistent, root, onEdit }) {
         ) : (
           <>
             <Btn size="sm" disabled={busy || !persistent} title="看过了，旁边的正文仍然对：记下现在这一版，它再变才会再提醒" onClick={() => ackRefs(f.path, [r.id])}>
-              确认没问题
+              确认这处
             </Btn>
             {r.type !== "spec" && persistent && (
               <Btn kind="ghost" size="sm" onClick={() => onEdit(r.line)}>
@@ -220,7 +232,7 @@ function RefCard({ f, r, busy, persistent, root, onEdit }) {
             )}
             {r.type === "spec" && (
               <Btn kind="ghost" size="sm" onClick={() => openInEditor(`${root}/docs/features/${r.key}/FRS.json`)}>
-                打开需求件套
+                查看需求文档
               </Btn>
             )}
           </>
@@ -245,6 +257,14 @@ export function FileView() {
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [flash, setFlash] = useState(null);
+  const [advanced, setAdvanced] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(() => {
+    try {
+      return localStorage.getItem(GUIDE_KEY) !== "1";
+    } catch {
+      return false;
+    }
+  });
   const rootRef = useRef(null);
   const editorRef = useRef(null);
 
@@ -256,6 +276,11 @@ export function FileView() {
   }, [editing?.start]);
 
   const open = useMemo(() => (f?.refs ?? []).filter((r) => r.state !== "ok" && !r.unverified), [f]);
+  const queue = useMemo(
+    () => (snap.status?.files ?? []).filter((x) => !x.iterating && (x.open || 0) + (x.unfilled || 0) > 0),
+    [snap.status],
+  );
+  const queueIndex = queue.findIndex((x) => x.path === f?.path);
   // 这篇用到的截图录屏里，拍完之后页面代码改过的：重拍在这一篇里做，不另设一张清单
   const stale = useMemo(() => {
     const keys = new Set(snap.status?.files.find((x) => x.path === f?.path)?.stale ?? []);
@@ -294,11 +319,32 @@ export function FileView() {
   const broken = open.filter((r) => r.state === "missing");
   const ackable = open.filter((r) => r.state !== "missing");
   const todoCount = open.length;
+  const pageTodo = todoCount + (f.unfilled || 0);
   const root = snap.status?.root ?? "";
   const busy = !!snap.busy;
   const byStart = new Map(blocks.map((b) => [b.start, b.open]));
   const toc = (f.sections ?? []).filter((x) => x.level >= 2 && x.level <= 4).map((x) => ({ ...x, open: byStart.get(x.line) ?? 0 }));
   const blockAt = (line) => blocks.find((b) => line >= b.start && line < b.end) ?? null;
+  const dismissGuide = () => {
+    setGuideOpen(false);
+    try {
+      localStorage.setItem(GUIDE_KEY, "1");
+    } catch {
+      // localStorage 不可用时只关掉本次提示
+    }
+  };
+  const startChecking = () => {
+    if (todoCount > 0) {
+      rootRef.current?.querySelector(".fv-card")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    } else if (f.unfilled > 0) {
+      setView("structure");
+    }
+  };
+  const nextPage = () => {
+    if (queue.length < 2) return;
+    const next = queue[(Math.max(queueIndex, 0) + 1) % queue.length];
+    if (next) openFile(next.path);
+  };
 
   const startEdit = (b) => {
     if (editing && draft !== editing.before && editing.start !== b.start) return notify("先保存或取消正在改的那一段");
@@ -345,21 +391,33 @@ export function FileView() {
           <p className="st-help">
             {f.path}
             {f.docStatus && ` · ${f.docStatus}`} · {f.reviewedAt ? `上次确认 ${fmt(f.reviewedAt)}` : "从没确认过"} · 用了 {f.refs.length} 处图与原文
-            {f.unfilled > 0 && ` · ${f.unfilled} 个格子待填`}
+            {f.unfilled > 0 && ` · ${f.unfilled} 处待补充`}
           </p>
           {f.topic && <p className="fv-topic">话题：{f.topic}</p>}
+          <p className="fv-progress">
+            {queue.length > 1 ? `待检查 ${queue.length} 篇 · 第 ${Math.max(queueIndex + 1, 1)} 篇` : "当前待检查内容"}
+            {todoCount > 0 ? ` · 本篇 ${todoCount} 处待确认` : f.unfilled > 0 ? ` · 本篇 ${f.unfilled} 处待补充` : " · 本篇已检查完"}
+          </p>
         </div>
         <div className="st-row fv-actions">
           <div className="fv-tabs" role="tablist">
             {[
-              ["review", "审阅", "要看的地方，和就地可改的正文"],
-              ["structure", "构成", "这篇由哪几屏、哪些截图录屏和原文组成；在这里规划各节、填格子、示范录制"],
+              ["review", "检查", "待确认内容和可就地编辑的正文"],
+              ["structure", "页面结构", "这篇由哪几屏、哪些截图录屏和原文组成；在这里规划各节、补充内容、示范录制"],
             ].map(([v, label, tip]) => (
               <button key={v} type="button" role="tab" aria-selected={snap.view === v} title={tip} className={cx(snap.view === v && "is-on")} onClick={() => setView(v)}>
                 {label}
               </button>
             ))}
           </div>
+          {queue.length > 1 && (
+            <Btn size="sm" title="打开下一篇待检查的内容" onClick={nextPage}>
+              下一篇
+            </Btn>
+          )}
+          <Btn kind="ghost" size="sm" aria-pressed={advanced} title="显示让 AI 修改、结构编辑等高级操作" onClick={() => setAdvanced(!advanced)}>
+            {advanced ? "收起高级" : "高级"}
+          </Btn>
           <Btn title="md 就是这篇的唯一真源，大改在编辑器里做" onClick={() => openInEditor(f.abs, 1)}>
             在编辑器打开
           </Btn>
@@ -373,6 +431,23 @@ export function FileView() {
           <div className="fv-body">
             {f.iterating && (
               <p className="fv-banner">这页标了「正在迭代」：{f.iterating}。页面收口前变动是预期的，不必逐条处理；收口后删掉 front-matter 里的 iterating 再整页过一遍。</p>
+            )}
+
+            {guideOpen && pageTodo > 0 && (
+              <div className="fv-guide">
+                <div>
+                  <strong>先看变更，再做确认</strong>
+                  <span>每张卡片都列出要判断的内容和来源；确认只记录这次检查，不会发布。</span>
+                </div>
+                <div className="st-row">
+                  <Btn kind="primary" size="sm" onClick={startChecking}>
+                    {todoCount > 0 ? "开始检查" : "去补充内容"}
+                  </Btn>
+                  <Btn kind="ghost" size="sm" onClick={dismissGuide}>
+                    知道了
+                  </Btn>
+                </div>
+              </div>
             )}
 
             {stale.length > 0 && (
@@ -389,7 +464,7 @@ export function FileView() {
             {todoCount > 0 ? (
               <section className="fv-open">
                 <header className="fv-open-head">
-                  <h4>要看的 {todoCount} 处</h4>
+                  <h4>待确认 {todoCount} 处</h4>
                   {ackable.length > 1 && (
                     <Btn size="sm" disabled={busy || !snap.persistent} title="逐张看过、旁边的正文都还对再点：记下现在这一版，它们再变才会再提醒" onClick={() => ackRefs(f.path)}>
                       {snap.busy === "ack" ? "确认中…" : `下面 ${ackable.length} 处图与原文都没问题`}
@@ -398,19 +473,29 @@ export function FileView() {
                   {ackable.length > 1 && broken.length > 0 && <span className="st-muted">找不到的 {broken.length} 处要改正文</span>}
                 </header>
                 {open.map((r) => (
-                  <RefCard key={r.id} f={f} r={r} busy={busy} persistent={snap.persistent} root={root} onEdit={editAt} />
+                  <RefCard key={r.id} f={f} r={r} busy={busy} persistent={snap.persistent} root={root} onEdit={editAt} advanced={advanced} />
                 ))}
               </section>
             ) : (
-              <p className="fv-clean">
-                图与原文都和上次确认时一致，没有要看的。
+              <div className="fv-clean">
+                {f.unfilled > 0 ? `没有待确认内容，但还有 ${f.unfilled} 处待补充。` : "这一页检查完了，没有待确认内容。"}
                 {f.unverified > 0 && `其中 ${f.unverified} 处出自人工记录，系统验不了，改动时留意。`}
-              </p>
+                {f.unfilled > 0 && (
+                  <Btn kind="primary" size="sm" onClick={() => setView("structure")}>
+                    去页面结构补充
+                  </Btn>
+                )}
+                {queue.length > 1 && (
+                  <Btn kind="primary" size="sm" onClick={nextPage}>
+                    去下一篇
+                  </Btn>
+                )}
+              </div>
             )}
 
             <section className="fv-doc">
               <h4>
-                正文 <span className="st-muted">（高亮的是要看的地方。悬停一段点「编辑」直接改，点图看大图）</span>
+                正文 <span className="st-muted">（高亮的是待确认内容。把鼠标移到段落上点「编辑」可直接改；点图看大图）</span>
               </h4>
               <div className="st-md" onClick={onDocClick}>
                 {blocks.map((b) => {
@@ -483,7 +568,7 @@ export function FileView() {
             <p className="fv-rail-title">目录</p>
             {todoCount > 0 && (
               <button type="button" className="fv-toc is-top" onClick={() => rootRef.current?.querySelector(".fv-open")?.scrollIntoView({ block: "start", behavior: "smooth" })}>
-                要看的 {todoCount} 处
+                待确认 {todoCount} 处
               </button>
             )}
             {toc.map((t) => (

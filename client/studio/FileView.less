@@ -143,7 +143,26 @@
 
 .fv-title { flex: 1; min-width: 0; }
 .fv-topic { margin: 2px 0 0; font-size: @bk-fs-sm; color: @color-text-secondary; }
+.fv-progress { margin: 4px 0 0; font-size: @bk-fs-sm; color: @color-text-weak; }
 .fv-actions { flex: 0 0 auto; margin-top: 0; }
+
+.fv-guide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: @space-16;
+  align-items: center;
+  justify-content: space-between;
+  padding: @space-12;
+  margin: 0 0 @space-12;
+  background: @color-status-info-bg;
+  border-left: 3px solid @color-status-info;
+  border-radius: @radius-control;
+
+  > div:first-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  strong { font-size: @bk-fs-sm; color: @color-heading; }
+  span { font-size: @bk-fs-sm; color: @color-text-secondary; }
+  .st-row { flex: 0 0 auto; margin-top: 0; }
+}
 
 .fv-banner {
   padding: @space-8 @space-12;
@@ -255,6 +274,10 @@
 .fv-note { font-size: @bk-fs-xs; }
 
 .fv-clean {
+  display: flex;
+  flex-wrap: wrap;
+  gap: @space-8 @space-12;
+  align-items: center;
   padding: @space-8 @space-12;
   font-size: @bk-fs-sm;
   color: @color-status-success;

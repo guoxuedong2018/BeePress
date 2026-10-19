@@ -3,7 +3,7 @@ import { proxy } from "valtio";
 import { getHost } from "../core/host";
 
 /**
- * 内容审阅台 · 运行时状态
+ * 内容检查台 · 运行时状态
  * ------------------------------------------------------------------
  * 与评审套件的 store 同构：独立的 valtio proxy，不进宿主的状态树——工具层要能整体剥离。
  *
@@ -441,18 +441,18 @@ export async function publishNow(confirmToken) {
 // 展示用
 // ────────────────────────────────────────────────────────────────
 
-export const REF_STATE_LABEL = { ok: "没变", changed: "有变化", unreviewed: "没确认过", missing: "找不到了" };
+export const REF_STATE_LABEL = { ok: "已确认", changed: "需要确认", unreviewed: "待确认", missing: "来源失效" };
 export const BASIS_LABEL = { frs: "需求规格", code: "原型代码", note: "人工记录" };
 
 /** 卡片标题：截图录屏说它拍的是什么（图注），原文说它出自哪 */
 export function refTitle(r) {
   if (r.type === "shot") return `截图：${r.caption || r.key}`;
   if (r.type === "clip") return `录屏：${r.caption || r.key}`;
-  if (r.type === "spec") return `挂靠的需求 ${r.key}`;
+  if (r.type === "spec") return `来源需求：${r.specTitle || r.key}`;
   const kind = String(r.basis ?? "").split(":")[0];
-  if (kind === "code") return "照抄的界面文案";
-  if (kind === "frs") return "照抄的需求规格";
-  return BASIS_LABEL[kind] ?? "照抄的原文";
+  if (kind === "code") return "正文引用：界面文案";
+  if (kind === "frs") return "正文引用：需求规格";
+  return kind === "note" ? "正文引用：人工记录" : "正文引用";
 }
 
 /** 原文出自哪：「需求规格 KEY#FP2」「原型代码 src/…/X.vue」 */

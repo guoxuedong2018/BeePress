@@ -18,13 +18,13 @@ function Item({ f, on, root, onPick }) {
   const tags = [
     f.iterating && "迭代中",
     f.docStatus === "待撰写" && "待撰写",
-    f.unfilled > 0 && `${f.unfilled} 个格子待填`,
+    f.unfilled > 0 && `${f.unfilled} 处待补充`,
     !f.publish && "不发布",
     `${day(f.updatedAt)} 改过`,
   ].filter(Boolean);
   const todo = todoOf(f);
   // 角标是两样加起来的；打开那篇后「要看的」只算引用，格子在「构成」里填，所以拆开说
-  const todoTip = [f.open && `${f.open} 处要看`, f.unfilled && `${f.unfilled} 个格子待填`].filter(Boolean).join("，");
+  const todoTip = [f.open && `${f.open} 处待确认`, f.unfilled && `${f.unfilled} 处待补充`].filter(Boolean).join("，");
   return (
     <div className={cx("cm-item", on && "is-on")}>
       <button type="button" className="cm-item-main" onClick={onPick}>
@@ -91,7 +91,7 @@ export function ContentMenu() {
       <button type="button" className={cx("cm-btn", open && "is-open")} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen(!open)}>
         <span className="cm-btn-title">{current ? current.title : sel?.kind === "new-topic" ? "按话题新建一页" : "选一篇内容"}</span>
         <span className="cm-btn-sum">
-          {files.length} 篇{todo.length ? ` · ${todo.length} 篇要处理` : ""}
+          {files.length} 篇{todo.length ? ` · ${todo.length} 篇待检查` : ""}
         </span>
         <span className="cm-caret" aria-hidden="true">
           ▾
@@ -105,7 +105,7 @@ export function ContentMenu() {
             <div className="cm-scope" role="radiogroup" aria-label="显示哪些">
               {[
                 ["all", `全部 ${files.length}`],
-                ["todo", `要处理 ${todo.length}`],
+                ["todo", `待检查 ${todo.length}`],
               ].map(([k, label]) => (
                 <button key={k} type="button" role="radio" aria-checked={scope === k} className={cx("cm-scope-btn", scope === k && "is-on")} onClick={() => setScope(k)}>
                   {label}
@@ -137,7 +137,7 @@ export function ContentMenu() {
                 </section>
               );
             })}
-            {!shown.length && <p className="cm-empty">{scope === "todo" && !kw ? "每一篇都处理完了：图与原文都确认过，格子都填了。" : "没有对得上的篇目，换个词试试。"}</p>}
+            {!shown.length && <p className="cm-empty">{scope === "todo" && !kw ? "每一篇都检查完了：图与原文都确认过，待补充内容也填好了。" : "没有对得上的篇目，换个词试试。"}</p>}
           </div>
         </div>
       )}

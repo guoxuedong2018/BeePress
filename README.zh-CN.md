@@ -12,7 +12,7 @@
 | 套件 | 收什么 | 落到哪 |
 |---|---|---|
 | `client/review` | 对原型的**意见** —— 圈选批注 | `docs/reviews/<区域>.json` |
-| `client/studio` | 内容跟不跟得上原型的**确认** —— 内容审阅台 | `docs/kb/_lock.json`（正文本身在 `docs/kb/*.md`） |
+| `client/studio` | 内容跟不跟得上原型的**确认** —— 内容检查台 | `docs/kb/_lock.json`（正文本身在 `docs/kb/*.md`） |
 
 界面是 **React**，挂在 `<body>` 下独立的根上；原型保持自己的框架，不用装 React。**React 是主适配层**（`builder-kit/react`）；**Vue 2**（`builder-kit/vue2`）是可选的兼容适配层。换框架只需按 `client/core/host.js` 写一层很薄的适配。
 
@@ -184,7 +184,7 @@ import "builder-kit/tokens.css";
 |---|---|
 | ![Helix 演示，浅色](./docs/assets/demo-overview-light.png) | ![Helix 演示，深色](./docs/assets/demo-overview-dark.png) |
 
-![内容审阅台](./docs/assets/demo-content-studio.png)
+![内容检查台](./docs/assets/demo-content-studio.png)
 
 
 ```bash
@@ -235,7 +235,7 @@ builderKit({
 | `BUILDER_KIT_PUBLISH_GATEWAY` | 发布目标适配器：路径、`file:` URL 或包名 | 未配置 |
 | `BUILDER_KIT_DOCS_CLI` | 内置 `docs-cli` 适配器的命令前缀 | `docs-cli` |
 
-## 内容审阅台
+## 内容检查台
 
 **这条链路是一个内容构建系统。** 叙述是手写的源文件，截图录屏是按配方可复现的构建产物，事实是被校验的断言；「上游变了之后，这几句还成立吗」是唯一需要人判断的事。
 
