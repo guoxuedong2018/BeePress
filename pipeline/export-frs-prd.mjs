@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * FRS 件套 → 云文档 PRD
+ * FRS 件套 → PRD 内容
  * ------------------------------------------------------------------
  * 把 docs/features/<KEY>/ 的 FRS.json 与 FLOW.md 渲染成一篇 PRD：
  *

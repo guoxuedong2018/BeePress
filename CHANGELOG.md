@@ -5,6 +5,10 @@
 - **Tailwind 4 migration** — the demo, canonical components and docs now target
   Tailwind 4.3 via `@tailwindcss/postcss`. The token-derived legacy config is
   loaded with `@config`; container queries use Tailwind's built-in support.
+- **Pluggable publish destinations** — the studio keeps the plan/state/confirm
+  workflow and loads the actual destination through
+  `BUILDER_KIT_PUBLISH_GATEWAY`; `pipeline/destinations/docs-cli.mjs` is now a
+  reference adapter, not core coupling. See `docs/publishing.md`.
 - **React-first dependencies** — Vue 2 is an optional peer only. It is no longer
   installed for development or allowed to gate the build/audit; the Vue adapter
   remains available for hosts that opt in.

@@ -12,7 +12,7 @@ import { openStudio, studioState } from "./store";
 export function StudioEntry() {
   const snap = useSnapshot(studioState);
   return (
-    <Btn kind={snap.open ? "primary" : undefined} title="打开内容审阅台：哪些文档要审、哪些图该重拍、发布到云文档" onClick={openStudio}>
+    <Btn kind={snap.open ? "primary" : undefined} title="打开内容审阅台：哪些文档要审、哪些图该重拍、发布到宿主配置的目标端" onClick={openStudio}>
       <Icon name="doc" />
       内容
     </Btn>

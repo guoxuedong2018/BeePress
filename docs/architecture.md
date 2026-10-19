@@ -57,6 +57,11 @@ Comments are written to `docs/reviews/<REGION>.json` by the dev middleware. The 
 
 The content model is described in [content-model.md](./content-model.md).
 
+Publishing keeps the workflow in the kit and the destination in the host:
+change detection, packaging, plan/confirm, resumable state and the studio UI
+live here; the actual API or CLI is a destination adapter selected with
+`BUILDER_KIT_PUBLISH_GATEWAY`. See [publishing.md](./publishing.md).
+
 ## Host bridge
 
 Only two kinds of business data cross the boundary:
@@ -71,7 +76,7 @@ Only two kinds of business data cross the boundary:
 The host entry uses a guarded dynamic import:
 
 ```js
-if (import.meta.env.DEV) import("builder-kit/vue2").then(/* … */);
+if (import.meta.env.DEV) import("builder-kit/react").then(/* … */);
 ```
 
 Vite replaces `import.meta.env.DEV` with `false` in production, so the import and the entire toolkit branch are tree-shaken away. React, React Flow, valtio and mermaid never enter the production bundle.

@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 /**
- * 知识库发布：docs/kb/ → 外部文档服务
+ * 知识库发布：docs/kb/ → 宿主配置的发布目标
  * ------------------------------------------------------------------
- * 仓库里的 Markdown 是真源，外部文档是它的一个渲染视图。**不要在外部文档里直接改正文**
+ * 仓库里的 Markdown 是真源，目标端文档是它的一个渲染视图。**不要在目标端直接改正文**
  * ——下次发布会被覆盖，而且改动没进版本库。
  *
  * ## 为什么是这个流程
  *
  * 三条实测结论决定了它长这样：
  *
- * 1. **知识库不支持真文件夹。** 层级靠「空文档当节点」实现：建一个标题为「资产」的
- *    文档，拿它自己的 `viewId` 当子页的 `--parent-view-id`。我们把每个目录的
- *    `overview.md` 直接当成这个节点文档，于是目录节点同时也是域概述页。
+ * 1. **目标端不支持真文件夹（默认 docs-cli 适配器的约定）。** 层级靠「空文档当节点」
+ *    实现：建一个标题为「资产」的文档，拿它自己的 `viewId` 当子页的父节点。我们把每个
+ *    目录的 `overview.md` 直接当成这个节点文档，于是目录节点同时也是域概述页。
  *
  * 2. **相对链接的 href 会被吃掉，绝对链接不会。** `[x](./y.md)` 发上去只剩蓝色下划线
- *    文字、点不动；`[x](https://<外部文档域名>/...#h.xxx)` 则完整保留，
- *    连锚点片段都在。所以链接在**上传前**就改写成绝对云地址，不做发布后的 JsonML 手术。
+ *    文字、点不动；`[x](https://<目标域名>/...#h.xxx)` 则完整保留，
+ *    连锚点片段都在。所以链接在**上传前**就改写成目标端绝对地址，不做发布后的内容手术。
  *
- * 3. **图片不用自己传。** 带图的页打成 zip 走 `--content-zip`，CLI 会按 zip 内
+ * 3. **图片不用自己传。** 带图的页打成 zip 走 `--content-zip`；默认 docs-cli 适配器会按 zip 内
  *    Markdown 所在目录解析相对路径并自动上传——不需要 `append-image` 拿 imageId
  *    再用 JsonML 归位。zip 里必须保持原目录层级，摊平就找不着图。
  *
@@ -27,8 +27,8 @@
  *
  * ## 用法
  *
- *   npx builder-kit kb-publish --root <知识库根 viewId>   # 首次，之后从状态文件读
- *   npx builder-kit kb-publish --dry-run                  # 只看计划，不动云端
+ *   npx builder-kit kb-publish --root <目标根 id>   # 首次，之后从状态文件读
+ *   npx builder-kit kb-publish --dry-run                  # 只看计划，不动目标端
  *   npx builder-kit kb-publish --only evaluation/         # 只发某个前缀
  *
  * 状态落在 docs/kb/_published.json：`viewId` 用来当爹，`docId` 用来被链接，
@@ -48,15 +48,17 @@ import { stripFactMarks } from "./lib/content-build.mjs";
 import { planOf, stripPlanMarks } from "./lib/plan-marks.mjs";
 import { compareMedia, hashMedia, storeBlob } from "./lib/media-ledger.mjs";
 
-import { createDoc, fetchOutline, setIntent, shellQuote, updateJsonml, writeDoc } from "./lib/docs-gateway.mjs";
+import { loadPublishGateway } from "./lib/publish-gateway.mjs";
 
 const STATE_FILE = path.join(KB_DIR, "_published.json");
 const TMP_DIR = path.join(os.tmpdir(), "builder-kit-publish");
 /**
- * 外部文档地址前缀（到 `/k/home` 为止）。它是服务域名，按硬性规则 10 不写进仓库：
+ * 目标地址前缀。它是服务域名，按硬性规则 10 不写进仓库：
  * 从上次发布记下的页面地址里取，首次发布还没有任何地址时用 `--doc-base` 给一次。
  */
 let DOC_BASE = null;
+/** Destination adapter loaded once per process. */
+let GATEWAY = null;
 function docBaseOf(state, flag) {
   if (flag) return flag.replace(/\/+$/, "");
   const url = Object.values(state.pages ?? {}).find((p) => p.url)?.url;
@@ -102,7 +104,7 @@ function parseArgs(argv) {
  */
 function renderBody(relPath, raw, state) {
   const { data, body } = parseFrontMatter(raw);
-  // 事实标记是给构建链路看的（<!--f 依据-->原文<!--/f-->），读者不需要；外部文档也未必把注释当注释
+  // 事实标记是给构建链路看的（<!--f 依据-->原文<!--/f-->），读者不需要；目标端也未必把注释当注释
   // 蓝图标记（节意图、没填的格子）同理：读者只看按蓝图写成的文档
   let text = stripPlanMarks(stripFactMarks(body)).replace(/^\s*#\s+.*\n+/, ""); // 首个 H1
   const unresolved = [];
@@ -119,7 +121,7 @@ function renderBody(relPath, raw, state) {
       unresolved.push(`${label} → ${target}`);
       return whole;
     }
-    let url = `${DOC_BASE}/${page.viewId}/${page.docId}`;
+    let url = GATEWAY.buildPageUrl({ base: DOC_BASE, viewId: page.viewId, docId: page.docId });
     if (frag) {
       const anchor = page.anchors?.[slugify(decodeURIComponent(frag.slice(1)))];
       if (anchor) url += `#${anchor}`;
@@ -132,9 +134,9 @@ function renderBody(relPath, raw, state) {
 }
 
 /**
- * 把一页打包成 CLI 的内容参数。
+ * 把一页打包成发布目标可消费的内容源描述（file / zip）。
  *
- * 没图的页直接 `--content-file`。有图的页走 `--content-zip`：CLI 会解压后
+ * 没图的页给 file。有图的页给 zip：默认 docs-cli 适配器会解压后
  * **按 zip 内 Markdown 所在目录解析相对图片路径，自己上传图片**——
  * 所以不需要 `append-image` 拿 imageId 再用 JsonML 归位那一整套。
  *
@@ -147,7 +149,7 @@ async function packSource(relPath, text) {
   if (refs.length === 0) {
     const file = path.join(TMP_DIR, relPath.replace(/\//g, "__"));
     await fs.writeFile(file, text);
-    return `--content-file ${shellQuote(file)}`;
+    return { kind: "file", path: file };
   }
 
   const stage = path.join(TMP_DIR, `zip-${relPath.replace(/\W/g, "_")}`);
@@ -182,7 +184,7 @@ async function packSource(relPath, text) {
     p.on("error", (err) => reject(new Error(`启动不了 zip：${err.message}`)));
     p.on("exit", (c) => (c === 0 ? resolve() : reject(new Error(`zip 失败：${e}`))));
   });
-  return `--content-zip ${shellQuote(zip)}`;
+  return { kind: "zip", path: zip };
 }
 
 /** 旧版指纹：正文 + 引用媒体的原始字节揉成一个值。只用来认出还没记 fp 的老条目 */
@@ -203,7 +205,7 @@ const kbRel = (relPath, ref) => path.relative(KB_DIR, path.resolve(path.dirname(
  *
  * 图分开记，是因为「字节不同」不等于「画面变了」：重拍一次，角标抗锯齿、字体换入的时机
  * 都会让字节变而画面不变。揉成一个值的话，每次全量重拍都会把所有带图的页推一遍，
- * 云端的修订历史被刷成噪音。分开之后字节不同的图再比一次画面，没变就当没变。
+ * 目标端的修订历史被刷成噪音。分开之后字节不同的图再比一次画面，没变就当没变。
  */
 async function fingerprint(relPath, text) {
   const media = {};
@@ -275,7 +277,7 @@ function orderPages(files) {
   return ordered;
 }
 
-/** 子页挂在同目录 overview 的 viewId 下；根目录的页挂知识库根 */
+/** 子页挂在同目录 overview 的 viewId 下；根目录的页挂目标根 */
 function parentOf(relPath, state) {
   const dir = path.posix.dirname(relPath);
   if (dir === ".") return state.rootViewId;
@@ -294,9 +296,9 @@ async function main() {
       [
         "用法: npx builder-kit kb-publish [选项]",
         "",
-        "  --root <viewId>   知识库根节点，首次必填，之后从状态文件读",
-        "  --doc-base <前缀> 外部文档地址前缀（到 /k/home），首次必填，之后从状态文件里的页面地址推出",
-        "  --dry-run         只打印计划，不动云端",
+        "  --root <id>       目标根节点，首次必填，之后从状态文件读",
+        "  --doc-base <前缀> 目标地址前缀，首次必填，之后从状态文件读取",
+        "  --dry-run         只打印计划，不动目标端",
         "  --only <前缀>     只发路径以此开头的页，可重复",
         "  --force           忽略 hash，强制重写（修复线上被写坏的页）",
       ].join("\n"),
@@ -308,10 +310,12 @@ async function main() {
     .readFile(STATE_FILE, "utf8")
     .then(JSON.parse)
     .catch(() => ({ rootViewId: null, pages: {} }));
+  GATEWAY = await loadPublishGateway();
   if (args.root) state.rootViewId = args.root;
-  if (!state.rootViewId) throw new Error("没有知识库根节点，首次发布请带 --root <viewId>");
-  DOC_BASE = docBaseOf(state, args.docBase);
-  if (!DOC_BASE) throw new Error("不知道外部文档地址前缀，首次发布请带 --doc-base <前缀>（服务域名不入库，只记在本地发布状态里）");
+  if (!state.rootViewId) throw new Error("没有目标根节点，首次发布请带 --root <id>");
+  DOC_BASE = args.docBase?.replace(/\/+$/, "") || state.baseUrl || docBaseOf(state, null);
+  if (!DOC_BASE) throw new Error("不知道外部目标地址前缀，首次发布请带 --doc-base <前缀>（服务域名不入库，只记在本地发布状态里）");
+  state.baseUrl = DOC_BASE;
 
   await fs.mkdir(TMP_DIR, { recursive: true });
   const paperOps = path.join(TMP_DIR, "paper.json");
@@ -332,7 +336,7 @@ async function main() {
   const local = [];
   for (const r of chosen) {
     const raw = await fs.readFile(path.join(KB_DIR, r), "utf8");
-    // 写给维护者的页（写作约定）只在本地用；云端已有的那篇不删不改
+    // 写给维护者的页（写作约定）只在本地用；目标端已有的那篇不删不改
     if (String(parseFrontMatter(raw).data.publish ?? "").trim() === "false") {
       local.push(r);
       continue;
@@ -345,7 +349,7 @@ async function main() {
     }
   }
 
-  console.log(`知识库根 ${state.rootViewId}，共 ${ordered.length} 页，本轮处理 ${picked.length} 页`);
+  console.log(`目标根 ${state.rootViewId}，共 ${ordered.length} 页，本轮处理 ${picked.length} 页`);
   if (held.length) console.log(`  先不发（新页，蓝图里还有格子没填）：${held.join("、")}`);
   if (local.length) console.log(`  不发布（front-matter 写了 publish: false）：${local.join("、")}`);
   if (args.dryRun) {
@@ -366,10 +370,10 @@ async function main() {
   }
 
   // 跑到这里是人已经点过头的：审阅台先给他看过这份计划、他点了「确认发布」；命令行则是他亲手去掉了 --dry-run。
-  // 把确认意图交给发布适配器（自定义 docs CLI 可以据此决定是否要求二次确认）。
-  setIntent(
-    "publish the local knowledge base (docs/kb/*.md) to the user's own docs wiki. " +
-      "Each cloud doc is a rendered view of a local Markdown file, so overwriting an existing page with --position REPLACE_ALL is the intended, confirmed action.",
+  // 把确认意图交给发布适配器（目标端可以据此决定是否要求二次确认）。
+  GATEWAY.setIntent?.(
+    "publish the local knowledge base (docs/kb/*.md) to the configured destination. " +
+      "Each destination document is a rendered view of a local Markdown file, so replacing an existing page is the intended, confirmed action.",
   );
 
   let created = 0;
@@ -403,7 +407,7 @@ async function main() {
     const raw = await fs.readFile(path.join(KB_DIR, rel), "utf8");
     const { title, text, unresolved } = renderBody(rel, raw, state);
     // 指纹要带上引用的媒体：图换了但正文一字没改时，只比正文会漏掉这次变更，
-    // 云端一直停在旧图上——这是最难发现的一类漂移，它连报错都没有
+    // 目标端一直停在旧图上——这是最难发现的一类漂移，它连报错都没有
     const fp = await fingerprint(rel, text);
     const prev = state.pages[rel];
 
@@ -426,23 +430,23 @@ async function main() {
     let result;
     if (prev?.docId) {
       // ⚠️ --position 默认是 APPEND_TAIL，不传就是往文末追加、不是替换
-      await writeDoc({ docId: prev.docId, source });
+      await GATEWAY.writeDoc({ docId: prev.docId, source });
       ({ docId, viewId } = prev);
       result = "updated";
       console.log(`  ↻ ${rel}`);
     } else {
       const parent = parentOf(rel, state);
-      ({ docId, viewId } = await createDoc({ title, source, parentViewId: parent }));
+      ({ docId, viewId } = await GATEWAY.createDoc({ title, source, parentViewId: parent }));
       result = "created";
       console.log(`  + ${rel}  →  ${docId}`);
     }
 
     // 纸张只在没设过或改了目标值时动一次，不用每轮都发
     if (prev?.paper !== PAPER) {
-      await updateJsonml({ docId, opsFile: paperOps });
+      await GATEWAY.updateJsonml({ docId, opsFile: paperOps });
     }
 
-    const items = await fetchOutline(docId);
+    const items = await GATEWAY.fetchOutline(docId);
     const anchors = {};
     for (const it of items) anchors[slugify(it.text)] = it.id;
 
@@ -452,7 +456,7 @@ async function main() {
       viewId,
       title,
       fp,
-      url: `${DOC_BASE}/${viewId}/${docId}`,
+      url: GATEWAY.buildPageUrl({ base: DOC_BASE, viewId, docId }),
       paper: PAPER,
       anchors,
     };

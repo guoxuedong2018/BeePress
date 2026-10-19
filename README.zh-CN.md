@@ -232,7 +232,8 @@ builderKit({
 | `BUILDER_KIT_DOCS_DIR` | 文档目录，相对项目根 | `docs` |
 | `BUILDER_KIT_WEB_DIR` | 原型工程目录，相对项目根 | 有 `web/` 用 `web`，否则项目根 |
 | `BUILDER_KIT_ADAPTER` | 管线适配器名 | `vue2-vite` |
-| `BUILDER_KIT_DOCS_CLI` | 外部文档发布命令前缀 | `docs-cli` |
+| `BUILDER_KIT_PUBLISH_GATEWAY` | 发布目标适配器：路径、`file:` URL 或包名 | 未配置 |
+| `BUILDER_KIT_DOCS_CLI` | 内置 `docs-cli` 适配器的命令前缀 | `docs-cli` |
 
 ## 内容审阅台
 
@@ -280,13 +281,16 @@ npx builder-kit prd <KEY> --scope delta
 
 ## 发布
 
-发布到外部文档服务是可选的。Builder Kit 通过 `pipeline/lib/docs-gateway.mjs` 调用外部 CLI，命令前缀可配置：
+发布是可选的。Builder Kit 只提供核心流程——变更判断、内容打包、计划确认、可续跑状态和审阅台 UI；**发布到哪里**由宿主自己的适配器决定：
 
 ```bash
-BUILDER_KIT_DOCS_CLI="docs-cli" npx builder-kit kb-publish --dry-run
+BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx builder-kit kb-publish --dry-run
 ```
 
-CLI 需要实现 `docs-gateway.mjs` 顶部注明的 JSON 协议。没有它，本地批注、内容清单、截图录屏都照常可用。
+适配器可以接内部 Wiki、CMS、文档服务或业务数据库。接口契约和最小示例见
+[`docs/publishing.md`](./docs/publishing.md)。未配置时发布功能关闭；要使用内置的
+[`docs-cli` 参考适配器，设置 `BUILDER_KIT_PUBLISH_GATEWAY=docs-cli`（它仍通过
+`BUILDER_KIT_DOCS_CLI` 接收外部 CLI 命令前缀）。完全不接发布目标时，本地批注、内容清单、截图录屏都照常可用。
 
 ## 边界规矩
 
@@ -299,6 +303,7 @@ CLI 需要实现 `docs-gateway.mjs` 顶部注明的 JSON 协议。没有它，�
 ```bash
 npm install
 npm run check
+npm run test:publish-gateway
 ```
 
 `npm run check` 会做语法检查、路径解析导入、CLI help、UI 规范门禁，并校验 package.json 与 package-lock.json 中的所有依赖都来自 `https://registry.npmjs.org`。仓库已在 `.npmrc` 固定公共 registry，避免本机全局或代理源悄悄改变安装来源。

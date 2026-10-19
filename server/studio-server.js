@@ -13,6 +13,7 @@ import { ROUTE_RE, applyPlanOp } from "../pipeline/lib/plan-marks.mjs";
 import { createTopicPage } from "../pipeline/lib/topic-context.mjs";
 import { SLOT_KINDS, TOPIC_TYPES } from "../pipeline/lib/topic-types.mjs";
 import { blobPath } from "../pipeline/lib/media-ledger.mjs";
+import { loadPublishGateway, publishDestinationInfo } from "../pipeline/lib/publish-gateway.mjs";
 import { KB_DIR, PIPELINE_DIR, REPO_ROOT } from "../pipeline/lib/paths.mjs";
 
 /**
@@ -30,11 +31,12 @@ import { KB_DIR, PIPELINE_DIR, REPO_ROOT } from "../pipeline/lib/paths.mjs";
  *   POST   /__builder_studio/ack                    我看过了（body: { path, refs? }）
  *   POST   /__builder_studio/adopt                  采纳需求规格的新写法（body: { path, ref }）
  *   POST   /__builder_studio/shoot                  重拍（body: { stale } 或 { keys }），后台任务
- *   POST   /__builder_studio/publish                发布到云文档（body: { dryRun }），后台任务
+ *   POST   /__builder_studio/publish                发布到配置的目标端（body: { dryRun }），后台任务
  *   GET    /__builder_studio/job?name=              后台任务的实时状态与输出
  *   GET    /__builder_studio/media/<path>           回源 docs/kb/ 下的图与视频（含 _blobs 里的旧版）
  *   GET    /__builder_studio/structure?path=        一页的构成：来源 → 素材 / 事实 → 章节
  *   GET    /__builder_studio/demo-config            示范录制要的：选择器引擎源码、字段定位
+ *   GET    /__builder_studio/publish-config          发布目标的 id / 名称 / 说明（未配置也返回 200）
  *   POST   /__builder_studio/clip                   示范录好了：写配方、录制、放进那一节，后台任务
  *   POST   /__builder_studio/shot                   示范截图：写配方、截图、放进那一节（有格子就填格子），后台任务
  *
@@ -144,7 +146,7 @@ function demoSpec(body) {
 /**
  * 后台任务。重拍与发布都是分钟级的，撑不住一个 HTTP 请求：POST 起一个，GET 拿进度。
  * 关掉审阅台、刷新页面都不影响它跑完。每种任务只留一个槽位——
- * 同时跑两轮重拍会抢同一个浏览器端口，同时跑两次发布会互相覆盖云端文档。
+ * 同时跑两轮重拍会抢同一个浏览器端口，同时跑两次发布会互相覆盖目标端内容。
  */
 const jobs = {};
 function startJob(name, script, argv, { page = null } = {}) {
@@ -242,6 +244,20 @@ export function studioServer() {
             return sendJson(res, 200, { selectorHelper: SELECTOR_HELPER, fieldSelector: adapter.fieldSelector ?? null });
           }
 
+          if (req.method === "GET" && seg[0] === "publish-config") {
+            try {
+              const gateway = await loadPublishGateway();
+              return sendJson(res, 200, { configured: true, ...publishDestinationInfo(gateway) });
+            } catch (e) {
+              return sendJson(res, 200, {
+                configured: false,
+                id: "unconfigured",
+                label: "发布目标",
+                description: e instanceof Error ? e.message : String(e),
+              });
+            }
+          }
+
           if (req.method === "POST" && (seg[0] === "clip" || seg[0] === "shot")) {
             const body = await readBody(req);
             const isShot = seg[0] === "shot";
@@ -316,7 +332,12 @@ export function studioServer() {
 
           if (req.method === "POST" && seg[0] === "publish") {
             const body = await readBody(req);
-            // 重拍到一半就发，云端会拿到一半新一半旧的图
+            try {
+              await loadPublishGateway();
+            } catch (e) {
+              return sendJson(res, 400, { error: e instanceof Error ? e.message : String(e) });
+            }
+            // 重拍到一半就发，目标端会拿到一半新一半旧的图
             if (!body.dryRun && busyWith()) return sendJson(res, 409, { error: `${busyWith()}，等它跑完再发布` });
             if (!body.dryRun && !hasPublishToken(body.confirmToken)) {
               return sendJson(res, 403, { error: "发布确认已过期，请重新打开发布面板算一次计划" });

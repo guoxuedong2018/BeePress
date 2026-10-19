@@ -3,7 +3,7 @@
  * 原型批注 → 评审意见汇总 Markdown
  * ------------------------------------------------------------------
  * 读取 docs/reviews/<FRS>.json 里的批注，按需求区域归并成结构化章节，
- * 输出可直接交给 docs-cli 发布的 Markdown。
+ * 输出可交给宿主发布适配器（或内置 docs-cli 参考适配器）的 Markdown。
  *
  * 这条链路和「需求 → PRD」是两回事：那条的输入是 docs/features/<KEY>/ 的 FRS 件套，
  * 走 builder-kit export-frs-prd 与 builder-kit prd，产出给研发推敲细节的规格文档。
@@ -16,7 +16,7 @@
  *   npx builder-kit export-review-notes --out -                # 输出到 stdout
  *   npx builder-kit export-review-notes --title "登录改版评审意见"
  *
- * 发布到外部文档服务（需安装并登录兼容的 docs-cli）：
+ * 使用内置 docs-cli 参考适配器发布（需安装并登录兼容 CLI）：
  *   docs-cli word +create --title "<标题>" --content-file <生成的 md> --link-share READ_ONLY
  */
 
@@ -185,7 +185,7 @@ async function main() {
   const rel = path.relative(REPO_ROOT, outPath);
   console.log(`已生成 ${rel}（${comments.length} 条批注）`);
   console.log("");
-  console.log("发布到 外部文档服务：");
+  console.log("发布到目标端（内置 docs-cli 参考示例）：");
   console.log(`  docs-cli word +create --title "${title}" --content-file ${rel} --link-share READ_ONLY`);
 }
 

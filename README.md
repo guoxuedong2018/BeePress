@@ -291,7 +291,8 @@ Environment variables:
 | `BUILDER_KIT_DOCS_DIR` | Docs directory, relative to project root | `docs` |
 | `BUILDER_KIT_WEB_DIR` | Prototype app directory, relative to project root | `web` if present, else project root |
 | `BUILDER_KIT_ADAPTER` | Pipeline adapter name | `vue2-vite` |
-| `BUILDER_KIT_DOCS_CLI` | Command prefix for external document publishing | `docs-cli` |
+| `BUILDER_KIT_PUBLISH_GATEWAY` | Publish destination adapter: path, `file:` URL, or package name | not configured |
+| `BUILDER_KIT_DOCS_CLI` | Command prefix used by the bundled `docs-cli` adapter | `docs-cli` |
 
 ## CLI
 
@@ -315,19 +316,29 @@ The `check-ui`, `check-routes` and `check-frs` scripts are **reference host chec
 
 ## Publishing
 
-Publishing to a cloud document service is optional. Builder Kit calls an external CLI through `pipeline/lib/docs-gateway.mjs`; the command prefix is configurable:
+Publishing is optional. Builder Kit owns the core workflow — change detection,
+content packaging, plan/confirm, resumable state and the studio UI. The
+**destination** is an adapter owned by the host:
 
 ```bash
-BUILDER_KIT_DOCS_CLI="docs-cli" npx builder-kit kb-publish --dry-run
+BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx builder-kit kb-publish --dry-run
 ```
 
-The CLI must implement the small JSON protocol documented at the top of [`pipeline/lib/docs-gateway.mjs`](./pipeline/lib/docs-gateway.mjs). Without it, local review, content status, screenshots and clips all still work.
+The adapter can publish to an internal wiki, a CMS, a docs service, or a
+product database. The contract and a minimal example are in
+[`docs/publishing.md`](./docs/publishing.md). Publishing is disabled until a
+destination is configured. To use the bundled
+[`docs-cli` reference destination](./pipeline/destinations/docs-cli.mjs), set
+`BUILDER_KIT_PUBLISH_GATEWAY=docs-cli` (it still accepts a CLI command prefix
+through `BUILDER_KIT_DOCS_CLI`). Local review, content status, screenshots and
+clips work without any destination at all.
 
 ## Development
 
 ```bash
 npm install
 npm run check
+npm run test:publish-gateway
 ```
 
 `npm run check` syntax-checks every `.js`/`.mjs` file, imports the path resolver, exercises the CLI help path, runs the UI spec gate, and verifies that every manifest and lockfile entry resolves from `https://registry.npmjs.org`. The repository pins that registry in `.npmrc`, so a global or proxy registry cannot silently change what is installed.
@@ -339,6 +350,7 @@ npm run check
 - [Content model](./docs/content-model.md)
 - [Styling and tokens](./docs/styling.md)
 - [UI spec integration](./docs/ui-spec.md)
+- [Publishing destinations](./docs/publishing.md)
 - [Deploy skill review](./docs/deploy-skill-review.md)
 
 ## License

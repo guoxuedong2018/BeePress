@@ -414,7 +414,12 @@ export async function pollPublish() {
   return pollJob("publish");
 }
 
-/** 算一遍这次会动哪些页，不碰云端。确认框里摆的就是它 */
+/** 发布目标的名称与说明；目的地由宿主配置，套件不假设是哪一个服务 */
+export async function publishConfig() {
+  return api("/publish-config");
+}
+
+/** 算一遍这次会动哪些页，不碰目标端。确认框里摆的就是它 */
 export async function publishPlan() {
   const started = await api("/publish", { method: "POST", body: { dryRun: true } });
   for (let i = 0; i < 60; i += 1) {

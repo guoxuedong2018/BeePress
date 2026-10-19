@@ -75,6 +75,8 @@ Environment:
   BUILDER_KIT_DOCS_DIR     Docs directory inside the project (default: docs)
   BUILDER_KIT_WEB_DIR      Prototype app directory (default: web, or project root)
   BUILDER_KIT_ADAPTER      Pipeline adapter (default: vue2-vite)
+  BUILDER_KIT_PUBLISH_GATEWAY  Publish destination adapter (default: disabled)
+  BUILDER_KIT_DOCS_CLI     Command prefix for the bundled docs-cli adapter
 
 Run \`builder-kit kb --help\` for command-specific options.`);
   process.exit(code);
