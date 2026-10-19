@@ -1,65 +1,75 @@
-// Builder Kit default theme
+// Builder Kit default theme — maps the toolkit's Less variables to Tool UI Spec tokens.
 // ------------------------------------------------------------------
-// Neutral fallback for hosts that do not have a design-token sheet.
-// Every value is a CSS variable with a light-theme fallback, so a host can
-// override the palette at runtime without recompiling Less:
+// The canonical values live in ui-spec/tokens.json / tokens.css. Hosts that already
+// inject their own @color-* tokens can skip this file; hosts without a design-token
+// sheet import it via Less `additionalData`.
 //
-//   :root { --bk-color-primary: #1677ff; }
-//
-// If the host already injects its own Less tokens, do not import this file;
-// host tokens win by being defined in the same Less scope.
+// Every value is a CSS variable, so runtime theming needs no recompilation:
+//   :root { --accent: #1677ff; }
 
 // Brand / interaction
-@color-primary: var(--bk-color-primary, #2563eb);
-@color-on-primary: var(--bk-color-on-primary, #ffffff);
-@color-primary-ring: var(--bk-color-primary-ring, rgba(37, 99, 235, 0.24));
-@color-link: var(--bk-color-link, #2563eb);
+@color-primary: var(--accent);
+@color-on-primary: var(--text-on-accent);
+@color-primary-ring: var(--accent-ring);
+@color-link: var(--accent);
 
 // Text
-@color-text: var(--bk-color-text, #1f2329);
-@color-heading: var(--bk-color-heading, #1f2329);
-@color-text-secondary: var(--bk-color-text-secondary, #4e5969);
-@color-text-weak: var(--bk-color-text-weak, #86909c);
-@color-text-disabled: var(--bk-color-text-disabled, #c9cdd4);
+@color-text: var(--text-primary);
+@color-heading: var(--text-primary);
+@color-text-secondary: var(--text-secondary);
+@color-text-weak: var(--text-tertiary);
+@color-text-disabled: var(--text-disabled);
 
 // Surfaces / borders
-@color-white: var(--bk-color-white, #ffffff);
-@color-page-bg: var(--bk-color-page-bg, #f5f6f7);
-@color-bg-subtle: var(--bk-color-bg-subtle, #f7f8fa);
-@color-bg-thead: var(--bk-color-bg-thead, #f7f8fa);
-@color-bg-count: var(--bk-color-bg-count, #f2f3f5);
-@color-hover-bg: var(--bk-color-hover-bg, rgba(0, 0, 0, 0.04));
-@color-border: var(--bk-color-border, #e5e6eb);
-@color-divider: var(--bk-color-divider, #f2f3f5);
-@color-mask: var(--bk-color-mask, rgba(0, 0, 0, 0.45));
+@color-white: var(--surface-2);
+@color-page-bg: var(--surface-1);
+@color-bg-subtle: var(--surface-3);
+@color-bg-thead: var(--surface-3);
+@color-bg-count: var(--surface-active);
+@color-hover-bg: var(--surface-hover);
+@color-border: var(--border-default);
+@color-divider: var(--border-subtle);
+@color-mask: var(--overlay);
 
 // Status
-@color-danger: var(--bk-color-danger, #f53f3f);
-@color-status-success: var(--bk-color-status-success, #00b42a);
-@color-status-info: var(--bk-color-status-info, #165dff);
-@color-status-info-bg: var(--bk-color-status-info-bg, #e8f3ff);
-@color-status-warning: var(--bk-color-status-warning, #ff7d00);
-@color-status-warning-bg: var(--bk-color-status-warning-bg, #fff7e8);
-@color-status-failed: var(--bk-color-status-failed, #f53f3f);
-@color-status-failed-bg: var(--bk-color-status-failed-bg, #ffece8);
+@color-danger: var(--danger);
+@color-status-success: var(--success);
+@color-status-success-bg: var(--success-subtle);
+@color-status-info: var(--info);
+@color-status-info-bg: var(--info-subtle);
+@color-status-warning: var(--warning);
+@color-status-warning-bg: var(--warning-subtle);
+@color-status-failed: var(--danger);
+@color-status-failed-bg: var(--danger-subtle);
 
 // Shape / spacing
-@radius-control: var(--bk-radius-control, 4px);
-@radius-overlay: var(--bk-radius-overlay, 8px);
-@radius-tag: var(--bk-radius-tag, 2px);
-@space-4: var(--bk-space-4, 4px);
-@space-8: var(--bk-space-8, 8px);
-@space-12: var(--bk-space-12, 12px);
-@space-16: var(--bk-space-16, 16px);
-@space-24: var(--bk-space-24, 24px);
-@space-40: var(--bk-space-40, 40px);
-@space-48: var(--bk-space-48, 48px);
-@elevation-1: var(--bk-elevation-1, 0 2px 8px rgba(0, 0, 0, 0.08));
+@radius-control: var(--radius-lg);
+@radius-overlay: var(--radius-2xl);
+@radius-tag: var(--radius-xs);
+@space-2: var(--space-2);
+@space-4: var(--space-4);
+@space-6: var(--space-6);
+@space-8: var(--space-8);
+@space-10: var(--space-10);
+@space-12: var(--space-12);
+@space-14: var(--space-14);
+@space-16: var(--space-16);
+@space-20: var(--space-20);
+@space-24: var(--space-24);
+@space-28: var(--space-28);
+@space-32: var(--space-32);
+@space-36: var(--space-36);
+@space-40: var(--space-40);
+@space-44: var(--space-44);
+@space-48: var(--space-48);
+@space-56: var(--space-56);
+@space-64: var(--space-64);
+@elevation-1: var(--shadow-sm);
 
 // Keyboard focus
-@focus-ring-width: var(--bk-focus-ring-width, 2px);
-@focus-ring-color: var(--bk-focus-ring-color, #2563eb);
-@focus-ring-offset: var(--bk-focus-ring-offset, 2px);
+@focus-ring-width: 1.5px;
+@focus-ring-color: var(--accent);
+@focus-ring-offset: 2px;
 
 // Code
-@font-family-code: var(--bk-font-family-code, ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace);
+@font-family-code: var(--font-mono);

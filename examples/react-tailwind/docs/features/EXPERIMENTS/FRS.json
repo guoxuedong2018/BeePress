@@ -1,0 +1,43 @@
+{
+  "key": "EXPERIMENTS",
+  "title": "Experiments",
+  "status": "confirmed",
+  "prototype": {
+    "entryRoute": "/experiments"
+  },
+  "background": {
+    "problem": [
+      "Runs are scattered across tools."
+    ],
+    "solution": [
+      "A single list with status, score and review trail."
+    ]
+  },
+  "spec": [
+    {
+      "group": "Experiments",
+      "route": "/experiments",
+      "points": [
+        {
+          "id": "FP1",
+          "name": "Experiments can be filtered by state.",
+          "display": [
+            "Experiments can be filtered by state."
+          ],
+          "interaction": [
+            "The surface updates without a reload."
+          ],
+          "value": [
+            "The result is visible in the review queue."
+          ],
+          "permission": [
+            "Any workspace member can review."
+          ]
+        }
+      ]
+    }
+  ],
+  "acceptance": [
+    "AC1 The surface renders with synthetic data."
+  ]
+}

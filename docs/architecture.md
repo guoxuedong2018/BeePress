@@ -13,7 +13,8 @@ host prototype (Vue 2, React, …)
         │      ├── server/studio-server.js   /__builder_studio (content workspace)
         │      └── host bridge               virtual module generated from config
         │
-        └── builder-kit/vue2 ────────── thin adapter → mountKit → React UI
+        ├── builder-kit/vue2 ────────── Vue 2 adapter → mountKit → React UI
+        └── builder-kit/react ───────── React adapter → mountKit → React UI
 ```
 
 ## Review suite
@@ -33,6 +34,10 @@ The source plugin injects three attributes:
 - `data-loc` — where a native element is defined.
 - `data-use` — where a component is **used** (Vue 2 attribute fall-through makes this land on the child root).
 - `data-comp` — the owning component name, used to build `componentPath`.
+
+Vue SFCs and React/JSX are both supported (`anchorLoc: "auto"`). The React
+plugin injects anchors on intrinsic elements only; component props are not
+injected because React components do not automatically forward unknown props.
 
 Relocation reports a confidence level:
 

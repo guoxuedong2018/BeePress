@@ -1,0 +1,61 @@
+@import "../../../ui-spec/tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--surface-1);
+    color: var(--text-primary);
+  }
+}
+
+@layer utilities {
+  .demo-grid {
+    background-image: radial-gradient(circle at 1px 1px, var(--border-subtle) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .demo-glow {
+    background:
+      radial-gradient(60% 80% at 70% 0%, var(--accent-subtle) 0%, transparent 70%),
+      radial-gradient(40% 60% at 0% 100%, var(--info-subtle) 0%, transparent 70%);
+  }
+
+  .demo-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-default) transparent;
+  }
+
+  .demo-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .demo-scroll::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: var(--radius-pill);
+  }
+
+  .demo-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .demo-fade-mask {
+    mask-image: linear-gradient(to bottom, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+  }
+}
+
+@container (min-width: 520px) {
+  .metric-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

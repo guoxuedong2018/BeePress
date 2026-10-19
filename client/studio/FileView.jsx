@@ -429,6 +429,7 @@ export function FileView() {
                               aria-label="这一段的原文"
                               onChange={(e) => setDraft(e.target.value)}
                               onKeyDown={(e) => {
+                                if (e.nativeEvent.isComposing || e.keyCode === 229) return;
                                 if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
                                   e.preventDefault();
                                   save();

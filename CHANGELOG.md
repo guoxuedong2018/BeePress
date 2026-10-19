@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.2.0
+
+- **React adapter** — `builder-kit/react` mounts the toolkit in React prototypes;
+  `hashRouter()` provides a router-library-free bridge.
+- **React source anchors** — `anchorLoc: "auto" | "react" | "vue" | false`;
+  the JSX plugin injects `data-loc` / `data-comp` on intrinsic elements in dev.
+- **React + Tailwind demo** — `examples/react-tailwind`, a synthetic product
+  workspace with review comments, a command palette, async dialog states, dark
+  mode and the content studio.
+- **Tool UI Spec** — `ui-spec/` now ships tokens, Tailwind config and canonical
+  React components. Export `builder-kit/ui` and `builder-kit/tokens.css`.
+- **UI conformance gate** — `scripts/check-ui-spec.mjs` checks raw colors,
+  transitions, viewport breakpoints, spacing, radii, focus compensation and
+  icon-button labels.
+- **UI audit** — tokenized typography, spacing, radii, focus rings and motion in
+  the review/studio UI; IME guards; draft persistence; tabular numerals.
+- **Pre-deploy preflight** — `scripts/preflight-dist.mjs` scans artifacts for dev
+  endpoints, source anchors, local paths, source maps and common secrets.
+- **Deploy skill review** — `docs/deploy-skill-review.md` covers new-environment
+  detection and user guidance.
+- Fixed a Vite Less edge case where an `@import` in a comment triggered URL
+  rebasing.
+
 ## 0.1.0
 
 Initial open-source release.

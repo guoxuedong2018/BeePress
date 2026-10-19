@@ -1,12 +1,16 @@
 // 套件基础件。类名一律 bk- 前缀：套件样式不 scoped，靠前缀与宿主隔开
 @import "./kit.less";
 
-// 键盘焦点环：套件自己定义，不指望宿主有全局规则（换一个宿主未必有）。
-// 用 :focus-visible——鼠标点不出现，键盘导航才出现；颜色宽度取宿主 token，亮暗都过 AA
+// 键盘焦点环：Tool UI Spec LAY-14 / A11Y-07。
+// 用 :focus-visible——鼠标点不出现，键盘导航才出现；颜色取 --accent，亮暗都过 AA。
 .bk-root :focus-visible {
-  outline: @focus-ring-width solid @focus-ring-color;
-  outline-offset: @focus-ring-offset;
+  outline: none;
+  box-shadow: var(--focus-shadow);
+  border-radius: inherit;
 }
+
+// Counts, timestamps and source coordinates must not jitter (TYP-03).
+.bk-root { font-variant-numeric: tabular-nums; }
 
 // 系统开了「减少动态效果」：闪烁的进度点、过渡一律停下
 @media (prefers-reduced-motion: reduce) {
@@ -19,24 +23,34 @@
   }
 }
 
+// Button recipe §6.1 — xs 24 / sm 28 / md 32 / lg 40
 .bk-btn {
   display: inline-flex;
   flex: 0 0 auto;
-  gap: 4px;
+  gap: @space-4;
   align-items: center;
-  height: 24px;
-  padding: 0 @space-8;
+  justify-content: center;
+  height: 28px;
+  padding: 0 @space-10;
   font-size: @bk-fs-sm;
   line-height: 1;
   color: @color-text;
   white-space: nowrap;
   cursor: pointer;
-  background: @color-white;
+  background: var(--surface-2);
   border: 1px solid @color-border;
   border-radius: @radius-control;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 
   &:hover:not(:disabled) { color: @color-primary; border-color: @color-primary; }
-  &:disabled { color: @color-text-disabled; cursor: not-allowed; }
+  &:active:not(:disabled) { transform: scale(0.98); }
+  &:disabled { color: @color-text-disabled; cursor: not-allowed; opacity: 0.45; }
+  &:focus-visible { outline: none; box-shadow: @focus-shadow; }
 
   &.is-primary {
     color: @color-on-primary;
@@ -44,24 +58,24 @@
     border-color: @color-primary;
 
     &:hover:not(:disabled) { color: @color-on-primary; opacity: 0.9; }
-    &:disabled { opacity: 0.5; }
   }
 
   &.is-ghost { background: none; border-color: transparent; }
   &.is-danger { color: @color-danger; }
-  &.is-sm { height: 22px; padding: 0 6px; font-size: @bk-fs-xs; }
-  &.is-lg { height: 28px; padding: 0 @space-12; }
+  &.is-sm { height: 24px; padding: 0 @space-6; font-size: @bk-fs-xs; border-radius: var(--radius-md); }
+  &.is-lg { height: 32px; padding: 0 @space-12; }
+  &.is-xl { height: 40px; padding: 0 @space-16; font-size: @bk-fs-lg; border-radius: var(--radius-xl); }
 }
 
 .bk-tag {
   display: inline-flex;
   align-items: center;
-  height: 18px;
-  padding: 0 6px;
+  height: 20px;
+  padding: 0 @space-6;
   font-size: @bk-fs-xs;
   color: @color-text-secondary;
   white-space: nowrap;
-  background: @color-bg-subtle;
+  background: var(--surface-3);
   border: 1px solid @color-border;
   border-radius: @radius-tag;
 
@@ -69,4 +83,4 @@
   &.is-success { color: @color-status-success; border-color: @color-status-success; }
 }
 
-.bk-icon { flex: 0 0 auto; vertical-align: -2px; }
+.bk-icon { flex: 0 0 auto; vertical-align: -0.125em; }

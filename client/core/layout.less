@@ -1,0 +1,33 @@
+// Shared host layout for framework adapters. Class names are prefixed (bk-/rs-).
+@import "./kit.less";
+
+.review-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--surface-1);
+}
+
+.rs-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// Deliberately block-level: a prototype root often has `margin: 0 auto`; as a
+// flex item that collapses the width. Block layout matches mounting into #app.
+//
+// overflow: hidden rather than auto — the prototype owns its own scroll container.
+.rs-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.bk-slot-bar { flex: none; }
+.bk-slot-drawer { display: flex; flex: none; min-height: 0; }
+.bk-host-extras { display: inline-flex; gap: @space-8; align-items: center; }

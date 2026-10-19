@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 
+import "../core/tokens.css";
 import { setFrsRegistry } from "../review/frs";
 import { App } from "./App";
 import { setHost } from "./host";

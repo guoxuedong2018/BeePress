@@ -14,7 +14,7 @@ Builder Kit attaches two independent suites to a running prototype:
 | **Review** | Opinions about the prototype — select an element, leave a comment anchored to its source | `docs/reviews/<REGION>.json` |
 | **Studio** | Whether the documentation still matches the prototype — stale screenshots, unreviewed facts, content gaps | `docs/kb/_lock.json`, `docs/kb/*.md` |
 
-The UI is React and lives in an isolated root under `<body>`. A thin host adapter mounts it; the prototype keeps its own framework. A Vue 2 adapter is included, and writing an adapter for React, Vue 3 or another framework is intentionally small (three responsibilities: layout slots, router bridge, host controls).
+The UI is React and lives in an isolated root under `<body>`. A thin host adapter mounts it; the prototype keeps its own framework. **React** and **Vue 2** adapters are included, and writing an adapter for Vue 3 or another framework is intentionally small (three responsibilities: layout slots, router bridge, host controls).
 
 The toolkit is **dev-only**. Production builds contain no Builder Kit code and no React.
 
@@ -45,7 +45,9 @@ Builder Kit makes every comment addressable:
 
 - Node.js >= 18
 - Vite >= 5
-- Vue 2.7 if you use the included Vue adapter and source-anchor injection
+- Vue 2.7 if you use the Vue adapter and Vue source anchors
+- React 18/19 if you use the React adapter (the toolkit already depends on React)
+- Tailwind >= 3.4 if you use the canonical React components from `builder-kit/ui`
 - Less >= 3 if you use the bundled styles
 
 ## Install
@@ -145,6 +147,32 @@ export default {
 
 `import.meta.env.DEV` is replaced with `false` at build time, so the dynamic import and the whole toolkit branch disappear from production.
 
+React example (the adapter is exported from `builder-kit/react`):
+
+```jsx
+// main.jsx
+import { createRoot } from "react-dom/client";
+import App from "./App.jsx";
+import { hashRouter } from "builder-kit/react";
+
+const root = createRoot(document.getElementById("root"));
+
+if (import.meta.env.DEV) {
+  import("builder-kit/react").then(({ BuilderKitRoot }) => {
+    root.render(
+      <BuilderKitRoot router={hashRouter()}>
+        <App />
+      </BuilderKitRoot>,
+    );
+  });
+} else {
+  root.render(<App />);
+}
+```
+
+`hashRouter()` is a small built-in bridge; a router-library adapter can pass its
+own `{ current, subscribe, href, push }` object instead.
+
 For another framework, create an adapter that calls `mountKit` and provides the slots described in [`client/core/host.js`](./client/core/host.js). See [docs/adapters.md](./docs/adapters.md).
 
 ### 3. Provide design tokens
@@ -182,6 +210,55 @@ The defaults are CSS variables with fallbacks, so the palette can be changed at 
 ```
 
 See [docs/styling.md](./docs/styling.md).
+
+### 4. Optional: use the UI spec components
+
+The repository includes the **Tool UI Spec** under [`ui-spec/`](./ui-spec):
+tokens, Tailwind config, and canonical React components.
+
+```jsx
+import { Badge, Button, Card, Dialog, EmptyState, SegmentedControl, Table } from "builder-kit/ui";
+import "builder-kit/tokens.css";
+```
+
+See [docs/ui-spec.md](./docs/ui-spec.md) for the token pipeline, the Less bridge
+and the conformance check.
+
+## Demo
+
+[`examples/react-tailwind`](./examples/react-tailwind) is a synthetic React +
+Tailwind product workspace that exercises the toolkit end to end.
+
+| Light | Dark |
+|---|---|
+| ![Helix demo, light](./docs/assets/demo-overview-light.png) | ![Helix demo, dark](./docs/assets/demo-overview-dark.png) |
+
+![Content studio](./docs/assets/demo-content-studio.png)
+
+
+```bash
+npm run demo        # dev server, usually http://localhost:5173/#/overview
+npm run build:demo  # production build
+```
+
+It includes source-anchored review comments, a persisted draft, an IME-safe
+command palette, an async dialog with retry, dark mode, a review queue and a UI
+spec page. Every value comes from the same tokens as the toolkit UI.
+
+## Pre-deploy check
+
+Publishing is an outbound action. Scan the production artifact first:
+
+```bash
+npm run build
+node scripts/preflight-dist.mjs --dir dist
+node scripts/preflight-dist.mjs --dir dist --deny "corp\\.example\\.com"
+```
+
+It fails on dev endpoints, source anchors, review data paths, absolute home
+paths, localhost URLs, source maps, private keys and common credential patterns.
+See [docs/deploy-skill-review.md](./docs/deploy-skill-review.md) for the
+new-environment detection review of a Harness deploy skill.
 
 ## Configuration
 
@@ -252,6 +329,8 @@ npm run check
 - [Host and pipeline adapters](./docs/adapters.md)
 - [Content model](./docs/content-model.md)
 - [Styling and tokens](./docs/styling.md)
+- [UI spec integration](./docs/ui-spec.md)
+- [Deploy skill review](./docs/deploy-skill-review.md)
 
 ## License
 

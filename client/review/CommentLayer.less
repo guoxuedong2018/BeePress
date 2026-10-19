@@ -1,11 +1,13 @@
 // 套件样式不 scoped：类名一律带前缀，靠前缀与宿主隔开
+@import "../core/kit.less";
+
 @import "./z-index.less";
 
 .cl-hover {
   position: fixed;
   z-index: @review-z-base;
   pointer-events: none;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   outline: 2px solid @color-primary;
   outline-offset: 1px;
   background: @color-primary-ring;
@@ -20,7 +22,7 @@
   width: 24px;
   height: 24px;
   padding: 0;
-  font-size: 11px;
+  font-size: @bk-fs-xs;
   font-weight: 600;
   color: @color-on-primary;
   cursor: pointer;
@@ -29,7 +31,7 @@
   border-radius: 50%;
   box-shadow: @elevation-1;
   transform: translate(-50%, -50%);
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
 
   &:hover { transform: translate(-50%, -50%) scale(1.12); }
   // 非精确定位：位置是推断出来的
@@ -45,7 +47,7 @@
   padding: 12px;
   background: @color-white;
   border: 1px solid @color-border;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   box-shadow: @elevation-1;
 }
 
@@ -55,13 +57,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: @bk-fs-sm;
   color: @color-text-weak;
 }
 
 .cl-anchor-src {
-  font-family: Menlo, Consolas, monospace;
-  font-size: 11px;
+  font-family: @font-family-code;
+  font-size: @bk-fs-xs;
 }
 
 .cl-textarea {
@@ -69,14 +71,18 @@
   height: 80px;
   padding: 8px;
   resize: none;
-  font-size: 13px;
+  font-size: @bk-fs-md;
   color: @color-heading;
   border: 1px solid @color-border;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   outline: none;
 
   &:focus {
     border-color: @color-primary;
+  }
+  &:focus-visible {
+    outline: none;
+    box-shadow: @focus-shadow;
   }
 }
 

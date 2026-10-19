@@ -1,0 +1,394 @@
+/* ============================================================================
+   Tool UI Spec — tokens.css
+   v1.0.0 · 可直接 @import 的令牌运行时层
+   与 tokens.json 一一对应。组件层禁止出现裸值，必须引用此处变量。
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   1. 语义令牌 · 浅色（默认）
+   -------------------------------------------------------------------------- */
+:root {
+  /* Surface ladder —— 4 层微对比，明度差仅 1~3% */
+  --surface-0: #f4f3f0;   /* 应用外壳 / 侧边栏 */
+  --surface-1: #faf9f7;   /* 主画布 */
+  --surface-2: #ffffff;   /* 卡片 / 容器 */
+  --surface-3: #ffffff;   /* 输入框 / 浮层（靠阴影区分） */
+  --surface-sunken: #efeeea;
+  --surface-hover: #f0efeb;
+  --surface-active: #e8e6e2;
+
+  /* Text —— 三档层级，禁止第四档 */
+  --text-primary: #1c1b19;
+  --text-secondary: #6b6862;
+  --text-tertiary: #9a978f;
+  --text-disabled: #b8b5af;
+  --text-inverse: #ffffff;
+  --text-on-accent: #ffffff;
+
+  /* Border —— 发丝级，永不使用纯黑 1px */
+  --border-subtle: rgba(28, 27, 25, 0.07);
+  --border-default: rgba(28, 27, 25, 0.11);
+  --border-strong: rgba(28, 27, 25, 0.19);
+  --border-focus: rgba(201, 100, 66, 0.55);
+  --hairline: 1px;
+
+  /* Accent —— 全站唯一强调色 */
+  --accent: #c96442;
+  --accent-hover: #b5573a;
+  --accent-active: #a04c33;
+  --accent-subtle: rgba(201, 100, 66, 0.10);
+  --accent-ring: rgba(201, 100, 66, 0.40);
+
+  /* Status —— 四类，必须搭配图标/文字冗余编码 */
+  --success: #2e8b62;
+  --warning: #b8801f;
+  --danger: #c0453c;
+  --info: #3a72b8;
+  --success-subtle: rgba(46, 139, 98, 0.11);
+  --warning-subtle: rgba(184, 128, 31, 0.12);
+  --danger-subtle: rgba(192, 69, 60, 0.11);
+  --info-subtle: rgba(58, 114, 184, 0.11);
+
+  /* 特殊表面 */
+  --code-bg: #0d0d0c;
+  --code-text: #e8e6e1;
+  --code-text-muted: #9a978f;
+  --code-border: rgba(255, 255, 255, 0.08);
+  --overlay: rgba(28, 27, 25, 0.32);
+  --selection: rgba(201, 100, 66, 0.18);
+
+  /* Composer 双环投影（三态） */
+  --shadow-composer:
+    0 4px 20px rgba(28, 27, 25, 0.035),
+    inset 0 0 0 1px var(--border-default);
+  --shadow-composer-hover:
+    0 4px 24px rgba(28, 27, 25, 0.06),
+    inset 0 0 0 1px var(--border-strong);
+  --shadow-composer-focus:
+    0 4px 24px rgba(28, 27, 25, 0.08),
+    inset 0 0 0 1px var(--border-strong),
+    0 0 0 1px var(--border-strong);
+
+  /* Radius —— 角色语义阶梯 */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-panel: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-bubble: 18px;
+  --radius-composer: 20px;
+  --radius-pill: 999px;
+
+  /* Space —— 4px 网格，变量名即像素值 */
+  --space-0: 0;
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-28: 28px;
+  --space-32: 32px;
+  --space-36: 36px;
+  --space-40: 40px;
+  --space-44: 44px;
+  --space-48: 48px;
+  --space-56: 56px;
+  --space-64: 64px;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans", "Microsoft YaHei", sans-serif;
+  --font-serif: ui-serif, Georgia, "Songti SC", "Times New Roman", serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --text-caption: 11px;   --leading-caption: 16px;
+  --text-footnote: 12px;  --leading-footnote: 16px;
+  --text-body: 14px;      --leading-body: 20px;
+  --text-body-lg: 15px;   --leading-body-lg: 22px;
+  --text-prose: 16px;     --leading-prose: 26px;
+  --text-heading: 15px;   --leading-heading: 20px;
+  --text-title: 20px;     --leading-title: 28px;
+  --text-display: 32px;   --leading-display: 40px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* Elevation —— 双层复合 */
+  --shadow-sm: 0 1px 2px rgba(28, 27, 25, 0.05), 0 2px 8px rgba(28, 27, 25, 0.06);
+  --shadow-md: 0 2px 4px rgba(28, 27, 25, 0.05), 0 6px 16px rgba(28, 27, 25, 0.08);
+  --shadow-lg: 0 4px 8px rgba(28, 27, 25, 0.06), 0 12px 28px -2px rgba(28, 27, 25, 0.09);
+  --shadow-popover: 0 0 0 1px var(--border-default), 0 8px 24px rgba(28, 27, 25, 0.12), 0 2px 6px rgba(28, 27, 25, 0.07);
+
+  /* Focus ring —— 三层陶土环，替代系统默认蓝框 */
+  --focus-shadow:
+    inset 0 0 0 1px var(--surface-1),
+    0 0 0 1.5px var(--accent),
+    0 0 6px 1px var(--accent-ring);
+
+  /* Motion */
+  --dur-instant: 60ms;
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-sheet: 300ms;
+  --dur-slow: 450ms;
+
+  --ease-out: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-snap: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-overshoot: cubic-bezier(0.34, 1.3, 0.64, 1);
+
+  /* 弹簧预设（供 CSS transition / JS 读取） */
+  --spring-snappy: 600 30 0.6;
+  --spring-bouncy: 400 25 0.8;
+  --spring-gentle: 220 24 1.0;
+  --spring-heavy: 1200 80 0.1;
+
+  /* 版心 */
+  --content-width: 720px;
+  --content-width-prose: 760px;
+}
+
+/* ---------------------------------------------------------------------------
+   2. 语义令牌 · 深色（重新映射，不是反色）
+   -------------------------------------------------------------------------- */
+[data-theme="dark"],
+.dark {
+  --surface-0: #131311;
+  --surface-1: #191917;
+  --surface-2: #1f1f1c;
+  --surface-3: #262622;
+  --surface-sunken: #0d0d0c;
+  --surface-hover: #262622;
+  --surface-active: #32322d;
+
+  --text-primary: #eceae4;
+  --text-secondary: #a9a69f;
+  --text-tertiary: #7a776f;
+  --text-disabled: #4a4942;
+  --text-inverse: #1c1b19;
+  --text-on-accent: #ffffff;
+
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-default: rgba(255, 255, 255, 0.11);
+  --border-strong: rgba(255, 255, 255, 0.19);
+  --border-focus: rgba(217, 118, 79, 0.60);
+
+  --accent: #d9764f;
+  --accent-hover: #e5895f;
+  --accent-active: #c96442;
+  --accent-subtle: rgba(217, 118, 79, 0.16);
+  --accent-ring: rgba(217, 118, 79, 0.45);
+
+  --success: #5fbd8d;
+  --warning: #d9a34a;
+  --danger: #e06a5f;
+  --info: #6f9fd8;
+  --success-subtle: rgba(95, 189, 141, 0.14);
+  --warning-subtle: rgba(217, 163, 74, 0.14);
+  --danger-subtle: rgba(224, 106, 95, 0.14);
+  --info-subtle: rgba(111, 159, 216, 0.14);
+
+  --overlay: rgba(0, 0, 0, 0.55);
+  --selection: rgba(217, 118, 79, 0.24);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.40);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.50), 0 6px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.55), 0 16px 36px -2px rgba(0, 0, 0, 0.45);
+  --shadow-popover: inset 0 0 0 1px rgba(255, 255, 255, 0.10), 0 8px 28px rgba(0, 0, 0, 0.65), 0 2px 6px rgba(0, 0, 0, 0.45);
+
+  --shadow-composer:
+    0 4px 20px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px var(--border-default);
+  --shadow-composer-hover:
+    0 4px 24px rgba(0, 0, 0, 0.50),
+    inset 0 0 0 1px var(--border-strong);
+  --shadow-composer-focus:
+    0 4px 24px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px var(--border-strong),
+    0 0 0 1px var(--border-strong);
+
+  --focus-shadow:
+    inset 0 0 0 1px var(--surface-2),
+    0 0 0 1.5px var(--accent),
+    0 0 8px 1px var(--accent-ring);
+
+  /* 深色模式字重逆补偿：感知等粗 */
+  --weight-regular: 360;
+  --weight-medium: 460;
+  --weight-semibold: 550;
+}
+
+/* ---------------------------------------------------------------------------
+   3. 基础层
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--weight-regular);
+  color: var(--text-primary);
+  background: var(--surface-1);
+}
+
+::selection { background: var(--selection); }
+
+/* 统一焦点：绝不允许 outline:none 而不补焦点样式 */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-shadow);
+  border-radius: inherit;
+}
+
+/* 排版角色类 —— 禁止在组件里手写 font-size */
+.t-caption  { font-size: var(--text-caption);  line-height: var(--leading-caption);  }
+.t-footnote { font-size: var(--text-footnote); line-height: var(--leading-footnote); }
+.t-body     { font-size: var(--text-body);     line-height: var(--leading-body);     }
+.t-body-lg  { font-size: var(--text-body-lg);  line-height: var(--leading-body-lg);  }
+.t-prose    { font-size: var(--text-prose);    line-height: var(--leading-prose);    }
+.t-heading  { font-size: var(--text-heading);  line-height: var(--leading-heading);  font-weight: var(--weight-semibold); }
+.t-title    { font-size: var(--text-title);    line-height: var(--leading-title);    font-weight: var(--weight-semibold); letter-spacing: -0.01em; }
+.t-display  { font-size: var(--text-display);  line-height: var(--leading-display);  font-weight: var(--weight-regular); letter-spacing: -0.02em; }
+
+/* 动态数字必须等宽，消除递增抖动 */
+.tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+/* 智能换行 */
+.wrap-balance { text-wrap: balance; }
+.wrap-pretty  { text-wrap: pretty; }
+.wrap-anywhere { overflow-wrap: anywhere; word-break: normal; min-width: 0; }
+
+/* 行内图标光学基线对齐 */
+.icon-inline { vertical-align: -0.125em; }
+.icon-inline-sm { vertical-align: -0.075em; }
+
+/* 单行 / 多行截断 */
+.clamp-1, .clamp-2, .clamp-3 {
+  display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;
+}
+.clamp-1 { -webkit-line-clamp: 1; }
+.clamp-2 { -webkit-line-clamp: 2; }
+.clamp-3 { -webkit-line-clamp: 3; overflow-wrap: anywhere; }
+
+/* 表面工具类 */
+.surface-0 { background: var(--surface-0); }
+.surface-1 { background: var(--surface-1); }
+.surface-2 { background: var(--surface-2); }
+.surface-3 { background: var(--surface-3); }
+.hairline-b { border-bottom: 1px solid var(--border-subtle); }
+.hairline-t { border-top: 1px solid var(--border-subtle); }
+.hairline-r { border-right: 1px solid var(--border-subtle); }
+
+/* Composer 输入终端外壳：三态双环投影（见 UI-SPEC §6.4） */
+.composer-shell {
+  background: var(--surface-3);
+  border-radius: var(--radius-composer);
+  box-shadow: var(--shadow-composer);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+.composer-shell:hover { box-shadow: var(--shadow-composer-hover); }
+.composer-shell:focus-within { box-shadow: var(--shadow-composer-focus); }
+
+/* 滚动边缘 7 档非线性羽化（替代生硬截断） */
+.scroll-fade {
+  --fade-size: 24px;
+  --fade-top: 0px;
+  --fade-bottom: var(--fade-size);
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0,0,0,0.051) calc(var(--fade-top) * 0.15),
+    rgba(0,0,0,0.149) calc(var(--fade-top) * 0.30),
+    rgba(0,0,0,0.302) calc(var(--fade-top) * 0.45),
+    rgba(0,0,0,0.502) calc(var(--fade-top) * 0.60),
+    rgba(0,0,0,0.702) calc(var(--fade-top) * 0.75),
+    rgba(0,0,0,0.851) calc(var(--fade-top) * 0.87),
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    rgba(0,0,0,0.851) calc(100% - var(--fade-bottom) * 0.87),
+    rgba(0,0,0,0.702) calc(100% - var(--fade-bottom) * 0.75),
+    rgba(0,0,0,0.502) calc(100% - var(--fade-bottom) * 0.60),
+    rgba(0,0,0,0.302) calc(100% - var(--fade-bottom) * 0.45),
+    rgba(0,0,0,0.149) calc(100% - var(--fade-bottom) * 0.30),
+    rgba(0,0,0,0.051) calc(100% - var(--fade-bottom) * 0.15),
+    transparent
+  );
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
+.scroll-fade[data-at-top="true"] { --fade-top: 0px; }
+.scroll-fade[data-at-bottom="true"] { --fade-bottom: 0px; }
+
+/* 触控命中区补偿：视觉小、可点大 */
+.touch-target { position: relative; }
+.touch-target::after {
+  content: ""; position: absolute; inset: 50% auto auto 50%;
+  width: max(100%, 44px); height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+
+/* ---------------------------------------------------------------------------
+   4. 关键帧（只保留会被复用的）
+   -------------------------------------------------------------------------- */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+@keyframes dot-wave {
+  0%, 8%    { opacity: 0; transform: translateY(2px); }
+  22%       { opacity: 1; transform: translateY(-2.5px); }
+  36%, 70%  { opacity: 1; transform: translateY(0); }
+  90%, 100% { opacity: 0; transform: translateY(0); }
+}
+@keyframes shimmer-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes grapheme-reveal {
+  from { opacity: 0.2; filter: blur(6px); transform: translateY(4px); }
+  to   { opacity: 1; filter: blur(0); transform: none; }
+}
+
+.anim-fade-up   { animation: fade-up var(--dur-base) var(--ease-out) both; }
+.anim-scale-in  { animation: scale-in var(--dur-base) var(--ease-out) both; }
+.anim-breathe   { animation: breathe 2.4s ease-in-out infinite; }
+.anim-grapheme  { animation: grapheme-reveal 120ms var(--ease-out) both; will-change: filter, opacity, transform; }
+
+/* ---------------------------------------------------------------------------
+   5. 无障碍：尊重减弱动效
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .anim-fade-up, .anim-scale-in { animation: fade-in 0.01ms both !important; }
+}

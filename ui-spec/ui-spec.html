@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tool UI Spec · 工具型产品 UI 设计规范</title>
+<style>
+:root{
+  --surface-0:#f4f3f0; --surface-1:#faf9f7; --surface-2:#ffffff; --surface-3:#ffffff;
+  --surface-sunken:#efeeea; --surface-hover:#f0efeb; --surface-active:#e8e6e2;
+  --text-primary:#1c1b19; --text-secondary:#6b6862; --text-tertiary:#9a978f;
+  --text-disabled:#b8b5af; --text-on-accent:#ffffff;
+  --border-subtle:rgba(28,27,25,.07); --border-default:rgba(28,27,25,.11);
+  --border-strong:rgba(28,27,25,.19);
+  --accent:#c96442; --accent-hover:#b5573a; --accent-active:#a04c33;
+  --accent-subtle:rgba(201,100,66,.10); --accent-ring:rgba(201,100,66,.40);
+  --success:#2e8b62; --warning:#b8801f; --danger:#c0453c; --info:#3a72b8;
+  --success-subtle:rgba(46,139,98,.11); --warning-subtle:rgba(184,128,31,.12);
+  --danger-subtle:rgba(192,69,60,.11); --info-subtle:rgba(58,114,184,.11);
+  --code-bg:#0d0d0c; --code-text:#e8e6e1; --overlay:rgba(28,27,25,.32);
+  --radius-xs:2px; --radius-sm:4px; --radius-md:6px; --radius-lg:8px;
+  --radius-panel:10px; --radius-xl:12px; --radius-2xl:16px;
+  --radius-bubble:18px; --radius-composer:20px; --radius-pill:999px;
+  --space-1:2px; --space-2:4px; --space-3:6px; --space-4:8px; --space-5:12px;
+  --space-6:16px; --space-7:20px; --space-8:24px; --space-9:32px;
+  --space-10:40px; --space-11:48px; --space-12:64px;
+  --font-sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans","Microsoft YaHei",sans-serif;
+  --font-serif:ui-serif,Georgia,"Songti SC","Times New Roman",serif;
+  --font-mono:"SF Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;
+  --weight-regular:400; --weight-medium:500; --weight-semibold:600;
+  --shadow-sm:0 1px 2px rgba(28,27,25,.05),0 2px 8px rgba(28,27,25,.06);
+  --shadow-md:0 2px 4px rgba(28,27,25,.05),0 6px 16px rgba(28,27,25,.08);
+  --shadow-lg:0 4px 8px rgba(28,27,25,.06),0 12px 28px -2px rgba(28,27,25,.09);
+  --shadow-popover:0 0 0 1px var(--border-default),0 8px 24px rgba(28,27,25,.12),0 2px 6px rgba(28,27,25,.07);
+  --focus-shadow:inset 0 0 0 1px var(--surface-1),0 0 0 1.5px var(--accent),0 0 6px 1px var(--accent-ring);
+  --dur-instant:60ms; --dur-fast:120ms; --dur-base:200ms; --dur-sheet:300ms; --dur-slow:450ms;
+  --ease-out:cubic-bezier(.165,.84,.44,1); --ease-snap:cubic-bezier(.32,.72,0,1);
+  --ease-overshoot:cubic-bezier(.34,1.3,.64,1);
+}
+[data-theme="dark"]{
+  --surface-0:#131311; --surface-1:#191917; --surface-2:#1f1f1c; --surface-3:#262622;
+  --surface-sunken:#0d0d0c; --surface-hover:#262622; --surface-active:#32322d;
+  --text-primary:#eceae4; --text-secondary:#a9a69f; --text-tertiary:#7a776f;
+  --text-disabled:#4a4942; --text-on-accent:#ffffff;
+  --border-subtle:rgba(255,255,255,.07); --border-default:rgba(255,255,255,.11);
+  --border-strong:rgba(255,255,255,.19);
+  --accent:#d9764f; --accent-hover:#e5895f; --accent-active:#c96442;
+  --accent-subtle:rgba(217,118,79,.16); --accent-ring:rgba(217,118,79,.45);
+  --success:#5fbd8d; --warning:#d9a34a; --danger:#e06a5f; --info:#6f9fd8;
+  --success-subtle:rgba(95,189,141,.14); --warning-subtle:rgba(217,163,74,.14);
+  --danger-subtle:rgba(224,106,95,.14); --info-subtle:rgba(111,159,216,.14);
+  --overlay:rgba(0,0,0,.55);
+  --weight-regular:360; --weight-medium:460; --weight-semibold:550;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.40);
+  --shadow-md:0 2px 4px rgba(0,0,0,.50),0 6px 16px rgba(0,0,0,.45);
+  --shadow-lg:0 4px 8px rgba(0,0,0,.55),0 16px 36px -2px rgba(0,0,0,.45);
+  --shadow-popover:inset 0 0 0 1px rgba(255,255,255,.10),0 8px 28px rgba(0,0,0,.65),0 2px 6px rgba(0,0,0,.45);
+  --focus-shadow:inset 0 0 0 1px var(--surface-2),0 0 0 1.5px var(--accent),0 0 8px 1px var(--accent-ring);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{
+  font-family:var(--font-sans);background:var(--surface-1);color:var(--text-primary);
+  font-size:14px;line-height:20px;font-weight:var(--weight-regular);
+  -webkit-font-smoothing:antialiased;transition:background .3s var(--ease-out),color .3s var(--ease-out);
+}
+::selection{background:var(--accent-subtle)}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--surface-1) 84%,transparent);backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--border-subtle)}
+.nav-in{max-width:1160px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:var(--weight-semibold);white-space:nowrap}
+.brand .d{width:9px;height:9px;border-radius:var(--radius-pill);background:var(--accent);box-shadow:0 0 0 3px var(--accent-subtle);animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.45}50%{opacity:1}}
+.nav-links{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{color:var(--text-secondary);text-decoration:none;font-size:12.5px;font-weight:var(--weight-medium);padding:6px 10px;border-radius:var(--radius-lg);white-space:nowrap;transition:background var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out)}
+.nav-links a:hover{background:var(--surface-active);color:var(--text-primary)}
+.tbtn{border:1px solid var(--border-default);background:var(--surface-2);color:var(--text-secondary);width:32px;height:32px;border-radius:var(--radius-lg);cursor:pointer;display:grid;place-items:center;font-size:14px;flex:none;transition:transform var(--dur-fast) var(--ease-snap)}
+.tbtn:active{transform:scale(.94)}
+
+main{max-width:1160px;margin:0 auto;padding:0 24px 100px}
+section{padding-top:56px}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.sec-id{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-subtle);padding:3px 8px;border-radius:var(--radius-pill);letter-spacing:.04em;flex:none;font-variant-numeric:tabular-nums}
+h2{font-size:23px;line-height:30px;font-weight:var(--weight-semibold);letter-spacing:-.02em;text-wrap:balance}
+h3{font-size:15px;line-height:20px;font-weight:var(--weight-semibold);margin:30px 0 10px;text-wrap:balance}
+h4{font-size:13.5px;font-weight:var(--weight-semibold);margin:18px 0 6px}
+.lead{color:var(--text-secondary);font-size:13.5px;margin-bottom:22px;max-width:76ch;text-wrap:pretty;line-height:1.7}
+p{margin:10px 0;text-wrap:pretty}
+.muted{color:var(--text-secondary)}
+code{font-family:var(--font-mono);font-size:.87em;background:var(--surface-active);color:var(--accent-active);padding:1.5px 5px;border-radius:var(--radius-sm);font-variant-numeric:tabular-nums}
+[data-theme="dark"] code{color:var(--accent-hover)}
+strong{font-weight:var(--weight-semibold)}
+
+/* hero */
+.hero{padding:64px 0 24px;position:relative}
+.hero::before{content:"";position:absolute;inset:-30px -20% auto;height:320px;background:radial-gradient(ellipse 55% 70% at 28% 0%,var(--accent-subtle),transparent 70%);pointer-events:none;z-index:-1}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:var(--weight-medium);color:var(--text-secondary);border:1px solid var(--border-default);background:var(--surface-2);padding:4px 11px;border-radius:var(--radius-pill);margin-bottom:18px}
+.eyebrow b{color:var(--accent);font-weight:var(--weight-semibold)}
+h1{font-family:var(--font-serif);font-size:clamp(28px,4.2vw,40px);font-weight:400;line-height:1.24;letter-spacing:-.02em;max-width:22ch;text-wrap:balance}
+h1 em{font-style:normal;color:var(--accent)}
+.hero p{font-size:15px;line-height:1.72;color:var(--text-secondary);max-width:66ch;margin-top:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{font-size:11.5px;color:var(--text-secondary);background:var(--surface-2);border:1px solid var(--border-subtle);padding:5px 11px;border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)}
+.chip b{color:var(--text-primary);font-weight:var(--weight-semibold)}
+
+/* cards */
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:900px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-panel);padding:16px;box-shadow:var(--shadow-sm);transition:transform .18s var(--ease-out),box-shadow .18s var(--ease-out)}
+.card:hover{transform:translateY(-1.5px);box-shadow:var(--shadow-md)}
+.card h4{margin:0 0 6px}
+.card p{font-size:12.5px;line-height:1.6;color:var(--text-secondary);margin:0}
+.card .tag{font-family:var(--font-mono);font-size:10.5px;color:var(--accent);display:block;margin-top:8px;font-variant-numeric:tabular-nums}
+.ico{font-size:18px;display:block;margin-bottom:10px}
+
+/* tables */
+.tbl{margin:16px 0;border:1px solid var(--border-subtle);border-radius:var(--radius-panel);overflow:hidden;box-shadow:var(--shadow-sm);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:520px}
+th{text-align:left;font-weight:var(--weight-semibold);font-size:11.5px;color:var(--text-secondary);padding:10px 14px;background:var(--surface-0);border-bottom:1px solid var(--border-subtle);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border-subtle);vertical-align:top;line-height:1.6}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-0)}
+.mono{font-family:var(--font-mono);font-size:11px;color:var(--accent-active);font-variant-numeric:tabular-nums}
+[data-theme="dark"] .mono{color:var(--accent-hover)}
+.rid{font-family:var(--font-mono);font-size:10.5px;font-weight:600;background:var(--surface-active);color:var(--text-secondary);padding:2px 6px;border-radius:var(--radius-sm);white-space:nowrap}
+.lv{font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--radius-pill);white-space:nowrap}
+.lv.must{background:var(--danger-subtle);color:var(--danger)}
+.lv.should{background:var(--info-subtle);color:var(--info)}
+.lv.never{background:var(--surface-active);color:var(--text-secondary);border:1px solid var(--border-default)}
+
+/* swatches */
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:10px;margin:16px 0}
+.sw{border:1px solid var(--border-subtle);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface-2);box-shadow:var(--shadow-sm)}
+.sw .c{height:48px}
+.sw .i{padding:8px 10px}
+.sw .i b{font-size:11.5px;display:block;font-weight:var(--weight-medium)}
+.sw .i span{font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);font-variant-numeric:tabular-nums}
+
+/* surface stack */
+.stack{border:1px solid var(--border-subtle);border-radius:var(--radius-panel);overflow:hidden;box-shadow:var(--shadow-sm);margin:16px 0}
+.srow{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border-subtle)}
+.srow:last-child{border-bottom:0}
+.ssw{width:48px;height:36px;border-radius:var(--radius-lg);border:1px solid var(--border-default);display:grid;place-items:center;font-family:var(--font-mono);font-size:9.5px;color:var(--text-secondary)}
+.srow b{font-size:12.5px;display:block}
+.srow small{font-size:11.5px;color:var(--text-secondary)}
+.srow .v{font-family:var(--font-mono);font-size:10.5px;color:var(--text-tertiary);text-align:right;font-variant-numeric:tabular-nums}
+
+/* radii */
+.radii{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.rad{display:flex;flex-direction:column;align-items:center;gap:6px}
+.rad .b{width:50px;height:50px;background:var(--accent-subtle);border:1.5px solid var(--accent);display:grid;place-items:center}
+.rad .b span{font-family:var(--font-mono);font-size:10px;color:var(--accent-active);font-weight:600}
+[data-theme="dark"] .rad .b span{color:var(--accent-hover)}
+.rad small{font-size:10px;color:var(--text-secondary);text-align:center;max-width:64px;line-height:1.3}
+
+/* space scale */
+.spaces{display:flex;align-items:flex-end;gap:8px;margin:16px 0;padding:16px;background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-panel);overflow-x:auto}
+.sp{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
+.sp .bar{width:20px;background:var(--accent);border-radius:2px 2px 0 0;opacity:.85}
+.sp small{font-family:var(--font-mono);font-size:9.5px;color:var(--text-tertiary);font-variant-numeric:tabular-nums}
+
+/* type scale */
+.typescale{border:1px solid var(--border-subtle);border-radius:var(--radius-panel);background:var(--surface-2);overflow:hidden;box-shadow:var(--shadow-sm);margin:16px 0}
+.trow{display:grid;grid-template-columns:88px 1fr auto;gap:14px;align-items:baseline;padding:11px 16px;border-bottom:1px solid var(--border-subtle)}
+.trow:last-child{border-bottom:0}
+.trow .nm{font-family:var(--font-mono);font-size:10.5px;color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.trow .meta{font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+@media(max-width:620px){.compare{grid-template-columns:1fr}}
+.cmp{border:1px solid var(--border-subtle);border-radius:var(--radius-panel);padding:14px;background:var(--surface-2);box-shadow:var(--shadow-sm)}
+.cmp .h{font-size:11.5px;font-weight:var(--weight-semibold);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.cmp.bad{border-color:color-mix(in srgb,var(--danger) 35%,transparent)}
+.cmp.bad .h{color:var(--danger)}
+.cmp.good{border-color:color-mix(in srgb,var(--success) 40%,transparent)}
+.cmp.good .h{color:var(--success)}
+.cmp p{font-size:12px;color:var(--text-secondary);margin:0}
+
+/* demo boxes */
+.demo{background:var(--surface-1);border-radius:var(--radius-lg);padding:14px;margin-top:10px}
+.nest-1{border:1px solid var(--border-strong);border-radius:var(--radius-lg);padding:10px}
+.nest-2{border:1px solid var(--border-strong);border-radius:var(--radius-md);padding:8px;margin-top:6px}
+.nest-3{border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:6px;margin-top:6px}
+.nest-btn{border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:2px 8px;font-size:10.5px;display:inline-block;margin-top:6px;color:var(--text-secondary)}
+.clean{background:var(--surface-2);border-radius:var(--radius-lg);padding:14px;margin-top:10px;box-shadow:var(--shadow-sm)}
+.ghost-btn{background:transparent;border:0;border-radius:var(--radius-md);padding:3px 9px;font-size:10.5px;color:var(--text-secondary);display:inline-block;margin-top:6px;cursor:pointer}
+.ghost-btn:hover{background:var(--surface-hover);color:var(--text-primary)}
+
+/* springs */
+.springs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+@media(max-width:620px){.springs{grid-template-columns:1fr}}
+.spring{border:1px solid var(--border-subtle);border-radius:var(--radius-panel);background:var(--surface-2);padding:14px;box-shadow:var(--shadow-sm)}
+.spring .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.spring .top b{font-family:var(--font-mono);font-size:12.5px;font-weight:600}
+.spring .top span{font-family:var(--font-mono);font-size:10.5px;color:var(--text-tertiary);font-variant-numeric:tabular-nums}
+.spring p{font-size:12px;color:var(--text-secondary);margin:6px 0 0;line-height:1.55}
+.spring .pr{font-family:var(--font-mono);font-size:10.5px;color:var(--accent-active);margin-top:7px;display:block;font-variant-numeric:tabular-nums}
+[data-theme="dark"] .spring .pr{color:var(--accent-hover)}
+.spring .track{height:5px;border-radius:var(--radius-pill);background:var(--surface-active);margin-top:10px;overflow:hidden}
+.spring .fill{height:100%;border-radius:var(--radius-pill);background:linear-gradient(90deg,var(--accent),var(--accent-hover))}
+
+/* decision tree */
+.tree{font-family:var(--font-mono);font-size:11.5px;line-height:1.85;background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-panel);padding:16px 18px;margin:14px 0;box-shadow:var(--shadow-sm);white-space:pre;overflow-x:auto;color:var(--text-secondary)}
+.tree b{color:var(--text-primary);font-weight:600}
+.tree em{color:var(--accent-active);font-style:normal;font-weight:600}
+[data-theme="dark"] .tree em{color:var(--accent-hover)}
+
+/* component showcase */
+.showcase{background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-panel);padding:20px;box-shadow:var(--shadow-sm);margin:14px 0}
+.showcase .label{font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;display:block}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font-family:var(--font-sans);font-size:12px;font-weight:var(--weight-medium);border-radius:var(--radius-lg);height:28px;padding:0 10px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:1px solid transparent;transition:background var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-snap)}
+.btn:active{transform:scale(.98)}
+.btn.pri{background:var(--accent);color:var(--text-on-accent)}
+.btn.pri:hover{background:var(--accent-hover)}
+.btn.sec{background:var(--surface-2);color:var(--text-primary);border-color:var(--border-default)}
+.btn.sec:hover{background:var(--surface-hover)}
+.btn.gho{background:transparent;color:var(--text-secondary);border:0}
+.btn.gho:hover{background:var(--surface-hover);color:var(--text-primary)}
+.btn.out{background:transparent;color:var(--text-primary);border-color:var(--border-strong)}
+.btn.dan{background:var(--danger);color:#fff}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.inp{height:30px;border-radius:var(--radius-lg);border:1px solid var(--border-default);background:var(--surface-3);padding:0 10px;font-size:12px;color:var(--text-primary);font-family:var(--font-sans);width:180px;outline:none}
+.inp::placeholder{color:var(--text-tertiary)}
+.inp:focus{box-shadow:var(--focus-shadow);border-color:transparent}
+
+.composer{border-radius:var(--radius-composer);background:var(--surface-3);box-shadow:0 4px 20px rgba(28,27,25,.035),inset 0 0 0 1px var(--border-default);padding:14px;margin-top:12px}
+[data-theme="dark"] .composer{box-shadow:0 4px 20px rgba(0,0,0,.4),inset 0 0 0 1px var(--border-default)}
+.composer textarea{width:100%;border:0;background:transparent;outline:none;resize:none;font-family:var(--font-sans);font-size:15px;line-height:22px;color:var(--text-primary);min-height:44px}
+.composer textarea::placeholder{color:var(--text-tertiary)}
+.chin{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border-subtle);margin-top:10px;padding-top:10px}
+
+.msg-u{background:var(--accent-subtle);border-radius:var(--radius-bubble);padding:10px 16px;font-size:13px;margin-left:auto;max-width:70%;width:fit-content}
+.msg-a{font-size:13.5px;line-height:1.65;max-width:720px;color:var(--text-primary)}
+
+.codeblk{background:var(--code-bg);border-radius:var(--radius-xl);overflow:hidden;border:1px solid rgba(255,255,255,.08);margin-top:10px}
+.codeblk .h{height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.codeblk .h span{font-family:var(--font-mono);font-size:10.5px;color:#9a978f;text-transform:uppercase;letter-spacing:.05em}
+.codeblk .h button{background:transparent;border:0;color:#9a978f;font-size:10.5px;cursor:pointer;font-family:var(--font-sans)}
+.codeblk pre{padding:14px;font-family:var(--font-mono);font-size:11.5px;line-height:1.65;color:var(--code-text);overflow-x:auto}
+.codeblk .kw{color:#e0895f}.codeblk .st{color:#8fbf8f}.codeblk .cm{color:#6b6862}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:var(--weight-medium);padding:2px 8px;border-radius:var(--radius-pill)}
+.badge.ok{background:var(--success-subtle);color:var(--success)}
+.badge.warn{background:var(--warning-subtle);color:var(--warning)}
+.badge.err{background:var(--danger-subtle);color:var(--danger)}
+.badge.info{background:var(--info-subtle);color:var(--info)}
+
+.empty{text-align:center;padding:36px 20px}
+.empty .ic{font-size:24px;opacity:.7;margin-bottom:10px}
+.empty b{display:block;font-size:15px;font-weight:var(--weight-semibold);margin-bottom:5px}
+.empty p{font-size:12.5px;color:var(--text-secondary);max-width:340px;margin:0 auto 14px}
+
+/* anti-pattern wall */
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:10px;margin:16px 0}
+.ap{background:var(--surface-2);border:1px solid var(--border-subtle);border-left:2.5px solid var(--danger);border-radius:var(--radius-lg);padding:12px 14px;box-shadow:var(--shadow-sm)}
+.ap .x{font-size:11.5px;color:var(--danger);font-weight:var(--weight-medium);line-height:1.5;margin-bottom:6px}
+.ap .ok{font-size:11.5px;color:var(--text-secondary);line-height:1.5}
+.ap .ok::before{content:"→ ";color:var(--success);font-weight:600}
+.ap .rid2{font-family:var(--font-mono);font-size:9.5px;color:var(--text-tertiary);margin-top:6px;display:block}
+
+/* callout */
+.callout{border:1px solid var(--border-subtle);border-left:3px solid var(--accent);background:var(--surface-2);border-radius:var(--radius-lg);padding:13px 16px;margin:14px 0;box-shadow:var(--shadow-sm)}
+.callout .ct{font-size:12.5px;font-weight:var(--weight-semibold);margin-bottom:4px;display:flex;align-items:center;gap:6px;color:var(--accent-active)}
+[data-theme="dark"] .callout .ct{color:var(--accent-hover)}
+.callout p{font-size:12.5px;color:var(--text-secondary);margin:0;line-height:1.65}
+.callout.tip{border-left-color:var(--success)}.callout.tip .ct{color:var(--success)}
+.callout.warn{border-left-color:var(--warning)}.callout.warn .ct{color:var(--warning)}
+
+/* gate */
+.gate{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin:16px 0}
+.gi{display:flex;align-items:flex-start;gap:9px;background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:11px 13px;box-shadow:var(--shadow-sm)}
+.gi .box{width:14px;height:14px;border-radius:var(--radius-sm);border:1.5px solid var(--border-strong);flex:none;margin-top:1px}
+.gi b{font-size:12px;display:block;font-weight:var(--weight-medium);line-height:1.45}
+.gi small{font-size:11px;color:var(--text-tertiary);font-family:var(--font-mono)}
+
+footer{border-top:1px solid var(--border-subtle);margin-top:64px;padding:26px 0;text-align:center;color:var(--text-tertiary);font-size:11.5px}
+footer .a{color:var(--accent)}
+
+.reveal{opacity:0;transform:translateY(10px);transition:opacity .55s var(--ease-out),transform .55s var(--ease-out)}
+.reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-in">
+    <div class="brand"><span class="d"></span>Tool UI Spec</div>
+    <div class="nav-links">
+      <a href="#stance">立场</a>
+      <a href="#tokens">令牌</a>
+      <a href="#border">边框</a>
+      <a href="#motion">动效</a>
+      <a href="#tree">决策树</a>
+      <a href="#components">组件</a>
+      <a href="#anti">反模式</a>
+      <a href="#gate">门禁</a>
+    </div>
+    <button class="tbtn" id="tb">◐</button>
+  </div>
+</nav>
+
+<main>
+
+<div class="hero">
+  <span class="eyebrow"><b>TUS v1.0.0</b> · 工具型产品 UI 规范</span>
+  <h1>让 agent <em>不能</em>写错<br>而不是<em>提醒</em>它写对</h1>
+  <p>这套规范的每一行，都是为了让 coding agent 在迭代中<b>没有发挥空间</b>。颜色、间距、圆角、动效全部收敛为令牌；边界、无障碍、容错全部收敛为硬规则。规范不是文档，是可执行的门禁。</p>
+  <div class="chips">
+    <span class="chip">规则 <b>58 条</b></span>
+    <span class="chip">决策树 <b>5 棵</b></span>
+    <span class="chip">组件配方 <b>8 个</b></span>
+    <span class="chip">门禁项 <b>45 项</b></span>
+  </div>
+</div>
+
+<!-- 立场 -->
+<section id="stance" class="reveal">
+  <div class="sec-head"><span class="sec-id">01</span><h2>设计立场：一条原理，四个推论</h2></div>
+  <p class="lead">规范里的所有规则都服务于同一句话。理解它，才能在规则未覆盖的地方做出正确判断。</p>
+
+  <div class="callout">
+    <div class="ct">◆ 第一性原理</div>
+    <p><strong>工具型产品的设计目标，是降低「长期使用」的认知负担，而不是制造「第一眼」的惊艳。</strong>任何设计决策，问一句"用户连续用 8 小时后，这个决定还成立吗？"——不成立的，就是消费级审美，不是工具级设计。</p>
+  </div>
+
+  <div class="grid g4">
+    <div class="card"><span class="ico">👁</span><h4>长时间注视</h4><p>视觉必须低刺激。低饱和、低对比层级、暖中性底色、无大面积高亮。</p><span class="tag">→ 低刺激</span></div>
+    <div class="card"><span class="ico">🔁</span><h4>高频重复</h4><p>交互必须可预测。固定位置、固定动效、固定反馈，不搞惊喜。</p><span class="tag">→ 可预测</span></div>
+    <div class="card"><span class="ico">📊</span><h4>信息密度高</h4><p>层级靠结构而非装饰。用明度差与留白分层，不用边框堆叠。</p><span class="tag">→ 结构分层</span></div>
+    <div class="card"><span class="ico">⌨️</span><h4>键盘优先</h4><p>焦点与快捷键是一等公民。全键盘可达、焦点可见。</p><span class="tag">→ 可键盘</span></div>
+  </div>
+
+  <h3>不变量 vs 可变量</h3>
+  <p class="muted" style="font-size:13px">这是本规范能被"通用化"的关键。换品牌时只改可变量，不变量永不改动。</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>类别</th><th>内容</th><th>能否替换</th></tr></thead>
+      <tbody>
+        <tr><td><b>不变量</b></td><td>四层表面分层逻辑 · 单闭合边框 · 圆角语义分级 · 动效四类分工 · 状态机 · 边界守卫 · 无障碍基线</td><td><span class="lv must">不可改</span></td></tr>
+        <tr><td><b>可变量</b></td><td>强调色 · 中性色温度 · 字体族 · 圆角性格 · 动效性格</td><td><span class="lv should">可替换</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 令牌 -->
+<section id="tokens" class="reveal">
+  <div class="sec-head"><span class="sec-id">02</span><h2>令牌体系</h2></div>
+  <p class="lead">组件内禁止出现任何裸值。所有视觉决策都在这张表里完成，agent 只负责查表。</p>
+
+  <h3>2.1 表面阶梯（4 层，禁止第 5 层）</h3>
+  <div class="stack">
+    <div class="srow"><div class="ssw" style="background:var(--surface-0)">S0</div><div><b>surface-0 · 外壳</b><small>应用外框、侧边栏、导航</small></div><div class="v">#f4f3f0</div></div>
+    <div class="srow"><div class="ssw" style="background:var(--surface-1)">S1</div><div><b>surface-1 · 画布</b><small>主内容区背景</small></div><div class="v">#faf9f7</div></div>
+    <div class="srow"><div class="ssw" style="background:var(--surface-2)">S2</div><div><b>surface-2 · 容器</b><small>卡片、面板、消息容器</small></div><div class="v">#ffffff</div></div>
+    <div class="srow"><div class="ssw" style="background:var(--surface-3);box-shadow:var(--shadow-sm)">S3</div><div><b>surface-3 · 浮起</b><small>输入框、下拉、浮层（靠阴影区分）</small></div><div class="v">#ffffff</div></div>
+  </div>
+  <div class="callout tip"><div class="ct">✦ 关键</div><p>相邻层明度差控制在 <strong>1–3%</strong>。差距过大就会"一块一块"，差距过小则层级失效。S2 与 S3 同色时，用阴影建立高度差。</p></div>
+
+  <h3>2.2 色彩</h3>
+  <div class="sw-grid">
+    <div class="sw"><div class="c" style="background:var(--accent)"></div><div class="i"><b>accent</b><span>#c96442</span></div></div>
+    <div class="sw"><div class="c" style="background:var(--accent-hover)"></div><div class="i"><b>accent-hover</b><span>#b5573a</span></div></div>
+    <div class="sw"><div class="c" style="background:var(--accent-subtle)"></div><div class="i"><b>accent-subtle</b><span>10% alpha</span></div></div>
+    <div class="sw"><div class="c" style="background:var(--text-primary)"></div><div class="i"><b>text-primary</b><span>#1c1b19</span></div></div>
+    <div class="sw"><div class="c" style="background:var(--text-secondary)"></div><div class="i"><b>text-secondary</b><span>#6b6862</span></div></div>
+    <div class="sw"><div class="c" style="background:var(--text-tertiary)"></div><div class="i"><b>text-tertiary</b><span>#9a978f</span></div></div>
+    <div class="sw"><div class="c" style="background:var(--success)"></div><div class="i"><b>success</b><span>#2e8b62</span></div></div>
+    <div class="sw"><div class="c" style="background:var(--warning)"></div><div class="i"><b>warning</b><span>#b8801f</span></div></div>
+    <div class="sw"><div class="c" style="background:var(--danger)"></div><div class="i"><b>danger</b><span>#c0453c</span></div></div>
+    <div class="sw"><div class="c" style="background:var(--info)"></div><div class="i"><b>info</b><span>#3a72b8</span></div></div>
+  </div>
+  <div class="callout warn"><div class="ct">⚠ 两条硬约束</div><p>① 全站<strong>只有一个强调色</strong>，其余全是中性灰。② 状态色<strong>必须配图标或文字</strong>，不能只靠颜色传达——灰度模式下仍要可辨识。</p></div>
+
+  <h3>2.3 圆角：按角色取值</h3>
+  <div class="radii">
+    <div class="rad"><div class="b" style="border-radius:2px"><span>2</span></div><small>徽章</small></div>
+    <div class="rad"><div class="b" style="border-radius:4px"><span>4</span></div><small>键帽</small></div>
+    <div class="rad"><div class="b" style="border-radius:6px"><span>6</span></div><small>小按钮</small></div>
+    <div class="rad"><div class="b" style="border-radius:8px"><span>8</span></div><small>标准按钮</small></div>
+    <div class="rad"><div class="b" style="border-radius:10px"><span>10</span></div><small>卡片</small></div>
+    <div class="rad"><div class="b" style="border-radius:12px"><span>12</span></div><small>代码块</small></div>
+    <div class="rad"><div class="b" style="border-radius:16px"><span>16</span></div><small>弹窗</small></div>
+    <div class="rad"><div class="b" style="border-radius:18px"><span>18</span></div><small>气泡</small></div>
+    <div class="rad"><div class="b" style="border-radius:20px"><span>20</span></div><small>输入终端</small></div>
+    <div class="rad"><div class="b" style="border-radius:999px"><span>∞</span></div><small>胶囊</small></div>
+  </div>
+  <div class="callout"><div class="ct">◆ 同心圆角法则</div><p>嵌套时必须满足 <code>R_outer = R_inner + padding</code>。违反这条，内外曲率就会"打架"，界面显得呆滞——这是很多界面看着别扭却说不清原因的根源。</p></div>
+
+  <h3>2.4 间距：4px 网格</h3>
+  <p class="muted" style="font-size:12.5px">值必须是 4 的倍数；2px 仅用于发丝级微调。Tailwind 原生 spacing 即 4px 网格，无需覆盖。</p>
+  <div class="spaces">
+    <div class="sp"><div class="bar" style="height:2px"></div><small>2</small></div>
+    <div class="sp"><div class="bar" style="height:4px"></div><small>4</small></div>
+    <div class="sp"><div class="bar" style="height:6px"></div><small>6</small></div>
+    <div class="sp"><div class="bar" style="height:8px"></div><small>8</small></div>
+    <div class="sp"><div class="bar" style="height:10px"></div><small>10</small></div>
+    <div class="sp"><div class="bar" style="height:12px"></div><small>12</small></div>
+    <div class="sp"><div class="bar" style="height:14px"></div><small>14</small></div>
+    <div class="sp"><div class="bar" style="height:16px"></div><small>16</small></div>
+    <div class="sp"><div class="bar" style="height:20px"></div><small>20</small></div>
+    <div class="sp"><div class="bar" style="height:24px"></div><small>24</small></div>
+    <div class="sp"><div class="bar" style="height:28px"></div><small>28</small></div>
+    <div class="sp"><div class="bar" style="height:32px"></div><small>32</small></div>
+    <div class="sp"><div class="bar" style="height:36px"></div><small>36</small></div>
+    <div class="sp"><div class="bar" style="height:40px"></div><small>40</small></div>
+    <div class="sp"><div class="bar" style="height:44px"></div><small>44</small></div>
+    <div class="sp"><div class="bar" style="height:48px"></div><small>48</small></div>
+    <div class="sp"><div class="bar" style="height:56px"></div><small>56</small></div>
+    <div class="sp"><div class="bar" style="height:64px"></div><small>64</small></div>
+  </div>
+
+  <h3>2.5 字阶：8 档角色</h3>
+  <div class="typescale">
+    <div class="trow"><span class="nm">display</span><span style="font-size:26px;line-height:1.2;font-weight:400;letter-spacing:-.02em">Aa 工具型界面</span><span class="meta">32 / 40</span></div>
+    <div class="trow"><span class="nm">title</span><span style="font-size:20px;line-height:28px;font-weight:600">Aa 页面标题</span><span class="meta">20 / 28</span></div>
+    <div class="trow"><span class="nm">heading</span><span style="font-size:15px;line-height:20px;font-weight:600">Aa 卡片标题</span><span class="meta">15 / 20</span></div>
+    <div class="trow"><span class="nm">prose</span><span style="font-size:16px;line-height:26px">Aa 长文阅读正文</span><span class="meta">16 / 26</span></div>
+    <div class="trow"><span class="nm">body-lg</span><span style="font-size:15px;line-height:22px">Aa 输入框与宽松区</span><span class="meta">15 / 22</span></div>
+    <div class="trow"><span class="nm">body</span><span style="font-size:14px;line-height:20px">Aa 标准正文与列表</span><span class="meta">14 / 20</span></div>
+    <div class="trow"><span class="nm">footnote</span><span style="font-size:12px;line-height:16px;color:var(--text-secondary)">Aa 辅助说明</span><span class="meta">12 / 16</span></div>
+    <div class="trow"><span class="nm">caption</span><span style="font-size:11px;line-height:16px;color:var(--text-tertiary)">Aa 时间戳与元信息</span><span class="meta">11 / 16</span></div>
+  </div>
+  <div class="callout tip"><div class="ct">✦ 深色模式字重逆补偿</div><p>白字在黑底会产生光晕外扩，感知上粗 10–15%。深色模式必须主动减薄：<code>400 → 360</code>、<code>500 → 460</code>、<code>600 → 550</code>。点右上角切换试试。</p></div>
+
+  <h3>2.6 阴影：双层复合</h3>
+  <div class="grid g4">
+    <div class="card" style="box-shadow:var(--shadow-sm)"><h4>shadow-sm</h4><p>卡片、附件磁贴的底衬</p></div>
+    <div class="card" style="box-shadow:var(--shadow-md)"><h4>shadow-md</h4><p>悬停抬升、下拉菜单</p></div>
+    <div class="card" style="box-shadow:var(--shadow-lg)"><h4>shadow-lg</h4><p>弹窗、全屏抽屉</p></div>
+    <div class="card" style="box-shadow:var(--shadow-popover)"><h4>shadow-popover</h4><p>浮层双环结构</p></div>
+  </div>
+  <p class="muted" style="font-size:12.5px">深色模式下，popover 改用<strong>内侧 inset 高光</strong>代替外描边——模拟边缘捕捉到顶光的反光，既立体又无边框感。</p>
+</section>
+
+<!-- 边框 -->
+<section id="border" class="reveal">
+  <div class="sec-head"><span class="sec-id">03</span><h2>单闭合边框原则</h2></div>
+  <p class="lead">这是整套规范里最值得立刻应用的一条。界面"廉价感"几乎 100% 来自边框套娃——视线被无数条灰线切割得支离破碎。</p>
+
+  <div class="compare">
+    <div class="cmp bad">
+      <div class="h">✕ 反模式：三层套娃</div>
+      <p>外卡片有框 → 内区块有框 → 操作栏有框 → 按钮还有框。</p>
+      <div class="demo">
+        <div class="nest-1">
+          <div style="font-size:11px;color:var(--text-secondary)">内容区块</div>
+          <div class="nest-2">
+            <div style="font-size:11px;color:var(--text-secondary)">消息正文</div>
+            <div class="nest-3">
+              <span class="nest-btn">复制</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cmp good">
+      <div class="h">✓ 正模式：单边框</div>
+      <p>外层保留 1 层边框，内部全部降级为无边框 + hover 底色。</p>
+      <div class="demo">
+        <div class="clean">
+          <div style="font-size:11px;color:var(--text-secondary)">内容区块</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:6px">消息正文</div>
+          <button class="ghost-btn">复制</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <div class="ct">⚠ 判定口诀</div>
+    <p>从屏幕边缘走到你要操作的那个按钮，中间穿过了几道灰线？<strong>超过 1 道就是错的。</strong></p>
+  </div>
+
+  <h3>边界授权决策表</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>场景</th><th>处理方式</th><th>规则</th></tr></thead>
+      <tbody>
+        <tr><td>父子层级（外壳 vs 内容）</td><td>用 surface 明度差，不加边框</td><td><span class="rid">LAY-01</span></td></tr>
+        <tr><td>同层并列，有间距</td><td>只用间距，不加任何线</td><td><span class="rid">LAY-02</span></td></tr>
+        <tr><td>同层并列，无间距</td><td>1px 单向细线（border-b / border-t）</td><td><span class="rid">LAY-06</span></td></tr>
+        <tr><td>独立可交互实体（弹窗、代码块）</td><td>允许 1 层闭合边框 + 阴影</td><td><span class="rid">LAY-04</span></td></tr>
+        <tr><td>已在带边框容器内部</td><td>禁止边框，改 Ghost / 填充</td><td><span class="rid">LAY-05</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 动效 -->
+<section id="motion" class="reveal">
+  <div class="sec-head"><span class="sec-id">04</span><h2>动效：四套物理预设</h2></div>
+  <p class="lead">不是所有交互都该用同一种动画。阻尼比 ζ 决定运动的性格——利落、果冻、沉稳，还是绝对咬合。agent 只能选，不能调。</p>
+
+  <div class="springs">
+    <div class="spring">
+      <div class="top"><b>snappy</b><span>ζ 0.79 · +1.8%</span></div>
+      <p>利落归位，几乎无多余弹跳。用于按钮点击、Tab 切换、hover 这类高频微交互。</p>
+      <span class="pr">600 / 30 / 0.6 · 220ms</span>
+      <div class="track"><div class="fill" style="width:30%"></div></div>
+    </div>
+    <div class="spring">
+      <div class="top"><b>bouncy</b><span>ζ 0.61 · +8.8%</span></div>
+      <p>明显的一到两次回弹，带一点果冻感。用于开关、徽章入场、成功确认。</p>
+      <span class="pr">400 / 25 / 0.8 · 380ms</span>
+      <div class="track"><div class="fill" style="width:52%"></div></div>
+    </div>
+    <div class="spring">
+      <div class="top"><b>gentle</b><span>ζ 0.81 · +1.5%</span></div>
+      <p>沉稳顺滑，微冲后平稳着陆。用于弹窗、折叠展开、抽屉、分栏复位。</p>
+      <span class="pr">220 / 24 / 1.0 · 480ms</span>
+      <div class="track"><div class="fill" style="width:72%"></div></div>
+    </div>
+    <div class="spring">
+      <div class="top"><b>heavySnap</b><span>ζ 1.83 · 零超调</span></div>
+      <p>松手瞬间绝对咬合。用于拖拽落点、边缘吸附、抽屉关闭。</p>
+      <span class="pr">1200 / 80 / 0.1 · 140ms</span>
+      <div class="track"><div class="fill" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>时长</th><th>上限</th><th>适用</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">instant</span> 60ms</td><td>—</td><td>颜色、透明度瞬时变化</td></tr>
+        <tr><td><span class="mono">fast</span> 120ms</td><td>微交互 ≤200ms</td><td>hover、按压、图标切换</td></tr>
+        <tr><td><span class="mono">base</span> 200ms</td><td>面板 ≤300ms</td><td>展开、卡片入场</td></tr>
+        <tr><td><span class="mono">sheet</span> 300ms</td><td>—</td><td>抽屉、侧滑面板</td></tr>
+        <tr><td><span class="mono">slow</span> 450ms</td><td>转场 ≤450ms</td><td>环境级转场、页面切换</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout warn"><div class="ct">⚠ 绝对禁止</div><p><code>transition: all</code> · <code>linear</code> · <code>ease</code> + 任意时长 · 对 <code>width/height/top/left</code> 做动画 · 不响应 <code>prefers-reduced-motion</code></p></div>
+</section>
+
+<!-- 决策树 -->
+<section id="tree" class="reveal">
+  <div class="sec-head"><span class="sec-id">05</span><h2>五棵决策树</h2></div>
+  <p class="lead">agent 遇到需要"判断"的地方，必须走决策树取唯一分支。不允许自由发挥。</p>
+
+  <h3>5.1 区分两个区域 → 用什么</h3>
+  <div class="tree">需要区分两个视觉区域
+│
+├─ <b>父子层级</b>（外壳 vs 内容）？
+│   └─ 用 <em>surface 明度差</em>
+│
+├─ <b>同层并列</b>（卡片 A vs 卡片 B）？
+│   ├─ 有间距 → <em>只用间距</em>，不加任何边框
+│   └─ 无间距 → <em>1px 单向细线</em>
+│
+├─ <b>独立可交互实体</b>（弹窗、代码块、可拖拽卡片）？
+│   └─ 允许 <em>1 层闭合边框 + 阴影</em>
+│
+└─ 在<b>已有边框的容器内部</b>？
+    └─ <em>禁止边框</em>，改 hover 底色 / 填充</div>
+
+  <h3>5.2 动效 → 哪套弹簧</h3>
+  <div class="tree">动效场景
+│
+├─ <b>高频微交互</b>（点击、Tab、开关、hover）？   → <em>snappy</em>
+├─ <b>情绪反馈</b>（成功、点赞、徽章出现）？       → <em>bouncy</em>
+├─ <b>大尺度空间变化</b>（弹窗、折叠、分栏）？     → <em>gentle</em>
+├─ <b>精确落位</b>（拖拽吸附、碰撞、贴边）？       → <em>heavySnap</em>
+└─ 只是<b>透明度 / 颜色</b>变化？                  → <em>120ms + ease-out</em></div>
+
+  <h3>5.3 异步操作 → 展示什么状态</h3>
+  <div class="tree">发起异步操作
+│
+├─ 预计 <b>&lt; 100ms</b>   → 不展示 loading（避免闪烁）
+├─ 预计 <b>100ms–1s</b>    → 局部骨架 / 按钮内 spinner，禁用重复提交
+├─ 预计 <b>1s–10s</b>      → 骨架屏 + 阶段文案
+├─ 预计 <b>&gt; 10s / 流式</b> → 流式输出 + 进度 + 取消按钮
+└─ <b>失败</b>             → 错误三要素 + 重试 + 保留用户输入</div>
+
+  <h3>5.4 响应式 → 哪种查询</h3>
+  <div class="tree">需要响应式适配
+│
+├─ 调整的是<b>页面级骨架</b>（侧栏宽度、整体栅格）？
+│   └─ 用 <em>@media</em>（视口断点）
+│
+└─ 调整的是<b>组件内部布局</b>（卡片列数、按钮文字显隐）？
+    └─ 必须用 <em>@container</em>
+        └─ 根元素须声明 <em>container-type: inline-size</em></div>
+
+  <h3>5.5 圆角 → 取多少</h3>
+  <div class="tree">组件类型
+│
+├─ 徽章 / 角标 / 复选框   → <em>2px</em>
+├─ 快捷键键帽             → <em>4px</em>
+├─ 极小按钮（≤24px）      → <em>6px</em>
+├─ 标准按钮 / 输入框      → <em>8px</em>
+├─ 卡片 / 附件磁贴        → <em>10px</em>
+├─ 代码块 / 大卡片        → <em>12px</em>
+├─ 弹窗 / 抽屉            → <em>16px</em>
+├─ 消息气泡               → <em>18px</em>
+├─ 大输入框（Composer）   → <em>20px</em>
+└─ 分段控件 / 头像        → <em>999px</em>
+
+⚠ 嵌套时必须校验：R_outer = R_inner + padding</div>
+</section>
+
+<!-- 组件 -->
+<section id="components" class="reveal">
+  <div class="sec-head"><span class="sec-id">06</span><h2>组件配方</h2></div>
+  <p class="lead">agent 生成以下组件时，必须严格按配方实现。下面每一个都是按规范渲染的正确示例。</p>
+
+  <div class="showcase">
+    <span class="label">Button · 5 变体 / 4 尺寸</span>
+    <div class="row">
+      <button class="btn pri">主要操作</button>
+      <button class="btn sec">次要操作</button>
+      <button class="btn gho">幽灵按钮</button>
+      <button class="btn out">描边按钮</button>
+      <button class="btn dan">删除</button>
+      <button class="btn sec" disabled>已禁用</button>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <span class="label">Input · 聚焦态使用自定义焦点环</span>
+    <div class="row">
+      <input class="inp" placeholder="请输入项目名称" />
+      <input class="inp" value="已聚焦状态" style="box-shadow:var(--focus-shadow);border-color:transparent" />
+    </div>
+  </div>
+
+  <div class="showcase">
+    <span class="label">Composer · 输入终端 20px 圆角</span>
+    <div class="composer">
+      <textarea rows="2" placeholder="描述你想要的界面…"></textarea>
+      <div class="chin">
+        <button class="btn gho" style="font-size:11px">＋ 添加内容</button>
+        <button class="btn pri" style="width:30px;height:30px;padding:0;justify-content:center">↑</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <span class="label">Message · 用户气泡 vs 助手正文</span>
+    <div class="msg-u">把这个表格改成卡片布局</div>
+    <div class="msg-a" style="margin-top:12px">
+      好的。我会保留原有的字段分组，但把每行数据改为独立卡片，并在卡片内用 <code>surface-2</code> 与间距建立层级，避免嵌套边框。
+    </div>
+  </div>
+
+  <div class="showcase">
+    <span class="label">Code Block · 12px 圆角 / 36px 头部</span>
+    <div class="codeblk">
+      <div class="h"><span>TypeScript</span><button>复制</button></div>
+      <pre><span class="cm">// 合成态守卫：中文候选词确认不触发提交</span>
+<span class="kw">if</span> (e.nativeEvent.isComposing || e.keyCode === <span class="st">229</span>) <span class="kw">return</span>;</pre>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <span class="label">Status Badge · 必须配图标冗余编码</span>
+    <div class="row">
+      <span class="badge ok">✓ 已同步</span>
+      <span class="badge warn">⚠ 待确认</span>
+      <span class="badge err">✕ 失败</span>
+      <span class="badge info">ℹ 处理中</span>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <span class="label">Empty State · 必须有下一步动作</span>
+    <div class="empty">
+      <div class="ic">📄</div>
+      <b>还没有任何项目</b>
+      <p>创建第一个项目，或从模板库导入现有配置。</p>
+      <button class="btn pri">新建项目</button>
+    </div>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>组件</th><th>圆角</th><th>背景</th><th>关键约束</th></tr></thead>
+      <tbody>
+        <tr><td>Button</td><td><span class="mono">6/8/8/12</span></td><td>按变体</td><td>容器内必须用 ghost</td></tr>
+        <tr><td>Card</td><td><span class="mono">10px</span></td><td>surface-2</td><td>内部禁止再套边框卡片</td></tr>
+        <tr><td>Dialog</td><td><span class="mono">16px</span></td><td>surface-2</td><td>焦点陷阱 + Esc + 归还焦点</td></tr>
+        <tr><td>Composer</td><td><span class="mono">20px</span></td><td>surface-3</td><td>IME 守卫 + 最大高 384px</td></tr>
+        <tr><td>Message</td><td><span class="mono">18px / 0</span></td><td>accent-subtle / 透明</td><td>助手消息零边框零背景</td></tr>
+        <tr><td>Code Block</td><td><span class="mono">12px</span></td><td>#0d0d0c</td><td>复制 2.5s 后自动淡出</td></tr>
+        <tr><td>Table</td><td><span class="mono">10px</span></td><td>surface-2</td><td>数字列右对齐 + tabular-nums</td></tr>
+        <tr><td>Empty</td><td>—</td><td>透明</td><td>必须有说明 + 行动按钮</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 反模式 -->
+<section id="anti" class="reveal">
+  <div class="sec-head"><span class="sec-id">07</span><h2>反模式墙</h2></div>
+  <p class="lead">这 20 条是 agent 最高频的错误。每条都对应一个明确规则，可直接被 grep 检出。</p>
+
+  <div class="wall">
+    <div class="ap"><div class="x">容器内按钮写 border</div><div class="ok">改用 ghost：透明 + hover 底色</div><span class="rid2">LAY-05</span></div>
+    <div class="ap"><div class="x">助手消息加气泡背景</div><div class="ok">零背景零边框，直接浮于画布</div><span class="rid2">LAY-05</span></div>
+    <div class="ap"><div class="x">卡片套卡片套卡片</div><div class="ok">视线路径至多 1 层边框</div><span class="rid2">LAY-04</span></div>
+    <div class="ap"><div class="x">transition: all 0.3s ease</div><div class="ok">transform 120ms ease-snap</div><span class="rid2">MOT-01</span></div>
+    <div class="ap"><div class="x">padding: 13px</div><div class="ok">var(--space-5) 即 12px</div><span class="rid2">TOK-05</span></div>
+    <div class="ap"><div class="x">border-radius: 7px</div><div class="ok">按 roleMap 取 8px</div><span class="rid2">LAY-08</span></div>
+    <div class="ap"><div class="x">深色模式 filter: invert</div><div class="ok">独立定义语义令牌</div><span class="rid2">TOK-04</span></div>
+    <div class="ap"><div class="x">深色模式沿用 400 字重</div><div class="ok">降至 360 抵消光晕</div><span class="rid2">TYP-07</span></div>
+    <div class="ap"><div class="x">计数器数字宽度不一</div><div class="ok">tabular-nums 锁定等宽</div><span class="rid2">TYP-03</span></div>
+    <div class="ap"><div class="x">组件内用 @media 断点</div><div class="ok">改用 @container</div><span class="rid2">EDGE-05</span></div>
+    <div class="ap"><div class="x">流式时每次 chunk 抢滚动</div><div class="ok">150ms 冷却 + 手势优先</div><span class="rid2">EDGE-02</span></div>
+    <div class="ap"><div class="x">Enter 直接提交（无守卫）</div><div class="ok">先判 isComposing / 229</div><span class="rid2">EDGE-01</span></div>
+    <div class="ap"><div class="x">空状态只写「暂无数据」</div><div class="ok">说明 + 主行动按钮</div><span class="rid2">INT-09</span></div>
+    <div class="ap"><div class="x">删除按钮放主位</div><div class="ok">危险操作放次位</div><span class="rid2">INT-06</span></div>
+    <div class="ap"><div class="x">outline:none 不补焦点</div><div class="ok">补 --focus-shadow</div><span class="rid2">A11Y-07</span></div>
+    <div class="ap"><div class="x">图标按钮无 aria-label</div><div class="ok">加 aria-label="关闭"</div><span class="rid2">A11Y-03</span></div>
+    <div class="ap"><div class="x">用红色表示「重要」</div><div class="ok">红色仅用于 danger</div><span class="rid2">COL-06</span></div>
+    <div class="ap"><div class="x">长 URL 撑破容器</div><div class="ok">overflow-wrap:anywhere</div><span class="rid2">TYP-05</span></div>
+    <div class="ap"><div class="x">每个功能新造颜色变量</div><div class="ok">复用语义令牌</div><span class="rid2">TOK-07</span></div>
+    <div class="ap"><div class="x">单层死黑阴影</div><div class="ok">近遮蔽 + 远漫反射双层</div><span class="rid2">LAY-12</span></div>
+  </div>
+</section>
+
+<!-- 门禁 -->
+<section id="gate" class="reveal">
+  <div class="sec-head"><span class="sec-id">08</span><h2>交付门禁</h2></div>
+  <p class="lead">规范能否落地，取决于门禁能否拦住不合格的代码。BLOCKER 必须全过，MAJOR 通过率 ≥90%。</p>
+
+  <div class="gate">
+    <div class="gi"><span class="box"></span><div><b>无裸色值</b><small>A1 · grep hex/rgb</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>无禁用动效</b><small>A2 · grep linear/ease</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>组件内无视口断点</b><small>A3 · grep @media</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>outline 已补偿</b><small>A6</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>图标按钮有 label</b><small>A7</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>typecheck + build</b><small>A9</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>浅色层级正确</b><small>B1 · 截图</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>深色模式正确</b><small>B2 · 截图</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>单闭合边框</b><small>B3 · 数边框</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>对比度达标</b><small>B6</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>加载态完整</b><small>B10</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>IME 守卫</b><small>C1 · 中文实测</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>滚动不抢夺</b><small>C2</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>键盘全通</b><small>C3 · 拔鼠标</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>焦点可见</b><small>C4</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>焦点陷阱</b><small>C6</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>断网不丢输入</b><small>C8</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>危险操作确认</b><small>C13</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>无局部颜色变量</b><small>D1</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>令牌双端同步</b><small>D4</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>豁免已标注</b><small>D5</small></div></div>
+    <div class="gi"><span class="box"></span><div><b>外部内容沙箱</b><small>D8</small></div></div>
+  </div>
+
+  <div class="callout tip">
+    <div class="ct">✦ 提交前最后一问</div>
+    <p>① 删掉这个装饰，界面会更清楚吗？会 → 删掉。② 用户连续用 8 小时，这个决定还成立吗？不成立 → 改。③ 这个异常路径，用户遇到时会骂人吗？会 → 补守卫。</p>
+  </div>
+</section>
+
+<footer>
+  <p>Tool UI Spec v1.0.0 · 方法论提炼自 Anthropic Claude Design System 的逆向工程成果</p>
+  <p style="margin-top:4px">已做品牌解耦与场景泛化 · 不包含任何专有资产 · 仅供设计工程研究</p>
+</footer>
+
+</main>
+
+<script>
+const root=document.documentElement, tb=document.getElementById('tb');
+const saved=localStorage.getItem('tus-theme');
+if(saved){root.setAttribute('data-theme',saved);tb.textContent=saved==='dark'?'◑':'◐';}
+tb.addEventListener('click',()=>{
+  const n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+  root.setAttribute('data-theme',n); localStorage.setItem('tus-theme',n);
+  tb.textContent=n==='dark'?'◑':'◐';
+});
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});
+},{threshold:.06,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+const secs=[...document.querySelectorAll('section[id]')];
+const links=[...document.querySelectorAll('.nav-links a')];
+const nio=new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){
+    links.forEach(l=>{const on=l.getAttribute('href')==='#'+e.target.id;
+      l.style.background=on?'var(--surface-active)':'';l.style.color=on?'var(--text-primary)':'';});
+  }});
+},{rootMargin:'-20% 0px -70% 0px'});
+secs.forEach(s=>nio.observe(s));
+</script>
+</body>
+</html>

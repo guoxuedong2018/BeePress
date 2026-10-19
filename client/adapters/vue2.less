@@ -1,33 +1,3 @@
-// 套件样式不 scoped：类名一律带前缀，靠前缀与宿主隔开
-.review-shell {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  background: @color-page-bg;
-}
+@import "../core/layout.less";
 
-.rs-body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-// 刻意保持块级：原型根节点带 margin: 0 auto，作为 flex 项会被 auto 外边距
-// 挤成内容宽度。块级容器下插槽内容的布局行为与直接挂载到 #app 时完全一致。
-//
-// overflow: hidden 而不是 auto——整页滚动交给 BasicLayout 的 .wrap，
-// 列表页才能把确定高度分给表体（表头固定 / 分页钉底）。
-.rs-content {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  background: @color-white;
-}
-
-// 两个交给 React 画的格子：工具栏在上、抽屉在右，都不占原型的宽高计算
-.bk-slot-bar { flex: none; }
-.bk-slot-drawer { display: flex; flex: none; min-height: 0; }
-.bk-host-extras { display: inline-flex; gap: 8px; align-items: center; }
+// The Vue 2 adapter renders the same host layout as the React adapter.

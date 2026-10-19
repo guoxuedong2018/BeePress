@@ -37,6 +37,44 @@ The included Vue 2 adapter ([`client/adapters/vue2.js`](../client/adapters/vue2.
 
 For Vue 3 or React, copy that file and call `mountKit` with the equivalent objects. The React UI itself does not change.
 
+### React adapter
+
+[`client/adapters/react.jsx`](../client/adapters/react.jsx) is included:
+
+```jsx
+// App entry, dev-only
+if (import.meta.env.DEV) {
+  import("builder-kit/react").then(({ BuilderKitRoot }) => {
+    root.render(
+      <BuilderKitRoot router={router}>
+        <App />
+      </BuilderKitRoot>,
+    );
+  });
+}
+```
+
+`router` is the same four-method contract (`current`, `subscribe`, `href`,
+`push`). The adapter exports `hashRouter()` for a router-library-free setup.
+`barExtras` are rendered as React components, so a React host can use React
+toolbar controls.
+
+### Source anchors
+
+`builderKit({ anchorLoc })` controls the dev source-anchor plugin:
+
+| Value | Behaviour |
+|---|---|
+| `"auto"` (default) | Vue SFC plugin + React/JSX plugin; each only sees its own files |
+| `"vue"` | Vue SFC plugin only |
+| `"react"` | React/JSX plugin only |
+| `false` | No source anchors |
+
+The React plugin injects `data-loc` and `data-comp` on **intrinsic** JSX
+elements only. Component props are not injected, because React components do
+not automatically forward unknown props; component roots still get L2/L3
+anchors. The plugin is dev-only and imports Babel lazily.
+
 ## Pipeline adapter
 
 The screenshot and clip engine (`pipeline/lib/cdp.mjs`, `capture-*.mjs`, `record-kb-clips.mjs`) does not know any frontend framework. It asks the adapter for three things:

@@ -1,0 +1,43 @@
+{
+  "key": "UI_SPEC",
+  "title": "UI spec",
+  "status": "confirmed",
+  "prototype": {
+    "entryRoute": "/ui-spec"
+  },
+  "background": {
+    "problem": [
+      "UI values drift between iterations."
+    ],
+    "solution": [
+      "Tokens and component recipes with a conformance gate."
+    ]
+  },
+  "spec": [
+    {
+      "group": "UI spec",
+      "route": "/ui-spec",
+      "points": [
+        {
+          "id": "FP1",
+          "name": "The demo shows the tokens and controls.",
+          "display": [
+            "The demo shows the tokens and controls."
+          ],
+          "interaction": [
+            "The surface updates without a reload."
+          ],
+          "value": [
+            "The result is visible in the review queue."
+          ],
+          "permission": [
+            "Any workspace member can review."
+          ]
+        }
+      ]
+    }
+  ],
+  "acceptance": [
+    "AC1 The surface renders with synthetic data."
+  ]
+}

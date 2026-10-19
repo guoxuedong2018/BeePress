@@ -1,44 +1,71 @@
 // 套件的样式约定：字号刻度与几种反复出现的控件。
-// 只放变量和带括号的 mixin——@import 进来不产出任何 CSS，每个组件的 less 放心引。
-// 颜色、间距、圆角、焦点环、等宽字体一律取宿主 token（宿主 vite 的 less additionalData 注入），这里不另起一套。
+// 只放变量和带括号的 mixin——被引用时不产出任何样式，每个组件的 less 放心引。
+// 颜色、间距、圆角、焦点环、等宽字体一律取 Tool UI Spec 的语义 token（宿主可覆盖 CSS 变量），这里不另起一套。
+// 规范见 ../../ui-spec/UI-SPEC.md；自检见 ../../ui-spec/SELF-CHECK.md。
 
-// ── 字号 ─────────────────────────────────────────────
-// 工具界面偏密，但不低于 11px：再小中文笔画就糊了（审查前有 8 处 10px）
-@bk-fs-xs: 11px;  // 次要信息：路径、时间、计数、角标
-@bk-fs-sm: 12px;  // 默认：按钮、列表、说明
-@bk-fs-md: 13px;  // 正文、输入框、区块标题
-@bk-fs-lg: 14px;
-@bk-fs-xl: 15px;
-@bk-fs-xxl: 16px; // 一篇文档的标题
+// ── 字号（8 档角色，成对绑定行高；来自 Tool UI Spec 令牌）────
+@bk-fs-xs: var(--text-caption);      // 11/16 路径、时间、计数、角标
+@bk-fs-sm: var(--text-footnote);     // 12/16 按钮、列表、说明
+@bk-fs-md: var(--text-body);         // 14/20 正文、输入框
+@bk-fs-lg: var(--text-body-lg);      // 15/22
+@bk-fs-xl: var(--text-prose);        // 16/26 正文段落
+@bk-fs-xxl: var(--text-title);       // 20/28 一篇文档的标题
+@bk-fs-display: var(--text-display); // 32/40 演示页展示标题
 
-// ── 圆角 ─────────────────────────────────────────────
-// 控件、卡片、浮层用宿主的 @radius-*；这两档是套件自己的
-@bk-radius-sm: 2px;     // 行内代码、图片描边
-@bk-radius-pill: 999px; // 药丸开关、数字徽标：两头全圆，不随高度算半径
+@bk-leading-caption: var(--leading-caption);
+@bk-leading-footnote: var(--leading-footnote);
+@bk-leading-body: var(--leading-body);
+@bk-leading-body-lg: var(--leading-body-lg);
+@bk-leading-prose: var(--leading-prose);
+@bk-leading-title: var(--leading-title);
+
+// ── 圆角（按角色，禁止统一值）──────────────────────
+@bk-radius-sm: var(--radius-xs);     // 行内代码、图片描边
+@bk-radius-pill: var(--radius-pill); // 药丸开关、数字徽标
+
+// Spec LAY-14: brand-colored ring + isolation inset + soft outer glow.
+// Defined here, not in the host token bridge, so hosts that supply their own
+// @color-* variables still get a valid focus ring.
+@focus-shadow: var(--focus-shadow, 0 0 0 1.5px var(--accent), 0 0 6px 1px var(--accent-ring));
+// Values added by the Tool UI Spec that older host token sheets may not define.
+// They resolve through tokens.css when present; the px fallbacks keep a partial
+// host token sheet compiling.
+@space-6: var(--space-6, 6px);
+@space-10: var(--space-10, 10px);
+@space-14: var(--space-14, 14px);
+@space-28: var(--space-28, 28px);
+@space-36: var(--space-36, 36px);
+@space-44: var(--space-44, 44px);
+@space-56: var(--space-56, 56px);
+@space-64: var(--space-64, 64px);
+
 
 // ── 输入框与多行文本 ─────────────────────────────────
-// 聚焦只换边框色；键盘焦点环交给 .bk-root 的 :focus-visible，不抹掉（审查前 6 处 outline: none）
+// 聚焦只换边框色；键盘焦点环交给 .bk-root 的 :focus-visible，不抹掉
 .bk-input() {
   box-sizing: border-box;
   width: 100%;
-  padding: 6px @space-8;
+  padding: @space-6 @space-8;
   font: inherit;
   font-size: @bk-fs-md;
+  line-height: @bk-leading-body;
   color: @color-text;
-  background: @color-white;
+  background: var(--surface-3);
   border: 1px solid @color-border;
   border-radius: @radius-control;
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
 
   &::placeholder { color: @color-text-weak; }
   &:focus { border-color: @color-primary; }
-  &:disabled { color: @color-text-disabled; cursor: not-allowed; background: @color-bg-subtle; }
+  &:focus-visible { outline: none; box-shadow: @focus-shadow; }
+  &:disabled { color: @color-text-disabled; cursor: not-allowed; background: var(--surface-sunken); }
 }
 
 // ── 药丸开关：可多选的筛选、预设、类型 ───────────────
 // 选中是浅底描边；互斥的几种看法用下面的 .bk-seg
 .bk-chip() {
   max-width: 100%;
-  height: 22px;
+  height: 24px;
   padding: 0 @space-8;
   overflow: hidden;
   font-size: @bk-fs-xs;
@@ -49,13 +76,14 @@
   background: none;
   border: 1px solid @color-border;
   border-radius: @bk-radius-pill;
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 
   &:hover:not(:disabled) { color: @color-primary; border-color: @color-primary; }
   &:disabled { color: @color-text-disabled; cursor: not-allowed; }
-  &.is-on { color: @color-primary; background: @color-bg-subtle; border-color: @color-primary; }
+  &.is-on { color: @color-primary; background: var(--accent-subtle); border-color: @color-primary; }
 }
 
-// ── 分段切换：同一件事互斥的几种看法（审阅 / 构成、全部 / 要处理、这一篇 / 全库）──
+// ── 分段切换：同一件事互斥的几种看法（审阅 / 构成、全部 / 要处理）──
 // 挂在容器上，按钮是直接子元素；选中是实心主色，和药丸开关的浅底区分开
 .bk-seg() {
   display: inline-flex;
@@ -77,23 +105,23 @@
     cursor: pointer;
     background: none;
     border: 0;
+    transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 
     & + button { border-left: 1px solid @color-border; }
     &:hover:not(:disabled):not(.is-on) { color: @color-primary; }
     &:disabled { color: @color-text-disabled; cursor: not-allowed; }
     &.is-on { color: @color-on-primary; background: @color-primary; }
     // 焦点环画在里面：外面一圈会被容器的 overflow 裁掉
-    &:focus-visible { outline-offset: -3px; }
+    &:focus-visible { outline: none; box-shadow: inset 0 0 0 1.5px var(--accent); }
   }
 }
 
 // ── 数字徽标：这里有几处要看 ─────────────────────────
-// 浅橙底橙字，和宿主 StatusTag 一个路数。不用「实心橙底 + @color-white」：
-// @color-white 的语义是卡片面，暗色下是深色，碰巧达标也是碰巧（见 theme.less 里 on-primary 那段）
+// 状态色必须配图标或文字，不能只靠颜色
 .bk-badge() {
   flex: 0 0 auto;
-  min-width: 18px;
-  padding: 0 5px;
+  min-width: 20px;
+  padding: 0 @space-6;
   font-size: @bk-fs-xs;
   font-weight: 600;
   font-style: normal;
@@ -102,14 +130,14 @@
   text-align: center;
   background: @color-status-warning-bg;
   border-radius: @bk-radius-pill;
+  font-variant-numeric: tabular-nums;
 }
 
 // ── 悬停才出现的次要按钮 ─────────────────────────────
-// 用透明度藏，不用 visibility：visibility: hidden 的元素键盘 Tab 不到，键盘用户就用不了这个功能。
-// 用法：按钮上 .bk-reveal()；父元素悬停或里面有焦点时 .bk-revealed()
+// 用透明度藏，不用 visibility：visibility: hidden 的元素键盘 Tab 不到。
 .bk-reveal() {
   opacity: 0;
-  transition: opacity 0.12s;
+  transition: opacity var(--dur-fast) var(--ease-out);
 
   &:focus-visible { opacity: 1; }
 }

@@ -1,0 +1,43 @@
+{
+  "key": "OVERVIEW",
+  "title": "Workspace overview",
+  "status": "confirmed",
+  "prototype": {
+    "entryRoute": "/overview"
+  },
+  "background": {
+    "problem": [
+      "The team cannot see whether a prototype change is ready for review."
+    ],
+    "solution": [
+      "One overview that shows runs, review threads and content health."
+    ]
+  },
+  "spec": [
+    {
+      "group": "Workspace overview",
+      "route": "/overview",
+      "points": [
+        {
+          "id": "FP1",
+          "name": "Overview summarises the workspace.",
+          "display": [
+            "Overview summarises the workspace."
+          ],
+          "interaction": [
+            "The surface updates without a reload."
+          ],
+          "value": [
+            "The result is visible in the review queue."
+          ],
+          "permission": [
+            "Any workspace member can review."
+          ]
+        }
+      ]
+    }
+  ],
+  "acceptance": [
+    "AC1 The surface renders with synthetic data."
+  ]
+}

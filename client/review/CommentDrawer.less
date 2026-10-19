@@ -2,6 +2,8 @@
 // 只靠前缀不够：宿主也可能用同一个前缀——产品的 CaseDetailBody 就用了 cd-body / cd-title / cd-empty，
 // 这里的全局 .cd-empty（64px 内边距、居中）在 dev 下漏进了 Case 详情抽屉，空的一节被撑成 150px 高（2026-09-24）。
 // 抽屉里没有 transfer 出去的浮层，全部内容都在 .cd-root 里，嵌套不会漏掉任何一条。
+@import "../core/kit.less";
+
 .cd-root {
   display: flex;
   flex-direction: column;
@@ -28,18 +30,18 @@
   }
 
   .cd-title {
-    font-size: 14px;
+    font-size: @bk-fs-lg;
     font-weight: 600;
     color: @color-heading;
   }
 
   .cd-close {
     padding: 2px 6px;
-    font-size: 18px;
+    font-size: var(--text-title);
     color: @color-text-weak;
     background: transparent;
     border: 0;
-    border-radius: 3px;
+    border-radius: @radius-control;
     cursor: pointer;
 
     &:hover {
@@ -49,7 +51,7 @@
 
   .cd-section-label {
     margin-bottom: 6px;
-    font-size: 11px;
+    font-size: @bk-fs-xs;
     letter-spacing: 0.4px;
     color: @color-text-weak;
   }
@@ -77,16 +79,16 @@
     display: inline-flex;
     padding: 2px;
     background: @color-hover-bg;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
   }
 
   .cd-filter {
-    padding: 3px 8px;
-    font-size: 12px;
+    padding: 2px 8px;
+    font-size: @bk-fs-sm;
     color: @color-text-weak;
     background: transparent;
     border: 0;
-    border-radius: 3px;
+    border-radius: @radius-control;
     cursor: pointer;
   }
 
@@ -100,14 +102,17 @@
     width: 80px;
     height: 28px;
     padding: 0 8px;
-    font-size: 12px;
+    font-size: @bk-fs-sm;
     color: @color-heading;
     border: 1px solid @color-border;
-    border-radius: 3px;
+    border-radius: @radius-control;
     outline: none;
 
     &:focus {
       border-color: @color-primary;
+    }
+    &:focus-visible {
+      box-shadow: @focus-shadow;
     }
   }
 
@@ -120,7 +125,7 @@
   .cd-empty {
     padding: 64px 12px;
     text-align: center;
-    font-size: 13px;
+    font-size: @bk-fs-md;
     line-height: 1.8;
     color: @color-text-weak;
   }
@@ -130,8 +135,8 @@
     padding: 12px;
     background: @color-white;
     border: 1px solid @color-border;
-    border-radius: 4px;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    border-radius: var(--radius-sm);
+    transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
   }
 
   .cd-card-active {
@@ -153,7 +158,7 @@
     width: 20px;
     height: 20px;
     flex: none;
-    font-size: 11px;
+    font-size: @bk-fs-xs;
     font-weight: 600;
     color: @color-on-primary;
     background: @color-primary;
@@ -166,7 +171,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 12px;
+    font-size: @bk-fs-sm;
     color: @color-text;
   }
 
@@ -176,13 +181,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-family: Menlo, Consolas, monospace;
-    font-size: 11px;
+    font-size: @bk-fs-xs;
     color: @color-text-weak;
   }
 
   .cd-hint {
     margin-bottom: 6px;
-    font-size: 11px;
+    font-size: @bk-fs-xs;
     line-height: 1.6;
     color: @color-status-warning;
   }
@@ -190,13 +195,13 @@
   .cd-body {
     margin: 0;
     white-space: pre-wrap;
-    font-size: 13px;
+    font-size: @bk-fs-md;
     color: @color-heading;
   }
 
   .cd-meta {
     margin-top: 4px;
-    font-size: 11px;
+    font-size: @bk-fs-xs;
     color: @color-text-weak;
   }
 
@@ -208,7 +213,7 @@
 
   .cd-reply {
     margin-bottom: 6px;
-    font-size: 12px;
+    font-size: @bk-fs-sm;
   }
 
   .cd-reply-body {
@@ -229,14 +234,17 @@
     height: 56px;
     padding: 8px;
     resize: none;
-    font-size: 12px;
+    font-size: @bk-fs-sm;
     color: @color-heading;
     border: 1px solid @color-border;
-    border-radius: 3px;
+    border-radius: @radius-control;
     outline: none;
 
     &:focus {
       border-color: @color-primary;
+    }
+    &:focus-visible {
+      box-shadow: @focus-shadow;
     }
   }
 
@@ -257,13 +265,13 @@
   .cd-act {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: -4;
     padding: 4px 6px;
-    font-size: 12px;
+    font-size: @bk-fs-sm;
     color: @color-text;
     background: transparent;
     border: 0;
-    border-radius: 3px;
+    border-radius: @radius-control;
     cursor: pointer;
 
     &:hover {
@@ -287,11 +295,11 @@
     width: 100%;
     padding: 6px 8px;
     text-align: left;
-    font-size: 12px;
+    font-size: @bk-fs-sm;
     color: @color-text;
     background: transparent;
     border: 0;
-    border-radius: 3px;
+    border-radius: @radius-control;
     cursor: pointer;
 
     &:hover {
@@ -310,15 +318,15 @@
     margin-left: 8px;
     flex: none;
     padding: 0 6px;
-    font-size: 11px;
+    font-size: @bk-fs-xs;
     color: @color-on-primary;
     background: @color-primary;
-    border-radius: 10px;
+    border-radius: var(--radius-panel);
   }
 
   .cd-warn {
     padding: 8px 16px;
-    font-size: 11px;
+    font-size: @bk-fs-xs;
     line-height: 1.7;
     color: @color-status-warning;
     border-top: 1px solid @color-divider;

@@ -1,0 +1,43 @@
+{
+  "key": "REVIEWS",
+  "title": "Review queue",
+  "status": "confirmed",
+  "prototype": {
+    "entryRoute": "/reviews"
+  },
+  "background": {
+    "problem": [
+      "Comments lose their target after a prototype changes."
+    ],
+    "solution": [
+      "Source-anchored threads with explicit confidence."
+    ]
+  },
+  "spec": [
+    {
+      "group": "Review queue",
+      "route": "/reviews",
+      "points": [
+        {
+          "id": "FP1",
+          "name": "Review threads can be opened and resolved.",
+          "display": [
+            "Review threads can be opened and resolved."
+          ],
+          "interaction": [
+            "The surface updates without a reload."
+          ],
+          "value": [
+            "The result is visible in the review queue."
+          ],
+          "permission": [
+            "Any workspace member can review."
+          ]
+        }
+      ]
+    }
+  ],
+  "acceptance": [
+    "AC1 The surface renders with synthetic data."
+  ]
+}

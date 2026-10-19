@@ -1,6 +1,6 @@
 {
   "name": "builder-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Local-first toolkit for prototype reviews, source-anchored comments, and a content workspace that keeps documentation in sync with the prototype.",
   "license": "MIT",
   "type": "module",
@@ -34,7 +34,12 @@
     "./vite": "./vite.mjs",
     "./core": "./client/core/mount.jsx",
     "./vue2": "./client/adapters/vue2.js",
-    "./package.json": "./package.json"
+    "./react": "./client/adapters/react.jsx",
+    "./ui": "./ui-spec/impl/react/index.ts",
+    "./tokens.css": "./ui-spec/tokens.css",
+    "./tailwind.config.js": "./ui-spec/impl/react/tailwind.config.cjs",
+    "./package.json": "./package.json",
+    "./tailwind.config.cjs": "./ui-spec/impl/react/tailwind.config.cjs"
   },
   "bin": {
     "builder-kit": "./bin/builder-kit.mjs",
@@ -45,8 +50,18 @@
     "build",
     "client",
     "docs",
+    "examples/react-tailwind/README.md",
+    "examples/react-tailwind/index.html",
+    "examples/react-tailwind/package.json",
+    "examples/react-tailwind/postcss.config.cjs",
+    "examples/react-tailwind/src",
+    "examples/react-tailwind/tailwind.config.cjs",
+    "examples/react-tailwind/vite.config.js",
+    "examples/react-tailwind/docs/features",
+    "examples/react-tailwind/docs/kb",
     "pipeline",
     "server",
+    "ui-spec",
     "vite.mjs",
     "README.md",
     "README.zh-CN.md",
@@ -55,11 +70,15 @@
     "LICENSE"
   ],
   "scripts": {
-    "check": "node scripts/check.mjs",
+    "check": "node scripts/check.mjs && node scripts/check-ui-spec.mjs",
+    "demo": "node scripts/demo.mjs",
+    "build:demo": "node scripts/demo.mjs build",
+    "preflight": "node scripts/preflight-dist.mjs",
     "prepublishOnly": "npm run check"
   },
   "peerDependencies": {
     "less": ">=3",
+    "tailwindcss": ">=3.4",
     "vite": ">=5",
     "vue": "^2.7.0"
   },
@@ -67,20 +86,34 @@
     "less": {
       "optional": true
     },
+    "tailwindcss": {
+      "optional": true
+    },
     "vue": {
       "optional": true
     }
   },
   "dependencies": {
+    "@babel/generator": "^7.29.8",
+    "@babel/parser": "^7.29.9",
+    "@babel/traverse": "^7.29.10",
+    "@babel/types": "^7.29.8",
     "@xyflow/react": "^12.11.6",
+    "clsx": "^2.1.1",
     "mermaid": "^11.17.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "tailwind-merge": "^2.6.0",
     "valtio": "^2.3.2"
   },
   "devDependencies": {
+    "@tailwindcss/container-queries": "^0.1.1",
+    "@vitejs/plugin-react": "^4.3.4",
     "@vitejs/plugin-vue2": "^2.3.4",
+    "autoprefixer": "^10.4.20",
     "less": "^4.9.1",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
     "vite": "^5.4.21",
     "vue": "^2.7.16"
   }

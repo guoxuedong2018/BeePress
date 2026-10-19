@@ -14,7 +14,7 @@
 | `client/review` | 对原型的**意见** —— 圈选批注 | `docs/reviews/<区域>.json` |
 | `client/studio` | 内容跟不跟得上原型的**确认** —— 内容审阅台 | `docs/kb/_lock.json`（正文本身在 `docs/kb/*.md`） |
 
-界面是 **React**，挂在 `<body>` 下独立的根上；原型保持自己的框架，不用装 React。仓库自带 Vue 2 适配层（`builder-kit/vue2`），换框架只需按 `client/core/host.js` 写一层很薄的适配。
+界面是 **React**，挂在 `<body>` 下独立的根上；原型保持自己的框架，不用装 React。仓库自带 **React**（`builder-kit/react`）与 **Vue 2**（`builder-kit/vue2`）两套适配层，换框架只需按 `client/core/host.js` 写一层很薄的适配。
 
 套件**只在 dev 生效**：入口组件的 `import.meta.env.DEV` 动态 import 在生产构建期被消除，产物里不留任何套件代码。
 
@@ -38,7 +38,7 @@ npm install --save-dev builder-kit
 npm install --save-dev vite vue@2.7 less
 ```
 
-要求：Node.js >= 18、Vite >= 5、Vue 2.7（仅使用自带 Vue 适配层与源码坐标注入时）、Less >= 3（使用自带样式时）。
+要求：Node.js >= 18、Vite >= 5、Vue 2.7（仅使用 Vue 适配层与 Vue 源码坐标注入时）、React 18/19（使用 React 适配层时，套件自身已依赖 React）、Tailwind >= 3.4（使用 `builder-kit/ui` 的规范组件时）、Less >= 3（使用自带样式时）。
 
 ## 目录约定
 
@@ -86,7 +86,7 @@ export default defineConfig({
 });
 ```
 
-### 2. 挂载 UI（Vue 2）
+### 2. 挂载 UI（Vue 2 / React）
 
 ```js
 // App.vue
@@ -107,6 +107,29 @@ export default {
   </component>
   <router-view v-else />
 </template>
+```
+
+React 原型用 `builder-kit/react`：
+
+```jsx
+// main.jsx
+import { createRoot } from "react-dom/client";
+import App from "./App.jsx";
+import { hashRouter } from "builder-kit/react";
+
+const root = createRoot(document.getElementById("root"));
+
+if (import.meta.env.DEV) {
+  import("builder-kit/react").then(({ BuilderKitRoot }) => {
+    root.render(
+      <BuilderKitRoot router={hashRouter()}>
+        <App />
+      </BuilderKitRoot>,
+    );
+  });
+} else {
+  root.render(<App />);
+}
 ```
 
 这两处就是全部集成缝。删掉它们即可剥离整个工具层，生产产物里不留任何痕迹。
@@ -139,6 +162,47 @@ export default defineConfig({
 ```
 
 详见 [docs/styling.md](./docs/styling.md)。
+
+### 4. 使用 UI 规范组件（可选）
+
+仓库内置 **Tool UI Spec**（[`ui-spec/`](./ui-spec)）：令牌、Tailwind 配置与 React 参考组件。
+
+```jsx
+import { Badge, Button, Card, Dialog, EmptyState, SegmentedControl, Table } from "builder-kit/ui";
+import "builder-kit/tokens.css";
+```
+
+令牌管线、Less 桥接与门禁见 [docs/ui-spec.md](./docs/ui-spec.md)。
+
+## 演示原型
+
+[`examples/react-tailwind`](./examples/react-tailwind) 是一个 React + Tailwind 的合成产品原型，完整跑通套件。
+
+| 浅色 | 深色 |
+|---|---|
+| ![Helix 演示，浅色](./docs/assets/demo-overview-light.png) | ![Helix 演示，深色](./docs/assets/demo-overview-dark.png) |
+
+![内容审阅台](./docs/assets/demo-content-studio.png)
+
+
+```bash
+npm run demo        # 开发服务，默认 http://localhost:5173/#/overview
+npm run build:demo  # 生产构建
+```
+
+包含源码坐标批注、草稿本地保存、IME 守卫的命令面板、带重试的异步弹窗、深色模式、评审队列与 UI 规范页。所有视觉值都来自与套件相同的令牌。
+
+## 发布前检查
+
+发布是对外动作，先扫产物：
+
+```bash
+npm run build
+node scripts/preflight-dist.mjs --dir dist
+node scripts/preflight-dist.mjs --dir dist --deny "corp\\.example\\.com"
+```
+
+会拦截开发接口、源码坐标、批注数据路径、本机绝对路径、localhost、source map、私钥与常见凭据。Harness 部署 skill 在新环境下的检测机制与引导建议见 [docs/deploy-skill-review.md](./docs/deploy-skill-review.md)。
 
 ## 配置
 
@@ -230,6 +294,8 @@ CLI 需要实现 `docs-gateway.mjs` 顶部注明的 JSON 协议。没有它，�
 - [宿主与管线适配器](./docs/adapters.md)
 - [内容模型](./docs/content-model.md)
 - [样式与 Token](./docs/styling.md)
+- [UI 规范集成](./docs/ui-spec.md)
+- [部署 skill 评审](./docs/deploy-skill-review.md)
 
 ## 许可
 

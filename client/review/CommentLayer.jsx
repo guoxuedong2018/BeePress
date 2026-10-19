@@ -8,6 +8,28 @@ import "./CommentLayer.less";
 
 const isReviewUi = (el) => !!(el && el.closest("[data-review-ui]"));
 
+/** Draft persistence (EDGE-03): a refresh or accidental close must not lose typed text. */
+const DRAFT_PREFIX = "builder-kit:comment-draft:";
+function draftKeyOf(anchor) {
+  const src = anchor?.src ? `${anchor.src.file}:${anchor.src.line}:${anchor.src.col}` : anchor?.selector || anchor?.label || "";
+  return `${DRAFT_PREFIX}${reviewState.route}:${src}`;
+}
+function readDraft(key) {
+  try {
+    return localStorage.getItem(key) ?? "";
+  } catch {
+    return "";
+  }
+}
+function writeDraft(key, value) {
+  try {
+    if (value) localStorage.setItem(key, value);
+    else localStorage.removeItem(key);
+  } catch {
+    // storage may be unavailable in private mode; typing still works
+  }
+}
+
 /**
  * 元素是否属于「可批注的原型」。
  *
@@ -29,6 +51,7 @@ export function CommentLayer() {
   const [hover, setHover] = useState(null);
   const [composer, setComposer] = useState(null);
   const [draft, setDraft] = useState("");
+  const [draftKey, setDraftKey] = useState("");
   // 按住 ⌘/Ctrl 临时进入圈选模式，与工具栏的常驻 commentMode 并行生效
   const [metaHeld, setMetaHeld] = useState(false);
   // 滚动 / 缩放 / 抽屉开合 / 浮层开合后靠它触发 Pin 位置重算
@@ -38,7 +61,7 @@ export function CommentLayer() {
   const picking = snap.commentMode || metaHeld;
   // 监听器挂在 window 上只注册一次，读最新值走 ref
   const live = useRef({});
-  live.current = { picking, composer };
+  live.current = { picking, composer, draftKey };
 
   useEffect(() => {
     const onMove = (e) => {
@@ -56,7 +79,11 @@ export function CommentLayer() {
       if (!el || isReviewUi(el) || !inRoot(el)) return;
       e.preventDefault();
       e.stopPropagation();
-      setComposer({ x: e.clientX, y: e.clientY, anchor: createAnchor(el, e.clientX, e.clientY) });
+      const anchor = createAnchor(el, e.clientX, e.clientY);
+      const key = draftKeyOf(anchor);
+      setComposer({ x: e.clientX, y: e.clientY, anchor });
+      setDraftKey(key);
+      setDraft(readDraft(key));
       setHover(null);
     };
     const onKeyDown = (e) => {
@@ -66,6 +93,7 @@ export function CommentLayer() {
       if (live.current.composer) {
         setComposer(null);
         setDraft("");
+        if (live.current.draftKey) writeDraft(live.current.draftKey, "");
       } else if (reviewState.commentMode) reviewState.commentMode = false;
     };
     const onKeyUp = (e) => {
@@ -132,6 +160,8 @@ export function CommentLayer() {
   const cancel = () => {
     setComposer(null);
     setDraft("");
+    if (draftKey) writeDraft(draftKey, "");
+    setDraftKey("");
   };
   const submit = () => {
     if (!composer || !draft.trim()) return;
@@ -174,6 +204,7 @@ export function CommentLayer() {
             data-review-ui
             type="button"
             // 非精确定位用虚线圈提示：位置是推断出来的，不能当作准确锚点
+            aria-label={`打开批注 ${p.number}：${p.c.body.slice(0, 40)}`}
             className={cx("cl-pin", p.confidence !== "exact" && "is-approx", active === p.c.id && "is-active", active && active !== p.c.id && "is-dim")}
             title={hint ? `${p.c.body}\n\n⚠ ${hint}` : p.c.body}
             style={{ left: p.left, top: p.top }}
@@ -206,8 +237,13 @@ export function CommentLayer() {
             value={draft}
             className="cl-textarea"
             placeholder="写下对该元素的修改建议…（⌘/Ctrl + Enter 提交）"
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              if (draftKey) writeDraft(draftKey, e.target.value);
+            }}
             onKeyDown={(e) => {
+              // EDGE-01: do not submit while an IME candidate window is composing.
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;
               if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit();
             }}
           />

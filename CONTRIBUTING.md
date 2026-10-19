@@ -11,7 +11,9 @@ npm install
 npm run check
 ```
 
-`npm run check` is dependency-free and runs in CI.
+`npm run check` runs syntax checks and the Tool UI Spec gate
+(`scripts/check-ui-spec.mjs`). Run the demo with `npm run demo` and build it with
+`npm run build:demo`.
 
 ## Scope
 
@@ -26,7 +28,9 @@ Builder Kit is intentionally small and local-first:
 
 - Keep changes surgical and explain the user-visible behaviour.
 - Add or update documentation when the integration surface changes.
-- Run `npm run check` before opening a PR.
+- Run `npm run check` and `npm run build:demo` before opening a PR.
+- Follow [`ui-spec/AGENT-RULES.md`](./ui-spec/AGENT-RULES.md) for UI changes; token
+  values come from `ui-spec/tokens.json`.
 - For UI changes, include a screenshot or a short description of the before/after.
 
 ## Reporting bugs

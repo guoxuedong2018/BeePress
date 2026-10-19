@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { anchorLoc as anchorLocPlugin } from "./build/anchor-loc.js";
+import { anchorLocReact } from "./build/anchor-loc-react.js";
 import { reviewServer } from "./server/review-server.js";
 import { studioServer } from "./server/studio-server.js";
 
@@ -10,17 +11,35 @@ const CLIENT_DIR = path.join(KIT_DIR, "client");
 const KIT_MODULES = path.join(KIT_DIR, "node_modules");
 /** Runtime dependencies of the toolkit UI (see package.json). Hosts don't install them. */
 const KIT_ALIASES = [
-  ["react", "react"],
-  ["react/jsx-runtime", "react/jsx-runtime.js"],
-  ["react/jsx-dev-runtime", "react/jsx-dev-runtime.js"],
-  ["react-dom", "react-dom"],
-  ["react-dom/client", "react-dom/client.js"],
   ["@xyflow/react", "@xyflow/react"],
   ["@xyflow/react/dist/style.css", "@xyflow/react/dist/style.css"],
   ["valtio", "valtio"],
   // Flow chart preview in the studio (Mermaid code blocks in the content).
   ["mermaid", "mermaid/dist/mermaid.core.mjs"],
 ];
+
+/** Used only when the host has no React of its own (vendored toolkit checkout). */
+const REACT_ALIASES = [
+  ["react", "react"],
+  ["react/jsx-runtime", "react/jsx-runtime.js"],
+  ["react/jsx-dev-runtime", "react/jsx-dev-runtime.js"],
+  ["react-dom", "react-dom"],
+  ["react-dom/client", "react-dom/client.js"],
+];
+
+function hostHasReact(root) {
+  for (const base of [root, process.cwd()]) {
+    let dir = path.resolve(base);
+    for (;;) {
+      if (existsSync(path.join(dir, "node_modules", "react", "package.json"))) return true;
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  return false;
+}
+
 const KIT_PREBUNDLE = ["react", "react/jsx-runtime", "react/jsx-dev-runtime", "react-dom", "react-dom/client", "@xyflow/react", "valtio", "mermaid"];
 
 
@@ -104,7 +123,8 @@ function hostBridge({ root, frsRegistry, barExtras, barLinks, agentPrompt }) {
  * @param {{label: string, route: object, title?: string}[]} [options.barLinks]
  *                                           host links on the right side of the toolbar
  * @param {string}   [options.reviewsDir]    comment directory, defaults to `<project>/docs/reviews`
- * @param {boolean}  [options.anchorLoc]     inject Vue 2 source anchors, default true
+ * @param {boolean|"auto"|"vue"|"react"} [options.anchorLoc]
+ *                                           source-anchor injection: auto (both), vue, react, or false
  * @param {string}   [options.agentPrompt]   optional prompt prefix for "copy for Agent" buttons
  */
 export function builderKit({
@@ -113,7 +133,7 @@ export function builderKit({
   barExtras = [],
   barLinks = [],
   reviewsDir,
-  anchorLoc = true,
+  anchorLoc = "auto",
   agentPrompt = "",
 } = {}) {
   return [
@@ -128,11 +148,18 @@ export function builderKit({
               // Toolkit runtime dependencies may be installed locally (vendored
               // checkout) or hoisted by the host package manager. Alias only
               // when the local copy exists, so hoisted installs still resolve.
+              ...(hostHasReact(root) ? [] : REACT_ALIASES).filter(([, rel]) => existsSync(path.join(KIT_MODULES, rel))).map(([spec, rel]) => ({
+                find: new RegExp(`^${spec.replace(/[/.]/g, "\\$&")}$`),
+                replacement: path.join(KIT_MODULES, rel),
+              })),
               ...KIT_ALIASES.filter(([, rel]) => existsSync(path.join(KIT_MODULES, rel))).map(([spec, rel]) => ({
                 find: new RegExp(`^${spec.replace(/[/.]/g, "\\$&")}$`),
                 replacement: path.join(KIT_MODULES, rel),
               })),
             ],
+            // One React for the host and the toolkit. Without this, a local
+            // toolkit dependency tree can load a second copy and hooks fail.
+            dedupe: ["react", "react-dom"],
           },
           // React is CommonJS and must be pre-bundled.
           optimizeDeps: {
@@ -150,8 +177,14 @@ export function builderKit({
         };
       },
     },
-    // Must run before plugin-vue2 to see the original SFC.
-    ...(anchorLoc ? [anchorLocPlugin({ root })] : []),
+    // Must run before plugin-vue2 / plugin-react to see the original source.
+    ...(anchorLoc === false
+      ? []
+      : anchorLoc === "react"
+        ? [anchorLocReact({ root })]
+        : anchorLoc === "vue"
+          ? [anchorLocPlugin({ root })]
+          : [anchorLocPlugin({ root }), anchorLocReact({ root })]),
     hostBridge({ root, frsRegistry, barExtras, barLinks, agentPrompt }),
     reviewServer({ reviewsDir }),
     studioServer(),
