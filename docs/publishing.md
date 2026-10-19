@@ -1,5 +1,7 @@
 # Publishing destinations
 
+中文操作说明见 [publishing.zh-CN.md](./publishing.zh-CN.md)。
+
 Builder Kit owns the **publishing workflow**: deciding which Markdown pages
 changed, packaging images, computing a plan, persisting resumable state, and
 showing the confirmation UI. It does **not** own the destination. A host that
@@ -23,6 +25,20 @@ When unset, publishing is disabled. To use the bundled
 reference adapter, set `BUILDER_KIT_PUBLISH_GATEWAY=docs-cli`; it still reads
 `BUILDER_KIT_DOCS_CLI` for its command prefix. Setting `BUILDER_KIT_DOCS_CLI`
 alone is also accepted as the legacy opt-in.
+
+## Connect in five steps
+
+1. Put the adapter in the **host** project, e.g. `tools/publish-gateway.mjs`.
+2. Implement the five core methods below; read `source.path` for `file` or `zip`.
+3. Set `BUILDER_KIT_PUBLISH_GATEWAY` on the process that starts Vite, then
+   restart the dev server.
+4. Check `GET /__builder_studio/publish-config`; it should return your
+   `destination` label.
+5. Run `builder-kit kb-publish --dry-run` once with `--root` and `--doc-base`,
+   then use the studio's publish panel to review the plan and confirm.
+
+The adapter runs in the Vite dev-server Node process, never in the browser. Keep
+credentials in server-side environment variables or a local secret store.
 
 ## Loaded interface
 

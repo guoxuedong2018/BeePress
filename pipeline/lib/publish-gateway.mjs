@@ -78,7 +78,7 @@ export async function loadPublishGateway({ methods = CORE_METHODS } = {}) {
   if (!spec) {
     throw new Error(
       "未配置发布目标：设置 BUILDER_KIT_PUBLISH_GATEWAY 指向宿主的发布适配器；" +
-        "使用内置参考适配器时设为 docs-cli。接口见 docs/publishing.md",
+        "使用内置参考适配器时设为 docs-cli，改完重启 dev server。接口见 docs/publishing.zh-CN.md",
     );
   }
   if (!cached || cachedSpec !== spec) {

@@ -288,7 +288,7 @@ BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx builder-kit kb-publi
 ```
 
 适配器可以接内部 Wiki、CMS、文档服务或业务数据库。接口契约和最小示例见
-[`docs/publishing.md`](./docs/publishing.md)。未配置时发布功能关闭；要使用内置的
+[`docs/publishing.zh-CN.md`](./docs/publishing.zh-CN.md)（接口契约见 [publishing.md](./docs/publishing.md)）。未配置时发布功能关闭；要使用内置的
 [`docs-cli` 参考适配器，设置 `BUILDER_KIT_PUBLISH_GATEWAY=docs-cli`（它仍通过
 `BUILDER_KIT_DOCS_CLI` 接收外部 CLI 命令前缀）。完全不接发布目标时，本地批注、内容清单、截图录屏都照常可用。
 
@@ -315,6 +315,7 @@ npm run test:publish-gateway
 - [内容模型](./docs/content-model.md)
 - [样式与 Token](./docs/styling.md)
 - [UI 规范集成](./docs/ui-spec.md)
+- [发布目的地接入](./docs/publishing.zh-CN.md)
 - [部署 skill 评审](./docs/deploy-skill-review.md)
 
 ## 许可
