@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+
+- **Tailwind 4 migration** — the demo, canonical components and docs now target
+  Tailwind 4.3 via `@tailwindcss/postcss`. The token-derived legacy config is
+  loaded with `@config`; container queries use Tailwind's built-in support.
+- **React-first dependencies** — Vue 2 is an optional peer only. It is no longer
+  installed for development or allowed to gate the build/audit; the Vue adapter
+  remains available for hosts that opt in.
+- **Dependency refresh** — Vite 6.4, Mermaid 12.2, tailwind-merge 3.7 and a
+  patched `postcss-selector-parser` override. `npm audit` now reports
+  **0 vulnerabilities**.
+
 ## 0.2.0
 
 - **React adapter** — `builder-kit/react` mounts the toolkit in React prototypes;
@@ -45,10 +57,6 @@
   missing ffmpeg/Chrome spawn errors, and publish modal focus handling.
 - **UI token cleanup** — danger buttons, code-block hover/focus, table headers
   and segmented tracks now use their semantic roles.
-- **Dependency refresh** — Vite 6.4, Mermaid 12.2 and a patched
-  `postcss-selector-parser` override; the remaining audit findings are Tailwind
-  3's watch-only `braces` chain and the EOL Vue 2 runtime, both requiring a
-  breaking major upgrade to remove.
 - Fixed a Vite Less edge case where an `@import` in a comment triggered URL
   rebasing.
 

@@ -11,7 +11,7 @@
 | :-- | :-- | :-- |
 | `tokens.css` | ✅ 完全复用 | 纯 CSS 变量，与框架无关 |
 | `tokens.json` | ✅ 完全复用 | 纯数据，可喂给任何生成器 |
-| `tailwind.config.cjs` | ✅ 基本复用 | 仅 `content` 路径需改成 `./src/**/*.{vue,ts}` |
+| `tailwind.config.cjs` | ✅ 基本复用 | Tailwind 4 通过 `@config` 加载；仅 `content` 路径需改成 `./src/**/*.{vue,ts}` |
 | `UI-SPEC.md` | ✅ 完全复用 | 规则描述的是设计决策，不含框架 |
 | `AGENT-RULES.md` | ✅ 完全复用 | 同上 |
 | `SELF-CHECK.md` | ⚠️ 微调 | grep 的 `--include` 要加 `*.vue` |
@@ -45,7 +45,7 @@
 ## 3. 配置调整
 
 ```js
-// tailwind.config.cjs —— 只需改 content
+// tailwind.config.cjs —— Tailwind 4 通过 @config 加载；只需改 content
 module.exports = {
   content: [
     './index.html',
@@ -381,7 +381,7 @@ function onKeydown(e: KeyboardEvent) {
 | **`ref` 与 `reactive`** | `reactive` 解构会丢失响应性 | DOM 引用与简单状态一律用 `ref` |
 | **`watch` 时机** | 默认在 DOM 更新前触发 | 需要读布局时加 `{ flush: 'post' }` |
 | **Teleport 与 SSR** | 服务端渲染时 Teleport 目标不存在 | 用 `<ClientOnly>` 包裹或 `onMounted` 后再渲染 |
-| **容器查询** | 需要 `@tailwindcss/container-queries` 插件 | 与 React 版一致，别忘了装 |
+| **容器查询** | Tailwind 4 已内置 `@container` | 与 React 版一致，不再需要额外插件 |
 
 ---
 

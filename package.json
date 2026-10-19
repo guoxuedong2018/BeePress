@@ -1,6 +1,6 @@
 {
   "name": "builder-kit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Local-first toolkit for prototype reviews, source-anchored comments, and a content workspace that keeps documentation in sync with the prototype.",
   "license": "MIT",
   "type": "module",
@@ -79,7 +79,7 @@
   },
   "peerDependencies": {
     "less": ">=3",
-    "tailwindcss": ">=3.4",
+    "tailwindcss": ">=4",
     "vite": ">=5",
     "vue": "^2.7.0"
   },
@@ -104,19 +104,17 @@
     "mermaid": "^12.2.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "tailwind-merge": "^2.6.0",
+    "tailwind-merge": "^3.7.0",
     "valtio": "^2.3.2"
   },
   "devDependencies": {
-    "@tailwindcss/container-queries": "^0.1.1",
+    "@tailwindcss/postcss": "^4.3.3",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitejs/plugin-vue2": "^2.3.4",
     "autoprefixer": "^10.4.20",
     "less": "^4.9.1",
     "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.17",
-    "vite": "^6.4.4",
-    "vue": "^2.7.16"
+    "tailwindcss": "^4.3.3",
+    "vite": "^6.4.4"
   },
   "overrides": {
     "postcss-selector-parser": "^7.1.6"

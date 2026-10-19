@@ -24,8 +24,9 @@ layers; React is the canonical component implementation.
    tokens. Hosts with their own token sheet can skip this file.
 3. **React components** — the demo imports `Button`, `Card`, `Badge`, `Dialog`,
    `SegmentedControl`, `EmptyState`, `Table` from `builder-kit/ui`.
-4. **Tailwind** — the canonical React components use Tailwind classes generated
-   from the same `tokens.json`.
+4. **Tailwind 4** — the canonical React components use Tailwind classes generated
+   from the same `tokens.json`. The demo loads the token-derived config through
+   `@config`; container queries are built in.
 
 ### Using the defaults from a host
 

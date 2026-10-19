@@ -14,7 +14,7 @@
 | `client/review` | 对原型的**意见** —— 圈选批注 | `docs/reviews/<区域>.json` |
 | `client/studio` | 内容跟不跟得上原型的**确认** —— 内容审阅台 | `docs/kb/_lock.json`（正文本身在 `docs/kb/*.md`） |
 
-界面是 **React**，挂在 `<body>` 下独立的根上；原型保持自己的框架，不用装 React。仓库自带 **React**（`builder-kit/react`）与 **Vue 2**（`builder-kit/vue2`）两套适配层，换框架只需按 `client/core/host.js` 写一层很薄的适配。
+界面是 **React**，挂在 `<body>` 下独立的根上；原型保持自己的框架，不用装 React。**React 是主适配层**（`builder-kit/react`）；**Vue 2**（`builder-kit/vue2`）是可选的兼容适配层。换框架只需按 `client/core/host.js` 写一层很薄的适配。
 
 套件**只在 dev 生效**：入口组件的 `import.meta.env.DEV` 动态 import 在生产构建期被消除，产物里不留任何套件代码。
 
@@ -35,10 +35,12 @@
 ```bash
 npm install --save-dev builder-kit
 # 宿主还没有这些 peer 时
-npm install --save-dev vite vue@2.7 less
+npm install --save-dev vite less
+# 仅当宿主使用可选 Vue 2 适配层时
+npm install --save-dev vue@2.7
 ```
 
-要求：Node.js >= 18、Vite >= 5、Vue 2.7（仅使用 Vue 适配层与 Vue 源码坐标注入时）、React 18/19（使用 React 适配层时，套件自身已依赖 React）、Tailwind >= 3.4（使用 `builder-kit/ui` 的规范组件时）、Less >= 3（使用自带样式时）。
+要求：Node.js >= 18、Vite >= 5、Vue 2.7（可选，仅使用 Vue 2 适配层与 Vue 源码坐标注入时）、React 18/19（使用 React 适配层时，套件自身已依赖 React）、Tailwind >= 4（使用 `builder-kit/ui` 的规范组件时）、Less >= 3（使用自带样式时）。
 
 ## 目录约定
 

@@ -2,6 +2,7 @@
  * Tool UI Spec — Tailwind 配置
  * ---------------------------------------------------------------------------
  * 本文件从 tokens.json 派生，是「单一事实源」原则的体现。
+ * Tailwind 4 通过入口 CSS 的 `@config` 加载本文件。
  * 不要在此手写颜色/圆角/间距值 —— 改 tokens.json，配置自动跟随。
  *
  * 若只拷贝 impl/react 到业务项目，请把下面的 require 路径改成你项目里
@@ -146,19 +147,6 @@ module.exports = {
         prose: '760px',
       },
 
-      /* ---------- 容器查询命名（组件内部必须用 @container） ---------- */
-      containers: {
-        compact: '320px',
-        narrow: '384px',
-        medium: '480px',
-        wide: '576px',
-        full: '821px',
-      },
     },
   },
-
-  plugins: [
-    // 组件内部响应式必须用容器查询，因此需要官方 container queries 插件
-    require('@tailwindcss/container-queries'),
-  ],
 };

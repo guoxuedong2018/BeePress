@@ -1,7 +1,7 @@
 # Helix · React + Tailwind demo
 
 A synthetic product workspace that demonstrates Builder Kit on a **React 19 +
-Tailwind 3.4** prototype. It is intentionally data-free: every project, person
+Tailwind 4.3** prototype. It is intentionally data-free: every project, person
 and metric is made up.
 
 ## Run it
@@ -44,7 +44,7 @@ written to `examples/react-tailwind/docs/reviews/`.
 ## Stack
 
 - React 19 + Vite 6
-- Tailwind CSS 3.4 with [`ui-spec/impl/react/tailwind.config.cjs`](../../ui-spec/impl/react/tailwind.config.cjs)
+- Tailwind CSS 4.3 with [`ui-spec/impl/react/tailwind.config.cjs`](../../ui-spec/impl/react/tailwind.config.cjs)
 - Tokens from [`ui-spec/tokens.css`](../../ui-spec/tokens.css)
 - Components from [`ui-spec/impl/react`](../../ui-spec/impl/react)
 - Builder Kit's React adapter (`client/adapters/react.jsx`)
@@ -75,7 +75,7 @@ To use this as a starting point for a real prototype:
 - `tailwind.config.cjs` reuses the canonical token config and adds the demo and
   toolkit source paths. Paths are absolute because Vite may run from the repo
   root.
-- `postcss.config.cjs` points Tailwind at that config explicitly for the same
-  reason.
+- `postcss.config.cjs` uses `@tailwindcss/postcss`; `src/styles.css` loads the
+  canonical config through `@config` for the same reason.
 - Do not add a second accent color. The only accent is `--accent`; status colors
   are paired with icons or text.

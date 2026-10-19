@@ -5,9 +5,8 @@
  *
  * 依赖：
  *   react / react-dom            ^18
- *   tailwindcss                  ^3.4
- *   @tailwindcss/container-queries
- *   clsx / tailwind-merge
+ *   tailwindcss                  ^4.3
+ *   clsx / tailwind-merge ^3
  *   framer-motion（可选，用于 SPRING_* 预设）
  */
 

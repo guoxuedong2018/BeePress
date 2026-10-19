@@ -14,7 +14,7 @@ Builder Kit attaches two independent suites to a running prototype:
 | **Review** | Opinions about the prototype — select an element, leave a comment anchored to its source | `docs/reviews/<REGION>.json` |
 | **Studio** | Whether the documentation still matches the prototype — stale screenshots, unreviewed facts, content gaps | `docs/kb/_lock.json`, `docs/kb/*.md` |
 
-The UI is React and lives in an isolated root under `<body>`. A thin host adapter mounts it; the prototype keeps its own framework. **React** and **Vue 2** adapters are included, and writing an adapter for Vue 3 or another framework is intentionally small (three responsibilities: layout slots, router bridge, host controls).
+The UI is React and lives in an isolated root under `<body>`. A thin host adapter mounts it; the prototype keeps its own framework. **React is the primary adapter**; a **Vue 2** adapter is optional. Writing an adapter for Vue 3 or another framework is intentionally small (three responsibilities: layout slots, router bridge, host controls).
 
 The toolkit is **dev-only**. Production builds contain no Builder Kit code and no React.
 
@@ -26,7 +26,7 @@ Review feedback is usually lost between the document and the implementation. A c
 
 Builder Kit makes every comment addressable:
 
-- **Automatic source locations** — during dev, the Vite plugin injects `file:line:column` into every Vue template element. Comments carry source coordinates without manual `data-*` attributes.
+- **Automatic source locations** — during dev, the Vite plugin injects `file:line:column` into Vue template elements and JSX elements. Comments carry source coordinates without manual `data-*` attributes.
 - **Graceful relocation** — after the source changes, an anchor degrades through three layers (`source coordinate → component semantics → geometry`) and reports its confidence. Comments do not silently drift onto the wrong element.
 - **Comments become documentation material** — comments are grouped by requirement region and exported as structured Markdown.
 - **Content is a build system** — prose is handwritten; screenshots and clips are reproducible build artifacts; facts are assertions checked against specs and source. “Is this sentence still true after the upstream change?” is the only thing a human has to judge.
@@ -45,9 +45,9 @@ Builder Kit makes every comment addressable:
 
 - Node.js >= 18
 - Vite >= 5
-- Vue 2.7 if you use the Vue adapter and Vue source anchors
+- Vue 2.7 if you use the optional Vue 2 adapter and Vue source anchors
 - React 18/19 if you use the React adapter (the toolkit already depends on React)
-- Tailwind >= 3.4 if you use the canonical React components from `builder-kit/ui`
+- Tailwind >= 4 if you use the canonical React components from `builder-kit/ui`
 - Less >= 3 if you use the bundled styles
 
 ## Install
@@ -55,7 +55,9 @@ Builder Kit makes every comment addressable:
 ```bash
 npm install --save-dev builder-kit
 # peers, if the host does not already have them
-npm install --save-dev vite vue@2.7 less
+npm install --save-dev vite less
+# add the optional Vue 2 adapter peer only if the host uses it
+npm install --save-dev vue@2.7
 ```
 
 ## Project layout

@@ -590,7 +590,7 @@ hover：translateY(-1.5px) + shadow-md + border-default，180ms ease-out
 
 | 栈 | 地位 | 说明 |
 | :-- | :-- | :-- |
-| **React 18 + TypeScript + Tailwind 3.4** | **正典（Canonical）** | 新组件、新规则的参考实现一律以 React 版为准 |
+| **React 18/19 + TypeScript + Tailwind 4.3** | **正典（Canonical）** | 新组件、新规则的参考实现一律以 React 版为准 |
 | Vue 3 + TS + Tailwind | 适配（Adapter） | 令牌层直接复用，组件层按 `ADAPTER-VUE.md` 重写 |
 
 ### 9.3 三条纪律
@@ -603,9 +603,8 @@ hover：translateY(-1.5px) + shadow-md + border-default，180ms ease-out
 
 ```
 react / react-dom        ^18
-tailwindcss              ^3.4
-@tailwindcss/container-queries
-clsx / tailwind-merge
+tailwindcss              ^4.3
+clsx / tailwind-merge ^3
 framer-motion            ^11（仅在使用 SPRING_* 预设时需要）
 ```
 

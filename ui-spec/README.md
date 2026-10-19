@@ -79,8 +79,17 @@ ui-spec-kit/
 **React 版依赖**：
 
 ```bash
-npm i clsx tailwind-merge @tailwindcss/container-queries
+npm i tailwindcss@^4 @tailwindcss/postcss@^4 clsx tailwind-merge
 npm i framer-motion          # 仅在使用 SPRING_* 预设时需要
+```
+
+Tailwind 4 在入口 CSS 中导入 `@import "tailwindcss";`，再用
+`@config "./tailwind.config.cjs";` 加载令牌配置；PostCSS 插件是
+`@tailwindcss/postcss`。容器查询已内置，不再需要额外插件。若使用
+`data-theme="dark"` 切换主题，在入口 CSS 加：
+
+```css
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 ```
 
 ---
@@ -190,7 +199,7 @@ function beforeCommit() {
 **Tailwind 配置派生**（避免令牌与工具类脱节）：
 
 ```js
-// tailwind.config.cjs
+// tailwind.config.cjs（由入口 CSS 的 @config 加载）
 const t = require('./src/styles/tokens.json');
 
 module.exports = {

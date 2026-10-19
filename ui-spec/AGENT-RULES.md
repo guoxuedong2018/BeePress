@@ -17,7 +17,7 @@
 
 ### 0.1 技术栈契约
 
-- **正典**：React 18 + TypeScript + Tailwind 3.4。参考实现见 `impl/react/`。
+- **正典**：React 18/19 + TypeScript + Tailwind 4.3。参考实现见 `impl/react/`。
 - **适配**：Vue 3 走 `ADAPTER-VUE.md`。令牌层（`tokens.css` / `tokens.json`）两端**原样复用**。
 - **组件不跨框架**：不要写"框架无关的组件"。共享规范，各自实现。
 - **不引入重型 UI 库**（MUI / Ant Design 等）。从令牌构建组件，不要在既有库上做主题覆盖——那必然破坏单闭合边框与表面阶梯。
