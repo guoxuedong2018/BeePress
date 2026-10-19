@@ -1,7 +1,7 @@
 {
   "name": "builder-kit",
   "version": "0.3.0",
-  "description": "Local-first toolkit for prototype reviews, source-anchored comments, and a content workspace that keeps documentation in sync with the prototype.",
+  "description": "Prototype-native content production and publishing layer: source-anchored review, Agent-ready content studio, reproducible media, and pluggable destinations.",
   "license": "MIT",
   "type": "module",
   "keywords": [
@@ -12,7 +12,11 @@
     "vite",
     "vue",
     "react",
-    "product-management"
+    "product-management",
+    "content",
+    "publishing",
+    "agent",
+    "screenshots"
   ],
   "repository": {
     "type": "git",

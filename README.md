@@ -1,6 +1,6 @@
 # Builder Kit
 
-**Local-first toolkit for prototype reviews, source-anchored comments, and a content workspace that keeps documentation in sync with the prototype.**
+**Prototype-native content production and publishing layer.** Turn a running prototype into source-grounded manuals, launch notes, message cards, campaign copy, screenshots, GIFs and clips — review them in place, keep them fresh, and deliver them through a pluggable destination layer.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
@@ -9,9 +9,9 @@
 
 Builder Kit attaches two independent tools to a running prototype:
 
-| Suite | What it collects | Where it lands |
+| Tool | What it does | Where it lands |
 |---|---|---|
-| **Review** | Opinions about the prototype — select an element, leave a comment anchored to its source | `docs/reviews/<REGION>.json` |
+| **Review** | Collects opinions about the running prototype — select an element and leave a comment anchored to its source | `docs/reviews/<REGION>.json` |
 | **Studio** | Turns the prototype into publishable content — manuals, launch notes, message cards, campaign copy, screenshots and clips | `docs/kb/*.md`, `images/`, `media/`, publishing state |
 
 The UI is React and lives in an isolated root under `<body>`. A thin host adapter mounts it; the prototype keeps its own framework. **React is the primary adapter**; a **Vue 2** adapter is optional. Writing an adapter for Vue 3 or another framework is intentionally small (three responsibilities: layout slots, router bridge, host controls).
@@ -22,8 +22,8 @@ The toolkit is **dev-only**. Production builds contain no Builder Kit code and n
 
 ## Content positioning
 
-Builder Kit is not a generic AI writing tool. It puts an Agent inside a
-verifiable prototype environment:
+Builder Kit is not a generic AI writing tool. It gives an Agent a verifiable
+prototype environment to work from:
 
 - the Agent reads source, routes, components, FRS and DOM state instead of
   guessing the UI;
@@ -42,24 +42,59 @@ publishing layer, not a generic document editor or screenshot tool.**
 
 ## Why this exists
 
-Review feedback is usually lost between the document and the implementation. A comment says “change this button to secondary”; by the time a developer reads it, nobody knows which button, on which page, in which file.
+Prototype work produces two things that usually drift apart: **feedback** and
+**content**. Review comments lose their context the moment the page changes;
+manuals, launch notes and screenshots are copied by hand from the prototype and
+are stale almost immediately. Generic AI writing tools cannot close that gap
+because they cannot see the running product or verify what they wrote.
 
-Builder Kit makes every comment addressable:
+Builder Kit treats both as first-class:
 
-- **Automatic source locations** — during dev, the Vite plugin injects `file:line:column` into Vue template elements and JSX elements. Comments carry source coordinates without manual `data-*` attributes.
-- **Graceful relocation** — after the source changes, an anchor degrades through three layers (`source coordinate → component semantics → geometry`) and reports its confidence. Comments do not silently drift onto the wrong element.
-- **Comments become documentation material** — comments are grouped by requirement region and exported as structured Markdown.
-- **Content is a build system** — prose is handwritten; screenshots and clips are reproducible build artifacts; facts are assertions checked against specs and source. “Is this sentence still true after the upstream change?” is the only thing a human has to judge.
+- **Review** makes every comment addressable. The Vite plugin injects
+  `file:line:column` into Vue template elements and JSX elements; after the
+  source changes an anchor degrades through source coordinate → component
+  semantics → geometry and reports its confidence.
+- **Studio** produces content from the same prototype. It keeps the narrative,
+  facts, media recipes, review state and publishing metadata together, so a
+  manual, launch note, message card or campaign asset is not a one-off copy.
+- **Content is a build system** — prose is authored with an Agent; screenshots
+  and clips are reproducible build artifacts; facts are assertions checked
+  against specs and source. “Is this sentence still true after the upstream
+  change?” is the only thing a human has to judge.
+
+## What it produces
+
+| Output | What Builder Kit contributes | Typical carrier |
+| :-- | :-- | :-- |
+| Operation manual / feature guide | Narrative + real screenshots + verified steps | Feishu Docs, Tencent Docs, wiki, site |
+| Launch note / version update | Release facts + cover image + links | Docs, IM, email, internal feed |
+| Message card | Title, fields, actions and source-backed copy | Feishu/Lark bot, WeCom, internal IM |
+| Campaign / visual asset | Screenshots, GIFs, clips, cover images | Asset library, CDN, content platform |
+| PRD / review report | FRS facts, review comments and generated structure | Docs, review archive |
+| Content bundle | Blocks + assets + facts + metadata + review state | Any destination adapter |
 
 ## Features
 
-- Select any element on the prototype and leave a comment; the comment is persisted to disk by a Vite dev middleware.
-- Three-layer anchors: source coordinates (L1), component semantics (L2), geometry (L3).
-- Content workspace: review queue, stale-asset detection by content hash (not timestamps), before/after screenshot comparison, structural view of a Markdown page, topic-based page scaffolding.
-- Demo recorder: record clicks on the prototype and turn them into a replayable clip recipe.
-- Optional screenshot/clip pipeline built on Chrome DevTools Protocol (no Playwright dependency).
-- Optional external document publishing through a pluggable CLI.
-- Markdown remains the single source of truth. No parallel JSON copy of the content graph.
+- Select any element on the prototype and leave a comment; the comment is
+  persisted to disk by a Vite dev middleware.
+- Three-layer anchors: source coordinates (L1), component semantics (L2),
+  geometry (L3).
+- **Content studio**: review queue, stale-asset detection by content hash (not
+  timestamps), before/after screenshot comparison, structural view of a page,
+  topic-based scaffolding and plain-language confirmation cards.
+- **Agent-ready context**: `kb context` and “copy for Agent” commands give an
+  IDE Agent the page refs, available media recipes, requirements and source
+  locations it needs; Builder Kit does not run the writing Agent itself.
+- **Media pipeline**: Chrome DevTools Protocol for screenshots and recordings,
+  ffmpeg for GIF/video composition — reproducible recipes, no Playwright
+  dependency.
+- **Freshness loop**: facts reference `frs:` / `code:` sources and return to
+  review when upstream changes; stale media is detected before it reaches a
+  document.
+- **Destination layer**: pluggable adapters for long-form docs, notifications,
+  message cards, asset libraries or internal content platforms.
+- Markdown remains the single source of truth. No parallel JSON copy of the
+  content graph.
 
 ## Requirements
 
@@ -89,7 +124,7 @@ my-prototype/
 ├── docs/
 │   ├── features/<KEY>/FRS.json      # feature specs (optional)
 │   ├── kb/
-│   │   ├── outline.config.mjs       # knowledge-base outline
+│   │   ├── outline.config.mjs       # content outline
 │   │   ├── shots.config.mjs         # screenshot recipes
 │   │   ├── clips.config.mjs         # clip recipes
 │   │   └── *.md                     # content, the source of truth
@@ -246,6 +281,38 @@ import "builder-kit/tokens.css";
 See [docs/ui-spec.md](./docs/ui-spec.md) for the token pipeline, the Less bridge
 and the conformance check.
 
+## Content studio
+
+The studio is a content production pipeline, not a CMS. It keeps the source,
+facts, media recipes, review state and publishing metadata together:
+
+| Layer | What it means | Where it lives |
+| :-- | :-- | :-- |
+| Narrative | The source of truth for manuals, notices, cards and campaign copy | `docs/kb/*.md` |
+| Facts | Claims tied to `frs:` requirements or `code:` source; open when upstream changes | `<!--f …-->` references and `docs/kb/_lock.json` |
+| Media | Screenshots, GIFs and clips generated from reproducible recipes | `docs/kb/shots.config.mjs`, `clips.config.mjs`, `images/`, `media/` |
+| Structure | Sections, intents and planned slots that the Agent fills | `<!--intent …-->`, `<!--slot …-->` and page front-matter |
+| Publication | Plan, confirmation, external ids, URLs and fingerprints | `docs/kb/_published.json` and destination adapter state |
+
+The production loop is:
+
+1. An Agent reads the prototype source, routes, FRS and DOM; it uses
+   `kb context` and the copied commands to produce accurate copy.
+2. Chrome/CDP and ffmpeg build screenshots, GIFs and clips from recipes instead
+   of manual attachments.
+3. The studio shows what changed, compares media before/after and asks a human
+   to confirm the few claims that need judgment.
+4. The destination layer publishes the same content bundle as a manual, notice,
+   message card or asset set.
+
+Long-form content is implemented end-to-end today. Message cards and asset
+libraries use the same destination layer; the adapter exposes resource-level
+methods for those carriers instead of forcing them into Markdown.
+
+Builder Kit does **not** run a hidden writing Agent. It makes the IDE Agent
+precise by supplying source context, executable media recipes, freshness checks
+and a human review gate.
+
 ## Demo
 
 [`examples/react-tailwind`](./examples/react-tailwind) is a synthetic React +
@@ -263,11 +330,11 @@ npm run demo        # dev server, usually http://localhost:5173/#/overview
 npm run build:demo  # production build
 ```
 
-It includes source-anchored review comments, a persisted draft, an IME-safe
-command palette, an async dialog with retry, dark mode, a review queue and a
-full UI spec page with foundations, live component states, patterns,
-accessibility notes and a searchable token reference. Every value comes from
-the same tokens as the toolkit UI.
+It includes source-anchored review comments, the content-check queue with
+before/after media, an Agent-ready command palette, an async dialog with retry,
+dark mode, a publishing panel and a full UI spec page with foundations, live
+component states, patterns, accessibility notes and a searchable token
+reference. Every value comes from the same tokens as the toolkit UI.
 
 ## Pre-deploy check
 
@@ -372,7 +439,7 @@ npm run test:publish-gateway
 - [Content model](./docs/content-model.md)
 - [Styling and tokens](./docs/styling.md)
 - [UI spec integration](./docs/ui-spec.md)
-- [Publishing destinations](./docs/publishing.md)
+- [Content destinations](./docs/publishing.md)
 - [Deploy skill review](./docs/deploy-skill-review.md)
 
 ## License
