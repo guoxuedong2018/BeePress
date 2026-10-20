@@ -810,6 +810,27 @@ app.whenReady().then(() => {
   }
   buildMenu();
   createWindow();
+  const lastProject = readConfig().lastProject;
+  if (lastProject) {
+    window.webContents.once("did-finish-load", async () => {
+      if (!(await isProject(lastProject).catch(() => false))) return;
+      await window.webContents
+        .executeJavaScript(
+          `document.getElementById("overlay").hidden = false; document.getElementById("overlay-title").textContent = "正在恢复上次工作区"; document.getElementById("overlay-detail").textContent = "启动 DeepSeek Harness…";`,
+        )
+        .catch(() => {});
+      loadHarness(lastProject).catch(async (error) => {
+        console.warn(`[beepress-desktop] restore failed: ${error instanceof Error ? error.message : String(error)}`);
+        await window.loadFile(ONBOARDING).catch(() => {});
+        await dialog.showMessageBox(window, {
+          type: "error",
+          title: "Bee Press",
+          message: "无法打开上次项目",
+          detail: error instanceof Error ? error.message : String(error),
+        });
+      });
+    });
+  }
 });
 app.on("window-all-closed", () => app.quit());
 app.on("before-quit", () => {
