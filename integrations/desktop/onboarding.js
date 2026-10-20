@@ -144,6 +144,13 @@ async function action(name) {
       showOutput(result.output || (result.ok ? "截图完成。" : "截图失败。"));
       return;
     }
+    if (name === "record-clips") {
+      setBusy(true, "正在重建录屏", "先启动原型，再按 clips 配方录制 MP4/GIF…");
+      const result = await window.beepress.recordClips(root);
+      setBusy(false);
+      showOutput(result.output || (result.ok ? "录屏完成。" : "录屏失败。"));
+      return;
+    }
     if (name === "save-gateway") {
       const gateway = $("publish-gateway").value.trim();
       const project = await window.beepress.savePublishGateway({ root, gateway });

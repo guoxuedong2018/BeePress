@@ -1,6 +1,6 @@
 {
   "name": "builder-kit",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "Compatibility package for Bee Press. Install `beepress` for the current package.",
   "license": "MIT",
   "type": "module",
@@ -14,7 +14,7 @@
     "url": "https://github.com/guoxuedong2018/BeePress/issues"
   },
   "dependencies": {
-    "beepress": "^0.6.7"
+    "beepress": "^0.6.8"
   },
   "exports": {
     ".": "./index.mjs",

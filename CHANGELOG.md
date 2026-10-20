@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.8 — 2026-10-20
+
+- **Clip recording action** — the content stage can rebuild MP4/GIF clips with
+  `record-kb-clips` against the running prototype.
+
 ## 0.6.7 — 2026-10-20
 
 - **FRS check action** — the project workbench can run `check-frs` directly

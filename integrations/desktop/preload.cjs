@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld("beepress", {
   reviewStatus: (root) => ipcRenderer.invoke("beepress:review-status", root),
   contentStatus: (root) => ipcRenderer.invoke("beepress:content-status", root),
   captureMedia: (root) => ipcRenderer.invoke("beepress:capture-media", root),
+  recordClips: (root) => ipcRenderer.invoke("beepress:record-clips", root),
   publishPlan: (root) => ipcRenderer.invoke("beepress:publish-plan", root),
   savePublishGateway: (payload) => ipcRenderer.invoke("beepress:save-publish-gateway", payload),
   openPath: (target) => ipcRenderer.invoke("beepress:open-path", target),

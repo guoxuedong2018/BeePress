@@ -586,6 +586,15 @@ ipcMain.handle("beepress:capture-media", async (_event, root) => {
     return { ok: false, output: error instanceof Error ? error.message : String(error) };
   }
 });
+ipcMain.handle("beepress:record-clips", async (_event, root) => {
+  try {
+    const started = await startPrototype(root);
+    const result = await runKit(root, ["record-kb-clips", "--base-url", started.url], 30 * 60_000);
+    return { ...result, prototypeUrl: started.url };
+  } catch (error) {
+    return { ok: false, output: error instanceof Error ? error.message : String(error) };
+  }
+});
 ipcMain.handle("beepress:publish-plan", async (_event, root) => runKit(root, ["kb-publish", "--dry-run"], 5 * 60_000));
 ipcMain.handle("beepress:save-publish-gateway", async (_event, { root, gateway }) => {
   writeProjectSettings(root, { publishGateway: String(gateway || "").trim() || null });
