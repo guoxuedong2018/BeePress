@@ -36,19 +36,42 @@ function setStep(step) {
 function showView(name, step) {
   for (const [key, node] of Object.entries(views)) node.hidden = key !== name;
   setStep(step);
+  $("app").dataset.view = name;
+  $("window-title").textContent = name === "project" ? currentProject?.name || "工作台" : name === "setup" ? "生产基线" : "项目";
+  $("status-project").textContent = name === "project" ? `${currentProject?.name || "项目"} · 本地` : name === "setup" ? `${currentProject?.name || "项目"} · 基线` : "未打开项目";
+}
+
+function selectStage(name) {
+  for (const node of document.querySelectorAll("[data-stage]")) {
+    if (node.tagName === "BUTTON") node.classList.toggle("active", node.dataset.stage === name);
+  }
+  for (const node of document.querySelectorAll("[data-stage-panel]")) {
+    node.classList.toggle("active", node.dataset.stagePanel === name);
+  }
 }
 
 function showHome() {
   currentProject = null;
   lastAnalysis = null;
+  for (const button of document.querySelectorAll("#recent-list [data-root]")) button.classList.remove("active");
   showView("home", 1);
   window.beepress?.recent?.().then(renderRecent).catch(() => {});
 }
 
-function showOutput(text) {
+function showOutput(text, state = "完成") {
   const output = $("stage-output");
   output.hidden = false;
   output.textContent = String(text ?? "").trim() || "完成。";
+  output.scrollTop = 0;
+  $("output-empty").hidden = true;
+  $("output-state").textContent = state;
+}
+
+function resetOutput() {
+  $("stage-output").hidden = true;
+  $("stage-output").textContent = "";
+  $("output-empty").hidden = false;
+  $("output-state").textContent = "就绪";
 }
 
 function formatContent(result) {
@@ -62,6 +85,18 @@ function formatContent(result) {
     `事实引用：${s.facts ?? 0}，人工记录：${s.unverified ?? 0}`,
   ].join("\n");
 }
+
+const stackLabels = {
+  "react-tailwind": "React + Tailwind",
+  react: "React",
+  vue2: "Vue 2.7",
+  existing: "沿用项目现状",
+};
+const uiLabels = {
+  "bee-press": "Bee Press UI Spec",
+  existing: "沿用现有产品",
+  url: "对齐线上页面",
+};
 
 function mapDetectedStack(project) {
   if (!project.stack) return "existing";
@@ -106,22 +141,30 @@ function renderAnalysis(analysis) {
 function renderHub(project) {
   currentProject = project;
   showView("project", 3);
-  $("project-name").textContent = project.name || "项目";
+  for (const button of document.querySelectorAll("#recent-list [data-root]")) {
+    button.classList.toggle("active", button.dataset.root === project.root);
+  }
+  $("project-title").textContent = project.name || "项目";
   $("project-path").textContent = project.root;
   $("project-baseline").textContent = [
-    project.setup?.stack ? `技术栈：${project.setup.stack}` : project.stack?.label ? `技术栈：${project.stack.label}` : "",
-    project.setup?.uiPreset ? `UI：${project.setup.uiPreset}` : "",
+    project.setup?.stack
+      ? `技术栈：${stackLabels[project.setup.stack] || project.setup.stack}`
+      : project.stack?.label
+        ? `技术栈：${project.stack.label}`
+        : "",
+    project.setup?.uiPreset ? `UI：${uiLabels[project.setup.uiPreset] || project.setup.uiPreset}` : "",
     project.setup?.sourceUrl ? `对齐网页：${project.setup.sourceUrl}` : "",
   ].filter(Boolean).join(" · ");
-  $("stage-output").hidden = true;
+  resetOutput();
   $("publish-gateway").value = project.publish?.destination || "";
-  $("stage-requirements-value").textContent = `${project.features?.length ?? 0} 份 FRS`;
-  $("stage-prototype-value").textContent = project.devScript ? `dev: ${project.devScript}` : "未配置 dev 脚本";
-  $("stage-review-value").textContent = `${project.openReviews ?? 0} 条待处理`;
-  $("stage-content-value").textContent = `${project.kbPages ?? 0} 页知识库`;
-  $("stage-publish-value").textContent = project.publish?.configured
-    ? `${project.publish.destination || "已配置"} · ${project.publish.publishedPages ?? 0} 已发布`
-    : "未配置目标";
+  $("status-requirements").textContent = `${project.features?.length ?? 0} FRS`;
+  $("status-prototype").textContent = project.devScript ? project.devScript : "未配置";
+  $("status-review").textContent = `${project.openReviews ?? 0} 待处理`;
+  $("status-content").textContent = `${project.kbPages ?? 0} 页`;
+  $("status-publish").textContent = project.publish?.configured
+    ? `${project.publish.publishedPages ?? 0} 已发`
+    : "未配置";
+  selectStage("requirements");
   $("project-note").textContent = project.templates
     ? "核心工具直接在这里使用；Agent 工作区只是其中一种入口，不是 Bee Press 本身。"
     : "项目还缺少 Bee Press 脚手架；进入 Agent 工作区后可以运行 npx beepress init 补齐。";
@@ -143,6 +186,7 @@ async function inspect(root, { skipSetup = false } = {}) {
 function renderRecent(config) {
   const list = $("recent-list");
   const recent = Array.isArray(config.recent) ? config.recent : [];
+  $("recent-count").textContent = recent.length ? String(recent.length) : "";
   if (!recent.length) {
     list.innerHTML = '<p class="empty">还没有最近项目。</p>';
     return;
@@ -210,9 +254,7 @@ async function runAgentScan() {
 async function action(name) {
   if (!currentProject) return;
   const root = currentProject.root;
-  const output = $("stage-output");
-  output.hidden = false;
-  output.textContent = "执行中…";
+  showOutput("执行中…", "运行中");
   try {
     if (name === "create-feature") {
       const title = $("feature-title").value.trim();
@@ -220,29 +262,29 @@ async function action(name) {
       showOutput(`已创建需求件套：\n${result.relativePath}\n\n下一步：\n${result.checkCommand}`);
       $("feature-title").value = "";
       currentProject.features = [...(currentProject.features || []), result.key].sort();
-      $("stage-requirements-value").textContent = `${currentProject.features.length} 份 FRS`;
+      $("status-requirements").textContent = `${currentProject.features.length} FRS`;
       return;
     }
     if (name === "check-frs") {
       const result = await window.beepress.checkFrs(root);
-      showOutput(result.output || (result.ok ? "FRS 校验通过。" : "FRS 校验失败。"));
+      showOutput(result.output || (result.ok ? "FRS 校验通过。" : "FRS 校验失败。"), result.ok ? "完成" : "失败");
       return;
     }
     if (name === "install-deps") {
       setBusy(true, "正在安装依赖", "在项目目录执行 npm install…");
       const result = await window.beepress.installDependencies(root);
       setBusy(false);
-      showOutput(result.output || (result.ok ? "依赖安装完成。" : "依赖安装失败。"));
+      showOutput(result.output || (result.ok ? "依赖安装完成。" : "依赖安装失败。"), result.ok ? "完成" : "失败");
       return;
     }
     if (name === "start-prototype") {
       const result = await window.beepress.startPrototype(root);
-      showOutput(result.ok ? `原型已启动：${result.url}\n${result.reused ? "（复用已运行的 dev server）" : ""}` : result.error);
+      showOutput(result.ok ? `原型已启动：${result.url}\n${result.reused ? "（复用已运行的 dev server）" : ""}` : result.error, result.ok ? "完成" : "失败");
       return;
     }
     if (name === "open-review") {
       const result = await window.beepress.openReview(root);
-      showOutput(result.ok ? `评审页已打开：${result.url}\n在页面上按住 ⌘/Ctrl 或点击评论按钮开始圈选。` : result.error);
+      showOutput(result.ok ? `评审页已打开：${result.url}\n在页面上按住 ⌘/Ctrl 或点击评论按钮开始圈选。` : result.error, result.ok ? "完成" : "失败");
       return;
     }
     if (name === "review-status") {
@@ -259,23 +301,23 @@ async function action(name) {
       setBusy(true, "正在重建截图", "先启动原型，再按配方抓取过期截图…");
       const result = await window.beepress.captureMedia(root);
       setBusy(false);
-      showOutput(result.output || (result.ok ? "截图完成。" : "截图失败。"));
+      showOutput(result.output || (result.ok ? "截图完成。" : "截图失败。"), result.ok ? "完成" : "失败");
       return;
     }
     if (name === "record-clips") {
       setBusy(true, "正在重建录屏", "先启动原型，再按 clips 配方录制 MP4/GIF…");
       const result = await window.beepress.recordClips(root);
       setBusy(false);
-      showOutput(result.output || (result.ok ? "录屏完成。" : "录屏失败。"));
+      showOutput(result.output || (result.ok ? "录屏完成。" : "录屏失败。"), result.ok ? "完成" : "失败");
       return;
     }
     if (name === "save-gateway") {
       const gateway = $("publish-gateway").value.trim();
       const project = await window.beepress.savePublishGateway({ root, gateway });
       currentProject = project;
-      $("stage-publish-value").textContent = project.publish?.configured
-        ? `${project.publish.destination || "已配置"} · ${project.publish.publishedPages ?? 0} 已发布`
-        : "未配置目标";
+      $("status-publish").textContent = project.publish?.configured
+        ? `${project.publish.publishedPages ?? 0} 已发`
+        : "未配置";
       showOutput(gateway ? `已保存发布目标：${gateway}` : "已清除发布目标。");
       return;
     }
@@ -283,14 +325,46 @@ async function action(name) {
       setBusy(true, "正在生成发布计划", "运行 kb-publish --dry-run…");
       const result = await window.beepress.publishPlan(root);
       setBusy(false);
-      showOutput(result.output || (result.ok ? "发布计划完成。" : "发布计划失败。"));
+      showOutput(result.output || (result.ok ? "发布计划完成。" : "发布计划失败。"), result.ok ? "完成" : "失败");
       return;
     }
     showOutput(`未知操作：${name}`);
   } catch (error) {
     setBusy(false);
-    showOutput(error instanceof Error ? error.message : String(error));
+    showOutput(error instanceof Error ? error.message : String(error), "失败");
   }
+}
+
+function switchIntake(name) {
+  for (const node of document.querySelectorAll("[data-intake]")) node.classList.toggle("active", node.dataset.intake === name);
+  for (const pane of document.querySelectorAll("[data-pane]")) pane.hidden = pane.dataset.pane !== name;
+}
+
+for (const tab of document.querySelectorAll("[data-intake]")) {
+  tab.addEventListener("click", () => switchIntake(tab.dataset.intake));
+}
+
+function goHomeIntake(name) {
+  showHome();
+  switchIntake(name);
+}
+
+function openExistingProject() {
+  goHomeIntake("drop");
+  $("dropzone").click();
+}
+
+$("import-shortcut").addEventListener("click", openExistingProject);
+$("scan-shortcut").addEventListener("click", () => goHomeIntake("agent"));
+$("new-project-shortcut").addEventListener("click", () => {
+  goHomeIntake("new");
+  nameInput.focus();
+});
+$("output-clear").addEventListener("click", resetOutput);
+
+for (const nav of document.querySelectorAll("[data-stage]")) {
+  if (nav.tagName !== "BUTTON") continue;
+  nav.addEventListener("click", () => selectStage(nav.dataset.stage));
 }
 
 $("dropzone").addEventListener("click", async () => {
@@ -439,6 +513,110 @@ $("feature-title").addEventListener("keydown", (event) => {
 
 $("enter-project").addEventListener("click", () => {
   if (currentProject) start(currentProject.root);
+});
+
+const paletteCommands = [
+  { label: "导入已有项目", hint: "⌘O", run: openExistingProject },
+  { label: "让 Agent 搜索本地项目", hint: "⌘⇧F", run: () => goHomeIntake("agent") },
+  { label: "新建项目", hint: "⌘N", run: () => { goHomeIntake("new"); nameInput.focus(); } },
+  { label: "转到需求规格", hint: "生产线", when: () => Boolean(currentProject), run: () => selectStage("requirements") },
+  { label: "转到原型", hint: "生产线", when: () => Boolean(currentProject), run: () => selectStage("prototype") },
+  { label: "转到原型评审", hint: "生产线", when: () => Boolean(currentProject), run: () => selectStage("review") },
+  { label: "转到内容工作台", hint: "生产线", when: () => Boolean(currentProject), run: () => selectStage("content") },
+  { label: "转到发布", hint: "生产线", when: () => Boolean(currentProject), run: () => selectStage("publish") },
+  { label: "重新配置生产基线", hint: "设置", when: () => Boolean(currentProject), run: () => showSetup(currentProject) },
+  { label: "打开 Agent 工作区", hint: "Enter", when: () => Boolean(currentProject), run: () => start(currentProject.root) },
+  { label: "回到项目列表", hint: "Esc", when: () => Boolean(currentProject), run: showHome },
+];
+let paletteIndex = 0;
+let paletteVisible = [];
+const palette = $("command-palette");
+const commandInput = $("command-input");
+
+function renderPalette() {
+  const query = commandInput.value.trim().toLowerCase();
+  paletteVisible = paletteCommands.filter((command) => (!command.when || command.when()) && (!query || command.label.toLowerCase().includes(query)));
+  paletteIndex = Math.min(paletteIndex, Math.max(paletteVisible.length - 1, 0));
+  $("command-list").innerHTML = paletteVisible.length
+    ? paletteVisible
+        .map(
+          (command, index) => `
+            <button type="button" class="palette-item${index === paletteIndex ? " active" : ""}" data-command="${index}">
+              <strong>${escapeHtml(command.label)}</strong><span>${escapeHtml(command.hint || "")}</span>
+            </button>`,
+        )
+        .join("")
+    : '<p class="empty">没有匹配的命令。</p>';
+  for (const button of $("command-list").querySelectorAll("[data-command]")) {
+    button.addEventListener("click", () => runPalette(Number(button.dataset.command)));
+  }
+}
+
+function openPalette() {
+  palette.hidden = false;
+  commandInput.value = "";
+  paletteIndex = 0;
+  renderPalette();
+  commandInput.focus();
+}
+
+function closePalette() {
+  palette.hidden = true;
+}
+
+function runPalette(index) {
+  const command = paletteVisible[index];
+  if (!command) return;
+  closePalette();
+  command.run();
+}
+
+function movePalette(delta) {
+  if (!paletteVisible.length) return;
+  paletteIndex = (paletteIndex + delta + paletteVisible.length) % paletteVisible.length;
+  renderPalette();
+}
+
+$("command-trigger").addEventListener("click", openPalette);
+palette.addEventListener("click", (event) => {
+  if (event.target === palette) closePalette();
+});
+commandInput.addEventListener("input", () => {
+  paletteIndex = 0;
+  renderPalette();
+});
+commandInput.addEventListener("keydown", (event) => {
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    movePalette(1);
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
+    movePalette(-1);
+  } else if (event.key === "Enter") {
+    event.preventDefault();
+    runPalette(paletteIndex);
+  } else if (event.key === "Escape") {
+    closePalette();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  const command = event.metaKey || event.ctrlKey;
+  if (command && event.key.toLowerCase() === "k") {
+    event.preventDefault();
+    palette.hidden ? openPalette() : closePalette();
+  } else if (command && event.key.toLowerCase() === "o") {
+    event.preventDefault();
+    openExistingProject();
+  } else if (command && event.shiftKey && event.key.toLowerCase() === "f") {
+    event.preventDefault();
+    goHomeIntake("agent");
+  } else if (command && event.key.toLowerCase() === "n") {
+    event.preventDefault();
+    goHomeIntake("new");
+    nameInput.focus();
+  } else if (event.key === "Escape" && !palette.hidden) {
+    closePalette();
+  }
 });
 
 showHome();

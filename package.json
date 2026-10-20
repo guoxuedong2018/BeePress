@@ -1,6 +1,6 @@
 {
   "name": "beepress",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Bee Press — a hive of agents for prototype-native content production and publishing: source-anchored review, Agent-ready content studio, a DeepSeek Harness host plugin, an MCP bridge, reproducible media, and pluggable destinations.",
   "license": "MIT",
   "type": "module",

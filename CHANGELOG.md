@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.1 — 2026-10-20
+
+- **Desktop-native shell** — replaced the marketing-style entry page with a
+  persistent workspace sidebar, native inset title bar, status bar and a
+  command palette (`⌘K`).
+- **Project workspace** — recent projects live in the sidebar; requirements,
+  prototype, review, content and publish are workflow navigation, not cards.
+- **Run inspector** — stage actions now write into a dedicated output panel with
+  running/success/failure state and a clear action.
+- **Settings-style baseline** — stack and UI-spec selection use a settings layout
+  with a sticky confirm action and visible project context.
+- **Keyboard flow** — `⌘K`, `⌘O`, `⌘N`, `⌘⇧F` and `Esc` cover the main desktop
+  entry points.
+
 ## 0.7.0 — 2026-10-20
 
 - **Consumer entry** — the desktop app opens with the “vibecoding toy → production

@@ -574,6 +574,8 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     title: "Bee Press",
+    titleBarStyle: "hiddenInset",
+    trafficLightPosition: { x: 16, y: 14 },
     icon: path.join(__dirname, "assets", "icon.png"),
     backgroundColor: "#f7f4ec",
     webPreferences: {
