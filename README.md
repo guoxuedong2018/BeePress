@@ -12,9 +12,9 @@ fresh, and deliver them through a pluggable destination layer.
 
 [中文文档](./README.zh-CN.md) · [Brand guide](./docs/brand.md)
 
-> **Name:** Bee Press is the product name. The package, import paths,
-> environment variables and `bk` CLI keep the `builder-kit` /
-> `BUILDER_KIT_*` names for compatibility; `beepress` is an alias.
+> **Name:** Bee Press is the product name. The npm package and import paths
+> are `beepress`. The `builder-kit` package and CLI remain as compatibility
+> aliases, and `BUILDER_KIT_*` environment variables are still accepted.
 
 Bee Press attaches two independent tools to a running prototype:
 
@@ -129,19 +129,23 @@ Bee Press treats both as first-class:
 - Vite >= 5
 - Vue 2.7 if you use the optional Vue 2 adapter and Vue source anchors
 - React 18/19 if you use the React adapter (the toolkit already depends on React)
-- Tailwind >= 4 if you use the canonical React components from `builder-kit/ui`
+- Tailwind >= 4 if you use the canonical React components from `beepress/ui`
 - Less >= 3 if you use the bundled styles
 
 ## Install
 
 ```bash
-npm install --save-dev builder-kit
+npm install --save-dev beepress
 # CLI aliases: beepress, builder-kit, bk
 # peers, if the host does not already have them
 npm install --save-dev vite less
 # add the optional Vue 2 adapter peer only if the host uses it
 npm install --save-dev vue@2.7
 ```
+
+Existing projects can keep `builder-kit` imports during migration by installing
+the compatibility package; it is a thin re-export of `beepress`. New code
+should use `beepress/*` and `BEEPRESS_*`.
 
 ## Project layout
 
@@ -163,7 +167,7 @@ my-prototype/
 └── package.json
 ```
 
-The project root is detected by walking up from the current working directory to the nearest ancestor containing `docs/`, a `builder-kit.config.*` file, or a `package.json` that depends on `builder-kit`. Override it with `BUILDER_KIT_ROOT`.
+The project root is detected by walking up from the current working directory to the nearest ancestor containing `docs/`, a `beepress.config.*` file, or a `package.json` that depends on `beepress`. Override it with `BEEPRESS_ROOT`; `BUILDER_KIT_ROOT` remains an alias.
 
 ## Quick start
 
@@ -174,13 +178,13 @@ The project root is detected by walking up from the current working directory to
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue2";
-import { builderKit } from "builder-kit/vite";
+import { beePress } from "beepress/vite";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
   plugins: [
-    builderKit({
+    beePress({
       root,
       // optional: requirement-region registry (business data)
       frsRegistry: "src/config/frs-map.js",
@@ -191,12 +195,12 @@ export default defineConfig({
       // optional: prefix for “copy for Agent” prompts
       agentPrompt: "",
     }),
-    vue(), // builderKit's anchor plugin runs before this
+    vue(), // beePress's anchor plugin runs before this
   ],
 });
 ```
 
-`builderKit()` registers four things:
+`beePress()` registers four things:
 
 1. `build/anchor-loc.js` — dev-time source-coordinate injection.
 2. `server/review-server.js` — dev middleware that persists comments.
@@ -205,7 +209,7 @@ export default defineConfig({
 
 ### 2. Mount the UI
 
-Vue 2 example (the adapter is exported from `builder-kit/vue2`):
+Vue 2 example (the adapter is exported from `beepress/vue2`):
 
 ```js
 // App.vue
@@ -213,8 +217,8 @@ export default {
   data: () => ({ kitRoot: null }),
   mounted() {
     if (import.meta.env.DEV) {
-      import("builder-kit/vue2").then((m) => {
-        this.kitRoot = m.BuilderKitRoot;
+      import("beepress/vue2").then((m) => {
+        this.kitRoot = m.BeePressRoot;
       });
     }
   },
@@ -232,22 +236,22 @@ export default {
 
 `import.meta.env.DEV` is replaced with `false` at build time, so the dynamic import and the whole toolkit branch disappear from production.
 
-React example (the adapter is exported from `builder-kit/react`):
+React example (the adapter is exported from `beepress/react`):
 
 ```jsx
 // main.jsx
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
-import { hashRouter } from "builder-kit/react";
+import { hashRouter } from "beepress/react";
 
 const root = createRoot(document.getElementById("root"));
 
 if (import.meta.env.DEV) {
-  import("builder-kit/react").then(({ BuilderKitRoot }) => {
+  import("beepress/react").then(({ BeePressRoot }) => {
     root.render(
-      <BuilderKitRoot router={hashRouter()}>
+      <BeePressRoot router={hashRouter()}>
         <App />
-      </BuilderKitRoot>,
+      </BeePressRoot>,
     );
   });
 } else {
@@ -272,7 +276,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
-const kitRoot = path.dirname(require.resolve("builder-kit/package.json"));
+const kitRoot = path.dirname(require.resolve("beepress/package.json"));
 const themeDefaults = path.join(kitRoot, "client/core/theme-defaults.less");
 
 export default defineConfig({
@@ -302,8 +306,8 @@ The repository includes the **Tool UI Spec** under [`ui-spec/`](./ui-spec):
 tokens, Tailwind config, and canonical React components.
 
 ```jsx
-import { Badge, Button, Card, Dialog, EmptyState, SegmentedControl, Table } from "builder-kit/ui";
-import "builder-kit/tokens.css";
+import { Badge, Button, Card, Dialog, EmptyState, SegmentedControl, Table } from "beepress/ui";
+import "beepress/tokens.css";
 ```
 
 See [docs/ui-spec.md](./docs/ui-spec.md) for the token pipeline, the Less bridge
@@ -372,6 +376,8 @@ reference. Every value comes from the same tokens as the toolkit UI.
   DeepSeek Harness plugin, a right-sidebar Bee Press panel, review write tools
   and a `beepress-mcp` stdio entrypoint for Cursor, Claude, Codex or another MCP
   client.
+- [`integrations/desktop`](./integrations/desktop) — a thin Electron shell that
+  boots an upstream dsh profile and loads the Web UI; no kernel fork.
 - All faces share the same dependency-free workspace reader, so the project
   files stay the contract.
 
@@ -379,9 +385,11 @@ reference. Every value comes from the same tokens as the toolkit UI.
 npm run test:integrations
 ```
 
-The dsh plugin can inspect a workspace, list content and reviews, add review
-comments and resolve them. Media capture and publishing are still separate
-steps.
+The dsh plugin can inspect a workspace, list content and reviews, add and
+resolve comments, read/confirm the content lock, show the publish plan, and
+rebuild screenshots or clips with the reproducible recipe runner. The same
+capabilities are exposed through the `ctx.beepress` service; MCP stays
+read-only.
 
 ![Bee Press panel in DeepSeek Harness](./docs/assets/dsh-bee-press-panel.png)
 
@@ -410,7 +418,7 @@ DEPLOY_SKILL=/path/to/deploy.mjs npm run test:deploy-skill
 ## Configuration
 
 ```js
-builderKit({
+beePress({
   root,                 // host app root (default: process.cwd())
   frsRegistry,          // module exporting FRS_REGISTRY, relative to root
   barExtras: [],        // host components rendered in the review toolbar
@@ -425,30 +433,30 @@ Environment variables:
 
 | Variable | Meaning | Default |
 |---|---|---|
-| `BUILDER_KIT_ROOT` | Host project root | auto-detected |
-| `BUILDER_KIT_DOCS_DIR` | Docs directory, relative to project root | `docs` |
-| `BUILDER_KIT_WEB_DIR` | Prototype app directory, relative to project root | `web` if present, else project root |
-| `BUILDER_KIT_ADAPTER` | Pipeline adapter name | `vue2-vite` |
-| `BUILDER_KIT_PUBLISH_GATEWAY` | Publish destination adapter: path, `file:` URL, or package name | not configured |
-| `BUILDER_KIT_DOCS_CLI` | Command prefix used by the bundled `docs-cli` adapter | `docs-cli` |
+| `BEEPRESS_ROOT` | Host project root (`BUILDER_KIT_ROOT` alias) | auto-detected |
+| `BEEPRESS_DOCS_DIR` | Docs directory, relative to project root (`BUILDER_KIT_DOCS_DIR` alias) | `docs` |
+| `BEEPRESS_WEB_DIR` | Prototype app directory, relative to project root (`BUILDER_KIT_WEB_DIR` alias) | `web` if present, else project root |
+| `BEEPRESS_ADAPTER` | Pipeline adapter name (`BUILDER_KIT_ADAPTER` alias) | `vue2-vite` |
+| `BEEPRESS_PUBLISH_GATEWAY` | Publish destination adapter: path, `file:` URL, or package name (`BUILDER_KIT_PUBLISH_GATEWAY` alias) | not configured |
+| `BEEPRESS_DOCS_CLI` | Command prefix used by the bundled `docs-cli` adapter (`BUILDER_KIT_DOCS_CLI` alias) | `docs-cli` |
 
 ## CLI
 
-The package installs one dispatcher with three aliases (`beepress`, `builder-kit` and `bk`). The examples below use `builder-kit` because the npm package name is unchanged; `beepress` behaves identically.
+The package installs one dispatcher with three aliases (`beepress`, `builder-kit` and `bk`). The examples below use `beepress`; the other two behave identically.
 
 ```bash
-npx builder-kit kb status
-npx builder-kit kb context docs/kb/guides/import.md
-npx builder-kit kb shoot --stale
-npx builder-kit kb ack guides/import.md
-npx builder-kit review open
-npx builder-kit review resolve <comment-id> --note "Changed to secondary style"
-npx builder-kit export-review-notes --status open
-npx builder-kit prd MY_FEATURE --scope delta
-npx builder-kit check-frs
+npx beepress kb status
+npx beepress kb context docs/kb/guides/import.md
+npx beepress kb shoot --stale
+npx beepress kb ack guides/import.md
+npx beepress review open
+npx beepress review resolve <comment-id> --note "Changed to secondary style"
+npx beepress export-review-notes --status open
+npx beepress prd MY_FEATURE --scope delta
+npx beepress check-frs
 ```
 
-Run `npx builder-kit --help` for the full list. The scripts under [`pipeline/`](./pipeline) can also be executed directly with `node`.
+Run `npx beepress --help` for the full list. The scripts under [`pipeline/`](./pipeline) can also be executed directly with `node`.
 
 The `check-ui`, `check-routes` and `check-frs` scripts are **reference host checks**: they encode one design-system convention (iView components, a specific token file, a navigation registry). Adapt or remove them for your project. Everything else is framework-agnostic.
 
@@ -459,7 +467,7 @@ resumable state and the studio UI. The **destination** is an adapter owned by
 the host:
 
 ```bash
-BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx builder-kit kb-publish --dry-run
+BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx beepress kb-publish --dry-run
 ```
 
 A destination can publish to Feishu Docs, Tencent Docs, an internal wiki/CMS,
@@ -469,8 +477,8 @@ can share the same integration layer. The contract and examples are in
 [`docs/publishing.md`](./docs/publishing.md). Publishing is disabled until a
 destination is configured. To use the bundled
 [`docs-cli` reference destination](./pipeline/destinations/docs-cli.mjs), set
-`BUILDER_KIT_PUBLISH_GATEWAY=docs-cli` (it still accepts a CLI command prefix
-through `BUILDER_KIT_DOCS_CLI`). Local review, content status, screenshots and
+`BEEPRESS_PUBLISH_GATEWAY=docs-cli` (it still accepts a CLI command prefix
+through `BEEPRESS_DOCS_CLI`; the `BUILDER_KIT_*` names remain aliases). Local review, content status, screenshots and
 clips work without any destination at all.
 
 ## Development

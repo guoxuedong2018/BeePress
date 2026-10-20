@@ -174,8 +174,9 @@ export async function readStatus(inputRoot) {
   }
 
   const webDir = (await statSafe(path.join(root, "web"))) ? "web" : ".";
-  const gateway = process.env.BUILDER_KIT_PUBLISH_GATEWAY || null;
-  const legacyDocsCli = process.env.BUILDER_KIT_DOCS_CLI || null;
+  const gateway = process.env.BEEPRESS_PUBLISH_GATEWAY || process.env.BUILDER_KIT_PUBLISH_GATEWAY || null;
+  const legacyDocsCli = process.env.BEEPRESS_DOCS_CLI || process.env.BUILDER_KIT_DOCS_CLI || null;
+  const published = await readPublishedState(root);
 
   return {
     root,
@@ -189,8 +190,66 @@ export async function readStatus(inputRoot) {
       configured: Boolean(gateway || legacyDocsCli),
       gateway,
       legacyDocsCli,
+      publishedPages: Object.keys(published.pages).length,
+      updatedAt: published.updatedAt,
     },
     generatedAt: new Date().toISOString(),
+  };
+}
+
+
+async function readPublishedState(root) {
+  const file = path.join(root, "docs", "kb", "_published.json");
+  const stat = await statSafe(file);
+  if (!stat) return { pages: {}, updatedAt: null };
+  try {
+    const parsed = JSON.parse(await fs.readFile(file, "utf8"));
+    return { pages: parsed.pages && typeof parsed.pages === "object" ? parsed.pages : {}, updatedAt: stat.mtime.toISOString() };
+  } catch {
+    return { pages: {}, updatedAt: null, error: "docs/kb/_published.json 不是合法 JSON" };
+  }
+}
+
+/**
+ * Compare local pages with the last publish state. This is intentionally
+ * conservative: without loading the destination adapter we cannot know its
+ * capabilities, so changed pages are marked for review rather than published.
+ */
+export async function readPublishPlan(inputRoot) {
+  const root = resolveRoot(inputRoot);
+  const kbDir = path.join(root, "docs", "kb");
+  const state = await readPublishedState(root);
+  const files = (await statSafe(kbDir)) ? await walk(kbDir, (_full, name) => name.endsWith(".md")) : [];
+  const pages = [];
+  for (const file of files.sort()) {
+    const rel = path.relative(kbDir, file).split(path.sep).join("/");
+    const text = await fs.readFile(file, "utf8").catch(() => "");
+    const stat = await statSafe(file);
+    const previous = state.pages[rel];
+    pages.push({
+      path: rel,
+      title: titleOf(text, file),
+      status: !previous ? "new" : "published",
+      url: previous?.url ?? null,
+      publishedAt: previous ? state.updatedAt : null,
+      localUpdatedAt: stat?.mtime.toISOString() ?? null,
+      dependsOnDestination: !previous,
+    });
+  }
+  const gateway = process.env.BEEPRESS_PUBLISH_GATEWAY || process.env.BUILDER_KIT_PUBLISH_GATEWAY || null;
+  const legacyDocsCli = process.env.BEEPRESS_DOCS_CLI || process.env.BUILDER_KIT_DOCS_CLI || null;
+  return {
+    root,
+    configured: Boolean(gateway || legacyDocsCli),
+    destination: gateway || (legacyDocsCli ? "docs-cli" : null),
+    stateFile: "docs/kb/_published.json",
+    updatedAt: state.updatedAt,
+    summary: {
+      total: pages.length,
+      published: pages.filter((page) => page.status === "published").length,
+      newPages: pages.filter((page) => page.status === "new").length,
+    },
+    pages,
   };
 }
 

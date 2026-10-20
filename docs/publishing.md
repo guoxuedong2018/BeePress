@@ -45,25 +45,25 @@ fields.
 
 ```bash
 # A path relative to the host project root, a file: URL, or a package name
-BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs
-# BUILDER_KIT_PUBLISH_GATEWAY=@acme/builder-kit-publish
+BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs
+# BEEPRESS_PUBLISH_GATEWAY=@acme/beepress-publish
 ```
 
 When unset, publishing is disabled. To use the bundled
 [`pipeline/destinations/docs-cli.mjs`](../pipeline/destinations/docs-cli.mjs)
-reference adapter, set `BUILDER_KIT_PUBLISH_GATEWAY=docs-cli`; it still reads
-`BUILDER_KIT_DOCS_CLI` for its command prefix. Setting `BUILDER_KIT_DOCS_CLI`
+reference adapter, set `BEEPRESS_PUBLISH_GATEWAY=docs-cli`; it still reads
+`BEEPRESS_DOCS_CLI` for its command prefix. Setting `BEEPRESS_DOCS_CLI`
 alone is also accepted as the legacy opt-in.
 
 ## Connect in five steps
 
 1. Put the adapter in the **host** project, e.g. `tools/publish-gateway.mjs`.
 2. Implement the five core methods below; read `source.path` for `file` or `zip`.
-3. Set `BUILDER_KIT_PUBLISH_GATEWAY` on the process that starts Vite, then
+3. Set `BEEPRESS_PUBLISH_GATEWAY` on the process that starts Vite, then
    restart the dev server.
 4. Check `GET /__builder_studio/publish-config`; it should return your
    `destination` label.
-5. Run `builder-kit kb-publish --dry-run` once with `--root` and `--doc-base`,
+5. Run `beepress kb-publish --dry-run` once with `--root` and `--doc-base`,
    then use the studio's publish panel to review the plan and confirm.
 
 The adapter runs in the Vite dev-server Node process, never in the browser. Keep

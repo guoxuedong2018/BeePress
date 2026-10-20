@@ -7,7 +7,8 @@ import vm from "node:vm";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 
-import { addReview, readContext, readOpenReviews, readStatus, resolveReview } from "./host/src/project.mjs";
+import { addReview, readContext, readOpenReviews, readPublishPlan, readStatus, resolveReview } from "./host/src/project.mjs";
+import { createBeePressService } from "./host/src/service.mjs";
 import { apply as applyDshPlugin } from "./host/src/dsh.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -21,7 +22,7 @@ async function fixture() {
   await fs.mkdir(path.join(root, "docs", "features", "OVERVIEW"), { recursive: true });
   await fs.writeFile(
     path.join(root, "package.json"),
-    JSON.stringify({ scripts: { dev: "vite" }, dependencies: { "builder-kit": "^0.4.0" } }, null, 2),
+    JSON.stringify({ scripts: { dev: "vite" }, dependencies: { "beepress": "^0.4.0" } }, null, 2),
   );
   await fs.writeFile(path.join(root, "docs", "kb", "guides", "import.md"), "# Import guide\n\nImport a CSV file.\n");
   await fs.writeFile(
@@ -85,6 +86,24 @@ async function testCore(root) {
   assert.equal(reviews.comments.length, 1);
   assert.equal(reviews.comments[0].id, "c1");
   assert.equal(reviews.comments[0].anchor.loc, "src/App.jsx:42:3");
+
+  const publish = await readPublishPlan(root);
+  assert.equal(publish.summary.total, 2);
+  assert.equal(publish.summary.newPages, 2);
+  assert.equal(publish.configured, false);
+}
+
+async function testContentService(root) {
+  const service = createBeePressService();
+  const status = await service.contentStatus(root);
+  assert.equal(status.summary.pages, 2);
+  assert.equal(status.lock, "docs/kb/_lock.json");
+
+  const confirmed = await service.contentConfirm(root, { page: "guides/import.md" });
+  assert.equal(confirmed.ok, true);
+  const lock = JSON.parse(await fs.readFile(path.join(root, "docs", "kb", "_lock.json"), "utf8"));
+  assert.ok(lock.files["guides/import.md"].at);
+  await assert.rejects(() => service.contentConfirm(root, { page: "../outside.md" }), /page/);
 }
 
 async function testReviewWrites(root) {
@@ -107,6 +126,7 @@ async function testReviewWrites(root) {
 async function testDshPlugin(root) {
   const tools = [];
   const routes = [];
+  const provided = [];
   let ensured = 0;
   const webCtx = {
     effect: (fn) => fn(),
@@ -126,6 +146,7 @@ async function testDshPlugin(root) {
           return root;
         },
       },
+      provide: (name, value) => provided.push([name, value]),
       inject: (services, callback) => {
         if (services.includes("webServer")) callback(webCtx);
       },
@@ -134,9 +155,21 @@ async function testDshPlugin(root) {
   );
   assert.deepEqual(
     tools.map((tool) => tool.name).sort(),
-    ["beepress_context", "beepress_review_add", "beepress_review_open", "beepress_review_resolve", "beepress_status"],
+    [
+      "beepress_capture_media",
+      "beepress_content_confirm",
+      "beepress_content_status",
+      "beepress_context",
+      "beepress_publish_plan",
+      "beepress_review_add",
+      "beepress_review_open",
+      "beepress_review_resolve",
+      "beepress_status",
+    ],
   );
-  assert.deepEqual(routes.map((route) => route.path).sort(), ["/beepress/api/review/resolve", "/beepress/api/state"]);
+  assert.deepEqual(routes.map((route) => route.path).sort(), ["/beepress/api/content", "/beepress/api/review/resolve", "/beepress/api/state"]);
+  assert.equal(provided[0][0], "beepress");
+  assert.equal(typeof provided[0][1].contentStatus, "function");
 
   const statusTool = tools.find((tool) => tool.name === "beepress_status");
   const value = await statusTool.execute({}, { agent: {}, signal: new AbortController().signal });
@@ -224,7 +257,7 @@ async function testMcp(root) {
   const list = await request("tools/list");
   assert.deepEqual(
     list.tools.map((tool) => tool.name).sort(),
-    ["beepress_context", "beepress_review_open", "beepress_status"],
+    ["beepress_context", "beepress_publish_plan", "beepress_review_open", "beepress_status"],
   );
 
   const called = await request("tools/call", {
@@ -253,6 +286,7 @@ const root = await fixture();
 try {
   await testManifest();
   await testCore(root);
+  await testContentService(root);
   await testReviewWrites(root);
   await testDshPlugin(root);
   await testClientBundle();

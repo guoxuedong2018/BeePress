@@ -6,7 +6,8 @@ window.__ModuleLoader__.load({
 
     const ID = "@beepress/dsh-bundle";
     const KIND = "beepress";
-    const API = "/beepress/api/state";
+    const API_ROOT = "/beepress/api";
+    const API = `${API_ROOT}/state`;
 
     const colors = {
       text: "var(--dsh-text-primary, #1f2328)",
@@ -105,6 +106,7 @@ window.__ModuleLoader__.load({
     function BeeBody({ useSessions, sessionId }) {
       const cwd = typeof useSessions === "function" ? useSessions((sessions) => sessions.byId[sessionId]?.cwd) : undefined;
       const [state, setState] = React.useState({ loading: true, error: null, data: null });
+      const [content, setContent] = React.useState({ loading: false, error: null, data: null });
 
       const load = React.useCallback(async () => {
         if (!cwd) return;
@@ -126,7 +128,7 @@ window.__ModuleLoader__.load({
       const resolve = React.useCallback(
         async (id) => {
           try {
-            const response = await fetch(`${API}/review/resolve`, {
+            const response = await fetch(`${API_ROOT}/review/resolve`, {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({ root: cwd, id }),
@@ -140,7 +142,21 @@ window.__ModuleLoader__.load({
         [cwd, load],
       );
 
+      const loadContent = React.useCallback(async () => {
+        if (!cwd) return;
+        setContent({ loading: true, error: null, data: null });
+        try {
+          const query = new URLSearchParams({ root: cwd });
+          const response = await fetch(`${API_ROOT}/content?${query}`, { headers: { accept: "application/json" } });
+          if (!response.ok) throw new Error(`Bee Press content request failed: ${response.status}`);
+          setContent({ loading: false, error: null, data: await response.json() });
+        } catch (error) {
+          setContent({ loading: false, error: error instanceof Error ? error.message : String(error), data: null });
+        }
+      }, [cwd]);
+
       const status = state.data?.status;
+      const publish = state.data?.publish;
       const pages = status?.docs?.kb?.pages || [];
       const reviews = state.data?.reviews?.comments || [];
 
@@ -188,6 +204,49 @@ window.__ModuleLoader__.load({
                   h(
                     "section",
                     { style: styles.section },
+                    h(
+                      "div",
+                      { style: { ...styles.sectionTitle, display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" } },
+                      h("span", null, "Content lock"),
+                      h("button", { type: "button", style: styles.button, onClick: loadContent, disabled: content.loading }, content.loading ? "Checking…" : "Check"),
+                    ),
+                    content.error
+                      ? h("div", { style: styles.error }, content.error)
+                      : content.data
+                        ? h(
+                            "div",
+                            { style: styles.item },
+                            h(
+                              "div",
+                              { style: styles.itemTitle },
+                              `${content.data.summary?.pages ?? 0} pages · ${content.data.summary?.review ?? 0} need review`,
+                            ),
+                            h(
+                              "div",
+                              { style: styles.itemMeta },
+                              `${content.data.summary?.refsOpen ?? 0} open refs · ${content.data.summary?.backlog ?? 0} backlog · ${content.data.lock}`,
+                            ),
+                          )
+                        : h("div", { style: styles.empty }, "Read docs/kb/_lock.json to see what needs a human."),
+                  ),
+                  h(
+                    "section",
+                    { style: styles.section },
+                    h("div", { style: styles.sectionTitle }, "Publish plan"),
+                    h(
+                      "div",
+                      { style: styles.item },
+                      h("div", { style: styles.itemTitle }, publish?.configured ? publish?.destination || publish?.gateway || "Configured" : "No destination configured"),
+                      h(
+                        "div",
+                        { style: styles.itemMeta },
+                        `${publish?.publishedPages ?? 0} published · ${publish?.summary?.newPages ?? 0} new · ${publish?.stateFile || "docs/kb/_published.json"}`,
+                      ),
+                    ),
+                  ),
+                  h(
+                    "section",
+                    { style: styles.section },
                     h("div", { style: styles.sectionTitle }, "Open reviews"),
                     reviews.length === 0
                       ? h("div", { style: styles.empty }, "No open review comments.")
@@ -212,8 +271,7 @@ window.__ModuleLoader__.load({
                   h(
                     "div",
                     { style: styles.itemMeta },
-                    status?.publish?.configured ? "Publish destination configured" : "Publish destination not configured",
-                    status?.generatedAt ? ` · ${new Date(status.generatedAt).toLocaleTimeString()}` : "",
+                    status?.generatedAt ? `Updated ${new Date(status.generatedAt).toLocaleTimeString()}` : "",
                   ),
                 ),
       );

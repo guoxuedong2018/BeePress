@@ -1,4 +1,4 @@
-import { Button } from "builder-kit/ui";
+import { Button } from "beepress/ui";
 
 import { ROUTES } from "../router";
 import { Icon } from "./Icons";

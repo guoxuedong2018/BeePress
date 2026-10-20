@@ -1,4 +1,4 @@
-import { Badge, Button } from "builder-kit/ui";
+import { Badge, Button } from "beepress/ui";
 
 import { ROUTES, navigate } from "../router";
 import { Icon } from "./Icons";

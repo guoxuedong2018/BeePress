@@ -1,0 +1,15 @@
+{
+  "name": "@beepress/desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Thin Bee Press desktop shell around an upstream DeepSeek Harness profile.",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "install-profile": "node install-profile.mjs"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0"
+  },
+  "license": "MIT"
+}

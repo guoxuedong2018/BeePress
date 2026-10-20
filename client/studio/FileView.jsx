@@ -25,7 +25,8 @@ import {
 import "./FileView.less";
 
 const flat = (s) => String(s ?? "").replace(/\s+/g, " ").trim();
-const GUIDE_KEY = "builder-kit:content-check-guide";
+const GUIDE_KEY = "beepress:content-check-guide";
+const LEGACY_GUIDE_KEY = "builder-kit:content-check-guide";
 const fmt = (iso) => {
   const d = new Date(iso);
   return `${d.getMonth() + 1}-${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
@@ -260,7 +261,7 @@ export function FileView() {
   const [advanced, setAdvanced] = useState(false);
   const [guideOpen, setGuideOpen] = useState(() => {
     try {
-      return localStorage.getItem(GUIDE_KEY) !== "1";
+      return localStorage.getItem(GUIDE_KEY) !== "1" && localStorage.getItem(LEGACY_GUIDE_KEY) !== "1";
     } catch {
       return false;
     }
@@ -329,6 +330,7 @@ export function FileView() {
     setGuideOpen(false);
     try {
       localStorage.setItem(GUIDE_KEY, "1");
+      localStorage.removeItem(LEGACY_GUIDE_KEY);
     } catch {
       // localStorage 不可用时只关掉本次提示
     }

@@ -9,14 +9,15 @@ import "./CommentLayer.less";
 const isReviewUi = (el) => !!(el && el.closest("[data-review-ui]"));
 
 /** Draft persistence (EDGE-03): a refresh or accidental close must not lose typed text. */
-const DRAFT_PREFIX = "builder-kit:comment-draft:";
+const DRAFT_PREFIX = "beepress:comment-draft:";
+const LEGACY_DRAFT_PREFIX = "builder-kit:comment-draft:";
 function draftKeyOf(anchor) {
   const src = anchor?.src ? `${anchor.src.file}:${anchor.src.line}:${anchor.src.col}` : anchor?.selector || anchor?.label || "";
   return `${DRAFT_PREFIX}${reviewState.route}:${src}`;
 }
 function readDraft(key) {
   try {
-    return localStorage.getItem(key) ?? "";
+    return localStorage.getItem(key) ?? localStorage.getItem(key.replace(DRAFT_PREFIX, LEGACY_DRAFT_PREFIX)) ?? "";
   } catch {
     return "";
   }

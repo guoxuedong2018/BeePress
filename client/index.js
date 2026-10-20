@@ -4,7 +4,7 @@
  * The UI is React (core / review / studio) and does not know the host
  * framework. Hosts integrate through a thin adapter:
  *
- *   Vue 2   import { BuilderKitRoot } from "builder-kit/vue2"
+ *   Vue 2   import { BeePressRoot } from "beepress/vue2"
  *   other   write adapters/<framework>.js and call mountKit (see core/host.js)
  *
  * This entry deliberately has no framework imports, so it can be loaded by

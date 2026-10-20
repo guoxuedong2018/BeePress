@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Badge, Button, Card, EmptyState, SegmentedControl, Table, TableWrap, TBody, TD, TH, THead, TR } from "builder-kit/ui";
+import { Badge, Button, Card, EmptyState, SegmentedControl, Table, TableWrap, TBody, TD, TH, THead, TR } from "beepress/ui";
 
 import { ActivityTable } from "./components/ActivityTable";
 import { CommandPalette } from "./components/CommandPalette";

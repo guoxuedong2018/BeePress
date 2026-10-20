@@ -18,8 +18,8 @@
  * 这一格是判断密集的，自动生成叙述只会产出读起来像规格书的东西。
  *
  * 用法：
- *   npx builder-kit kb-plan                    # 扫全部需求，给概览
- *   npx builder-kit kb-plan <FEATURE_KEY>      # 单个需求的详细影响面
+ *   npx beepress kb-plan                    # 扫全部需求，给概览
+ *   npx beepress kb-plan <FEATURE_KEY>      # 单个需求的详细影响面
  */
 
 import { promises as fs } from "node:fs";
@@ -46,7 +46,7 @@ async function main() {
   if (args.help) {
     console.log(
       [
-        "用法: npx builder-kit kb-plan [FEATURE_KEY]",
+        "用法: npx beepress kb-plan [FEATURE_KEY]",
         "",
         "  不带 key    扫全部需求给概览",
         "  带 key      算这个需求的内容影响面",
@@ -59,7 +59,7 @@ async function main() {
     .readFile(path.join(KB_DIR, "_index.json"), "utf8")
     .then(JSON.parse)
     .catch(() => null);
-  if (!index) throw new Error("找不到 docs/kb/_index.json，先跑 npx builder-kit kb-index");
+  if (!index) throw new Error("找不到 docs/kb/_index.json，先跑 npx beepress kb-index");
 
   const keys = (await fs.readdir(FEATURES_DIR, { withFileTypes: true }))
     .filter((e) => e.isDirectory())
@@ -87,8 +87,8 @@ async function overview(index) {
   const noDoc = rows.filter((r) => r.pages.length === 0);
   console.log("");
   if (noDoc.length) console.log(`⚠️  ${noDoc.length} 个需求没有任何文档声明依赖它——要么该补文档，要么该在页面 front-matter 里挂 frs`);
-  console.log("\n看单个需求：npx builder-kit kb-plan <FEATURE_KEY>");
-  console.log("要动手：npx builder-kit kb status —— 待审、该重拍、待撰写与没页面挂靠的需求都在里面");
+  console.log("\n看单个需求：npx beepress kb-plan <FEATURE_KEY>");
+  console.log("要动手：npx beepress kb status —— 待审、该重拍、待撰写与没页面挂靠的需求都在里面");
 }
 
 /** 单需求视角：这次迭代牵动什么 */

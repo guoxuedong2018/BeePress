@@ -13,7 +13,7 @@ layers; React is the canonical component implementation.
 | Gate | [`ui-spec/SELF-CHECK.md`](../ui-spec/SELF-CHECK.md) | Manual and automated checks |
 | Tokens | [`ui-spec/tokens.json`](../ui-spec/tokens.json), [`ui-spec/tokens.css`](../ui-spec/tokens.css) | Single source of truth |
 | React reference | [`ui-spec/impl/react`](../ui-spec/impl/react) | Buttons, cards, dialogs, composer, table, empty state |
-| Tailwind config | [`ui-spec/impl/react/tailwind.config.cjs`](../ui-spec/impl/react/tailwind.config.cjs) | Maps tokens to Tailwind classes; package consumers can require `builder-kit/tailwind.config.cjs` |
+| Tailwind config | [`ui-spec/impl/react/tailwind.config.cjs`](../ui-spec/impl/react/tailwind.config.cjs) | Maps tokens to Tailwind classes; package consumers can require `beepress/tailwind.config.cjs` |
 
 ## How the toolkit consumes it
 
@@ -23,7 +23,7 @@ layers; React is the canonical component implementation.
    historical Less variables (`@color-primary`, `@space-8`, …) onto the semantic
    tokens. Hosts with their own token sheet can skip this file.
 3. **React components** — the demo imports `Button`, `Card`, `Badge`, `Dialog`,
-   `SegmentedControl`, `EmptyState`, `Table` from `builder-kit/ui`.
+   `SegmentedControl`, `EmptyState`, `Table` from `beepress/ui`.
 4. **Tailwind 4** — the canonical React components use Tailwind classes generated
    from the same `tokens.json`. The demo loads the token-derived config through
    `@config`; container queries are built in.
@@ -35,7 +35,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
-const kitRoot = path.dirname(require.resolve("builder-kit/package.json"));
+const kitRoot = path.dirname(require.resolve("beepress/package.json"));
 const themeDefaults = path.join(kitRoot, "client/core/theme-defaults.less");
 
 export default defineConfig({

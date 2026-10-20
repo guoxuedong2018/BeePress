@@ -14,11 +14,11 @@ function render(app) {
 
 if (import.meta.env.DEV) {
   // Dev-only integration: production builds contain no Bee Press code.
-  import("builder-kit/react").then(({ BuilderKitRoot }) => {
+  import("beepress/react").then(({ BeePressRoot }) => {
     render(
-      <BuilderKitRoot router={router}>
+      <BeePressRoot router={router}>
         <App />
-      </BuilderKitRoot>,
+      </BeePressRoot>,
     );
   });
 } else {

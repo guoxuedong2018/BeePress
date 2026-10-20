@@ -1,6 +1,6 @@
 {
-  "name": "builder-kit",
-  "version": "0.5.0",
+  "name": "beepress",
+  "version": "0.6.0",
   "description": "Bee Press — a hive of agents for prototype-native content production and publishing: source-anchored review, Agent-ready content studio, a DeepSeek Harness host plugin, an MCP bridge, reproducible media, and pluggable destinations.",
   "license": "MIT",
   "type": "module",
@@ -51,9 +51,9 @@
     "./tailwind.config.cjs": "./ui-spec/impl/react/tailwind.config.cjs"
   },
   "bin": {
-    "builder-kit": "./bin/builder-kit.mjs",
-    "bk": "./bin/builder-kit.mjs",
-    "beepress": "./bin/builder-kit.mjs"
+    "beepress": "./bin/beepress.mjs",
+    "bk": "./bin/beepress.mjs",
+    "builder-kit": "./bin/beepress.mjs"
   },
   "files": [
     "bin",

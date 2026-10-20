@@ -1,4 +1,4 @@
-import { addReview, readContext, readOpenReviews, readStatus, resolveReview } from "./project.mjs";
+import { createBeePressService } from "./service.mjs";
 
 export const name = "beepress";
 export const inject = ["tools", "workingDirectory"];
@@ -44,6 +44,8 @@ function readBody(req) {
 
 export function apply(ctx, config = {}) {
   const fallbackRoot = config.root || undefined;
+  const beepress = createBeePressService();
+  if (typeof ctx.provide === "function") ctx.provide("beepress", beepress);
 
   async function resolveToolRoot(args, exec) {
     if (args.root) return args.root;
@@ -62,7 +64,7 @@ export function apply(ctx, config = {}) {
       name: "beepress_status",
       description:
         "Inspect a Bee Press workspace: content pages, open review comments, feature specs, prototype dev script and publish configuration.",
-      execute: async (args, exec) => readStatus(await resolveToolRoot(args, exec)),
+      execute: async (args, exec) => beepress.status(await resolveToolRoot(args, exec)),
     }),
   );
 
@@ -76,7 +78,7 @@ export function apply(ctx, config = {}) {
         limit: { type: "integer", minimum: 1, maximum: 20, description: "Maximum pages to return." },
       },
       execute: async (args, exec) =>
-        readContext(await resolveToolRoot(args, exec), { topic: args.topic, limit: args.limit }),
+        beepress.context(await resolveToolRoot(args, exec), { topic: args.topic, limit: args.limit }),
     }),
   );
 
@@ -84,7 +86,7 @@ export function apply(ctx, config = {}) {
     jsonTool({
       name: "beepress_review_open",
       description: "List unresolved prototype review comments from docs/reviews, including anchors and reply counts.",
-      execute: async (args, exec) => readOpenReviews(await resolveToolRoot(args, exec)),
+      execute: async (args, exec) => beepress.reviews(await resolveToolRoot(args, exec)),
     }),
   );
 
@@ -100,7 +102,7 @@ export function apply(ctx, config = {}) {
         anchor: { type: "string", description: "Optional source location, e.g. src/App.jsx:42:3." },
       },
       execute: async (args, exec) =>
-        addReview(await resolveToolRoot(args, exec), {
+        beepress.addReview(await resolveToolRoot(args, exec), {
           frs: args.frs,
           route: args.route,
           body: args.body,
@@ -120,11 +122,65 @@ export function apply(ctx, config = {}) {
         author: { type: "string", description: "Resolver name; defaults to Bee Press Agent." },
       },
       execute: async (args, exec) =>
-        resolveReview(await resolveToolRoot(args, exec), {
+        beepress.resolveReview(await resolveToolRoot(args, exec), {
           id: args.id,
           note: args.note,
           author: args.author,
         }),
+    }),
+  );
+
+  ctx.tools.register(
+    jsonTool({
+      name: "beepress_content_status",
+      description:
+        "Read the content lock status: pages that need review, changed refs, backlog and planned slots. Backed by docs/kb/_lock.json via the Bee Press CLI.",
+      execute: async (args, exec) => beepress.contentStatus(await resolveToolRoot(args, exec)),
+    }),
+  );
+
+  ctx.tools.register(
+    jsonTool({
+      name: "beepress_content_confirm",
+      description:
+        "Confirm one page or selected refs as reviewed. Writes the current fingerprints into docs/kb/_lock.json. Use after a human has actually reviewed the page.",
+      parameters: {
+        page: { type: "string", description: "Page path relative to docs/kb, e.g. guide/intro.md." },
+        refs: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional ref ids. Omit to confirm the whole page.",
+        },
+      },
+      execute: async (args, exec) =>
+        beepress.contentConfirm(await resolveToolRoot(args, exec), { page: args.page, refs: args.refs }),
+    }),
+  );
+
+  ctx.tools.register(
+    jsonTool({
+      name: "beepress_publish_plan",
+      description:
+        "Show the local-to-destination publishing plan: configured destination, previously published pages, and pages that have never been published.",
+      execute: async (args, exec) => beepress.publishPlan(await resolveToolRoot(args, exec)),
+    }),
+  );
+
+  ctx.tools.register(
+    jsonTool({
+      name: "beepress_capture_media",
+      description:
+        "Rebuild documentation screenshots (PNG) or clips (MP4 + GIF) with the reproducible Bee Press CDP recipe runner. Use only after the prototype and shots/clips config are ready.",
+      parameters: {
+        kind: { type: "string", enum: ["shot", "clip"], description: "Capture screenshots or record clips." },
+        only: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional recipe keys. Omit to capture everything.",
+        },
+      },
+      execute: async (args, exec) =>
+        beepress.captureMedia(await resolveToolRoot(args, exec), { kind: args.kind, only: args.only }),
     }),
   );
 
@@ -145,10 +201,14 @@ export function apply(ctx, config = {}) {
               try {
                 const url = new URL(req.url || "/", "http://127.0.0.1");
                 const root = url.searchParams.get("root") || undefined;
-                const [status, reviews] = await Promise.all([readStatus(root), readOpenReviews(root)]);
+                const [status, reviews, publish] = await Promise.all([
+                  beepress.status(root),
+                  beepress.reviews(root),
+                  beepress.publishPlan(root),
+                ]);
                 res.statusCode = 200;
                 res.setHeader("content-type", "application/json; charset=utf-8");
-                res.end(JSON.stringify({ status, reviews }, null, 2));
+                res.end(JSON.stringify({ status, reviews, publish }, null, 2));
               } catch (error) {
                 res.statusCode = 500;
                 res.setHeader("content-type", "application/json; charset=utf-8");
@@ -157,6 +217,34 @@ export function apply(ctx, config = {}) {
             },
           }),
         "beepress: http state",
+      );
+      webCtx.effect(
+        () =>
+          webCtx.webServer.register({
+            kind: "exact",
+            path: "/beepress/api/content",
+            async handler(req, res) {
+              res.setHeader("cache-control", "no-store");
+              if (req.method !== "GET") {
+                res.statusCode = 405;
+                res.end("Method Not Allowed");
+                return;
+              }
+              try {
+                const url = new URL(req.url || "/", "http://127.0.0.1");
+                const root = url.searchParams.get("root") || undefined;
+                const content = await beepress.contentStatus(root);
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify(content, null, 2));
+              } catch (error) {
+                res.statusCode = 500;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+              }
+            },
+          }),
+        "beepress: http content",
       );
       webCtx.effect(
         () =>
@@ -172,7 +260,7 @@ export function apply(ctx, config = {}) {
               }
               try {
                 const body = await readBody(req);
-                const result = await resolveReview(body.root, {
+                const result = await beepress.resolveReview(body.root, {
                   id: body.id,
                   note: body.note,
                   author: body.author,

@@ -21,7 +21,7 @@ import {
   THead,
   TR,
   cn,
-} from "builder-kit/ui";
+} from "beepress/ui";
 
 import tokens from "../../../../ui-spec/tokens.json";
 import { Icon } from "./Icons";
@@ -574,7 +574,7 @@ function SpecView() {
               <Demo title="Code block" hint="Copy feedback, horizontal scroll, no wrapping.">
                 <CodeBlock
                   language="js"
-                  code={'builderKit({\n  anchorLoc: "react",\n  frsRegistry: "src/config/frs-map.js",\n  barLinks: [{ label: "UI spec", route: "/ui-spec" }],\n});'}
+                  code={'beePress({\n  anchorLoc: "react",\n  frsRegistry: "src/config/frs-map.js",\n  barLinks: [{ label: "UI spec", route: "/ui-spec" }],\n});'}
                 />
               </Demo>
             </div>

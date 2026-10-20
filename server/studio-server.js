@@ -172,7 +172,7 @@ function startJob(name, script, argv, { page = null } = {}) {
 
 export function studioServer() {
   return {
-    name: "builder-kit:studio-server",
+    name: "beepress:studio-server",
     apply: "serve",
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {

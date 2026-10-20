@@ -11,10 +11,10 @@
  *
  * 用法：
  *   # 第一步：列出 --image 参数（按 shots.json 的 order）
- *   npx builder-kit prd-images <KEY> --args
+ *   npx beepress prd-images <KEY> --args
  *
  *   # 第二步：把 append-image 的 JSON 输出存盘后对齐
- *   npx builder-kit prd-images <KEY> --from append.json --doc-id fcXXXX
+ *   npx beepress prd-images <KEY> --from append.json --doc-id fcXXXX
  */
 
 import { promises as fs } from "node:fs";
@@ -69,7 +69,7 @@ async function main() {
   if (args.help || !args.key) {
     console.log(
       [
-        "用法: npx builder-kit prd-images <FEATURE_KEY> [选项]",
+        "用法: npx beepress prd-images <FEATURE_KEY> [选项]",
         "",
         "  --args              按 shots.json 的 order 打印 --image 参数串",
         "  --from <文件>       word +append-image 的 JSON 输出",
@@ -118,7 +118,7 @@ async function main() {
   await fs.writeFile(file, `${JSON.stringify(map, null, 2)}\n`, "utf8");
   console.log(`已对齐 ${shots.order.length} 张 → ${path.relative(REPO_ROOT, file)}`);
   console.log("");
-  console.log(`重新导出带图版本：npx builder-kit export-frs-prd ${args.key} --images docs/prd/${args.key}/images.json`);
+  console.log(`重新导出带图版本：npx beepress export-frs-prd ${args.key} --images docs/prd/${args.key}/images.json`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

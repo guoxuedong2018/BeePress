@@ -44,11 +44,11 @@ For Vue 3 or React, copy that file and call `mountKit` with the equivalent objec
 ```jsx
 // App entry, dev-only
 if (import.meta.env.DEV) {
-  import("builder-kit/react").then(({ BuilderKitRoot }) => {
+  import("beepress/react").then(({ BeePressRoot }) => {
     root.render(
-      <BuilderKitRoot router={router}>
+      <BeePressRoot router={router}>
         <App />
-      </BuilderKitRoot>,
+      </BeePressRoot>,
     );
   });
 }
@@ -61,7 +61,7 @@ toolbar controls.
 
 ### Source anchors
 
-`builderKit({ anchorLoc })` controls the dev source-anchor plugin:
+`beePress({ anchorLoc })` controls the dev source-anchor plugin:
 
 | Value | Behaviour |
 |---|---|
@@ -88,7 +88,7 @@ The screenshot and clip engine (`pipeline/lib/cdp.mjs`, `capture-*.mjs`, `record
 Select an adapter with:
 
 ```bash
-BUILDER_KIT_ADAPTER=react-router npx builder-kit capture-kb-shots
+BEEPRESS_ADAPTER=react-router npx beepress capture-kb-shots
 ```
 
 `PROTO_ADAPTER` is still accepted for projects migrating from older versions.

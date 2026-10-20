@@ -92,10 +92,10 @@ The structure view renders these as dashed nodes. Filling a slot writes back int
 ## Commands
 
 ```bash
-builder-kit kb status                 # what needs review / reshoot / writing
-builder-kit kb context <page|route>   # bundle references, recipes and specs for an agent
-builder-kit kb shoot --stale          # reshoot only genuinely stale recipes
-builder-kit kb ack <page> [ref…]      # record a human confirmation
-builder-kit kb check                  # fail only on broken references
-builder-kit kb new <page> <type> "<topic>" --pages=/a,/b
+beepress kb status                 # what needs review / reshoot / writing
+beepress kb context <page|route>   # bundle references, recipes and specs for an agent
+beepress kb shoot --stale          # reshoot only genuinely stale recipes
+beepress kb ack <page> [ref…]      # record a human confirmation
+beepress kb check                  # fail only on broken references
+beepress kb new <page> <type> "<topic>" --pages=/a,/b
 ```

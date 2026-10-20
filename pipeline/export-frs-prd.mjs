@@ -15,9 +15,9 @@
  * 和多张配图，Markdown 表格全部表达不了；在线文档也不渲染 Markdown 里的 Mermaid 源码。
  *
  * 用法：
- *   npx builder-kit export-frs-prd 09071618_EVAL_CASE_BULK_VISIBILITY
- *   npx builder-kit export-frs-prd <KEY> --images docs/prd/<KEY>/images.json
- *   npx builder-kit export-frs-prd <KEY> --scope delta
+ *   npx beepress export-frs-prd 09071618_EVAL_CASE_BULK_VISIBILITY
+ *   npx beepress export-frs-prd <KEY> --images docs/prd/<KEY>/images.json
+ *   npx beepress export-frs-prd <KEY> --scope delta
  *
  * `--scope delta` 只出需要研发迭代的功能点（`origin` 为 new / online-hardened），
  * 线上已有且本期不改的字段整条不渲染。这是「精简 PRD」的唯一正当做法——收窄的是
@@ -28,7 +28,7 @@
  *   preview.md    本地评审用的降级预览，不用于发布
  *   shots.json    截图配方，交给 scripts/capture-shots.mjs
  *
- * 发布链路见 .agent/skillsbuilder-kit prd/SKILL.md，不要手动拼命令。
+ * 发布链路见 .agent/skillsbeepress prd/SKILL.md，不要手动拼命令。
  */
 
 import { promises as fs } from "node:fs";
@@ -456,7 +456,7 @@ async function main() {
   if (args.help || !args.key) {
     console.log(
       [
-        "用法: npx builder-kit export-frs-prd <FEATURE_KEY> [选项]",
+        "用法: npx beepress export-frs-prd <FEATURE_KEY> [选项]",
         "",
         "  --images <路径>   截图上传结果 {shotKey: imageId}，缺省则参考图列留占位",
         "  --out-dir <路径>  产物目录，默认 docs/prd/<FEATURE_KEY>/",
@@ -558,7 +558,7 @@ async function main() {
   if (missing.length > 0) console.log(`参考图待补 ${missing.length} 张：${missing.join("、")}`);
   for (const line of warnings) console.log(`  提醒 ${line}`);
   console.log("");
-  console.log("下一步走 builder-kit prd：截图 → 建文档 → 追图拿 imageId → 重新导出 → setBodyChildren → 回读校验");
+  console.log("下一步走 beepress prd：截图 → 建文档 → 追图拿 imageId → 重新导出 → setBodyChildren → 回读校验");
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

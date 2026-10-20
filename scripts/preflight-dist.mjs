@@ -38,7 +38,7 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-const dist = path.resolve(args.dir || path.join(process.env.BUILDER_KIT_WEB_DIR || ROOT, "dist"));
+const dist = path.resolve(args.dir || path.join(process.env.BEEPRESS_WEB_DIR || process.env.BUILDER_KIT_WEB_DIR || ROOT, "dist"));
 const EXT = new Set([".js", ".mjs", ".css", ".html", ".json", ".map", ".txt"]);
 
 const RULES = [

@@ -45,8 +45,8 @@ function loadBabel() {
     .catch((error) => {
       babelPromise = null;
       throw new Error(
-        "builder-kit: React source anchors need @babel/parser, @babel/traverse and @babel/generator. " +
-          "Install them or set builderKit({ anchorLoc: false }).\n" +
+        "beepress: React source anchors need @babel/parser, @babel/traverse and @babel/generator. " +
+          "Install them or set beePress({ anchorLoc: false }).\n" +
           error.message,
       );
     });
@@ -55,7 +55,7 @@ function loadBabel() {
 
 export function anchorLocReact({ root = process.cwd() } = {}) {
   return {
-    name: "builder-kit:anchor-loc-react",
+    name: "beepress:anchor-loc-react",
     apply: "serve",
     enforce: "pre",
     async transform(code, id) {

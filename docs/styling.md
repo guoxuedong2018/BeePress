@@ -46,7 +46,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
-const kitRoot = path.dirname(require.resolve("builder-kit/package.json"));
+const kitRoot = path.dirname(require.resolve("beepress/package.json"));
 const themeDefaults = path.join(kitRoot, "client/core/theme-defaults.less");
 
 export default defineConfig({

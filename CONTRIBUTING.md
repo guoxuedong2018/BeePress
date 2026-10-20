@@ -24,7 +24,7 @@ Bee Press is intentionally small and local-first:
 - No hosted service, no telemetry, no account system.
 - Dev-only middleware; never ship the toolkit to production.
 - Markdown is the single source of truth. Do not add a second copy of the content graph.
-- The toolkit must not import product code. Business data crosses the boundary through `virtual:builder-kit/host`.
+- The toolkit must not import product code. Business data crosses the boundary through `virtual:beepress/host`.
 
 ## Pull requests
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createInterface } from "node:readline";
 
-import { readContext, readOpenReviews, readStatus } from "./project.mjs";
+import { readContext, readOpenReviews, readPublishPlan, readStatus } from "./project.mjs";
 
 const SERVER_INFO = { name: "bee-press-mcp", version: "0.0.0-spike" };
 const PROTOCOL_VERSION = "2024-11-05";
@@ -45,6 +45,16 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    name: "beepress_publish_plan",
+    description:
+      "Show the local-to-destination publishing plan: configured destination, previously published pages, and pages that have never been published.",
+    inputSchema: {
+      type: "object",
+      properties: { root: ROOT_SCHEMA },
+      additionalProperties: false,
+    },
+  },
 ];
 
 function send(message) {
@@ -64,6 +74,7 @@ async function callTool(name, args = {}) {
   if (name === "beepress_status") return readStatus(root);
   if (name === "beepress_context") return readContext(root, { topic: args.topic, limit: args.limit });
   if (name === "beepress_review_open") return readOpenReviews(root);
+  if (name === "beepress_publish_plan") return readPublishPlan(root);
   throw new Error(`Unknown tool: ${name}`);
 }
 

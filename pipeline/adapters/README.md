@@ -15,7 +15,7 @@
 默认 `vue2-vite`。换别的：
 
 ```bash
-BUILDER_KIT_ADAPTER=react-router npx builder-kit capture-kb-shots
+BEEPRESS_ADAPTER=react-router npx beepress capture-kb-shots
 ```
 
 ## 写一个新适配器

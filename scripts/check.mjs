@@ -54,11 +54,11 @@ for (const [name, file] of [["path resolver", "pipeline/lib/paths.mjs"]]) {
 }
 
 checked += 1;
-const help = spawnSync(process.execPath, [path.join(ROOT, "bin/builder-kit.mjs"), "--help"], {
+const help = spawnSync(process.execPath, [path.join(ROOT, "bin/beepress.mjs"), "--help"], {
   encoding: "utf8",
   cwd: ROOT,
 });
-if (help.status !== 0 || !help.stdout.includes("builder-kit")) {
+if (help.status !== 0 || !help.stdout.includes("beepress")) {
   failures += 1;
   console.error(`✗ CLI --help failed\n${help.stderr?.trim() ?? ""}`);
 }

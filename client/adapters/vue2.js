@@ -1,5 +1,5 @@
 import Vue from "vue";
-import { AGENT_PROMPT, FRS_REGISTRY, barExtras, barLinks } from "virtual:builder-kit/host";
+import { AGENT_PROMPT, FRS_REGISTRY, barExtras, barLinks } from "virtual:beepress/host";
 
 import { mountKit } from "../core/mount";
 import "./vue2.less";
@@ -62,3 +62,6 @@ export const BuilderKitRoot = {
     ]);
   },
 };
+
+/** Bee Press name for the same adapter. */
+export const BeePressRoot = BuilderKitRoot;

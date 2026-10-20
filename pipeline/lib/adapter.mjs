@@ -4,7 +4,7 @@
  * 引擎通过这里拿到技术栈相关的三件事，自己不认识任何前端框架。
  * 接口与自定义方式见 `pipeline/adapters/README.md`。
  *
- *   BUILDER_KIT_ADAPTER=react-router npx builder-kit capture-kb-shots
+ *   BEEPRESS_ADAPTER=react-router npx beepress capture-kb-shots
  */
 
 import path from "node:path";
@@ -21,7 +21,7 @@ let cached = null;
 export async function loadAdapter() {
   if (cached) return cached;
   // `PROTO_ADAPTER` is kept for projects migrating from the pre-0.1 API.
-  const name = process.env.BUILDER_KIT_ADAPTER || process.env.PROTO_ADAPTER || "vue2-vite";
+  const name = process.env.BEEPRESS_ADAPTER || process.env.BEEPRESS_ADAPTER || process.env.PROTO_ADAPTER || "vue2-vite";
   const file = path.join(ADAPTERS_DIR, `${name}.mjs`);
   const mod = await import(`file://${file}`).catch(() => {
     throw new Error(`找不到适配器 ${name}——应当是 pipeline/adapters/${name}.mjs`);

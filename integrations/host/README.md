@@ -7,6 +7,8 @@ has three faces:
 - `lib/client.js` — the dsh client plugin (right-sidebar Bee Press panel)
 - `src/mcp.mjs` — a stdio MCP server (`beepress-mcp`)
 - `src/project.mjs` — the dependency-free workspace reader shared by all faces
+- `src/service.mjs` — the `ctx.beepress` domain service shared by tools and routes
+- `src/kit.mjs` — locates the installed `beepress` CLI for lock/material capture commands
 
 The separation is intentional: the reader is the domain seam; dsh and MCP are
 two hosts. The package is one directory so a `file:` install of the dsh bundle
@@ -21,16 +23,21 @@ does not depend on files outside the package.
 | `beepress_review_open` | Unresolved review comments with anchors and reply counts |
 | `beepress_review_add` | Add an open comment to `docs/reviews` |
 | `beepress_review_resolve` | Resolve a comment, optionally appending a note |
+| `beepress_content_status` | Read `docs/kb/_lock.json` through `beepress kb status --json` |
+| `beepress_content_confirm` | Confirm a page or selected refs through `beepress kb ack` |
+| `beepress_publish_plan` | Compare local pages with `docs/kb/_published.json` and show the destination |
+| `beepress_capture_media` | Rebuild screenshots or clips with the reproducible recipe runner |
 
 The dsh plugin also ships a **Bee Press** right-sidebar tab. It reads the
-current Session workspace, shows content pages/review counts/specs, lists open
-reviews, supports refresh, and resolves a comment in place. The HTTP path is
-`/beepress/api/state`; resolution posts to `/beepress/api/review/resolve`.
+current Session workspace, shows content pages/review counts/specs, the content
+lock and publish plan, lists open reviews, supports refresh, and resolves a
+comment in place. The HTTP paths are `/beepress/api/state`,
+`/beepress/api/content` and `/beepress/api/review/resolve`.
 
 ![Bee Press panel in DeepSeek Harness](../../docs/assets/dsh-bee-press-panel.png)
 
-The MCP entrypoint remains read-only: Cursor/Claude/Codex get the three read
-tools, not the write tools. Media capture and publishing are not included yet.
+The MCP entrypoint remains read-only: Cursor/Claude/Codex get the read tools,
+not review writes, content confirmation, media capture, or publishing.
 
 ## Load into dsh
 
@@ -70,7 +77,7 @@ Cursor / Claude configuration:
   "mcpServers": {
     "bee-press": {
       "command": "node",
-      "args": ["/absolute/path/to/builder-kit/integrations/host/src/mcp.mjs"],
+      "args": ["/absolute/path/to/beepress/integrations/host/src/mcp.mjs"],
       "env": {
         "BEEPRESS_ROOT": "/absolute/path/to/your/project"
       }
@@ -87,7 +94,12 @@ Cursor / Claude configuration:
   plugin unloads.
 - The workspace root defaults to the dsh **session working directory**, then
   `BEEPRESS_ROOT`. Pass `root` to a tool when you need another workspace.
+- Content confirmation and media capture run the installed `beepress` CLI.
+  Set `BEEPRESS_KIT_ROOT` when the package is not resolvable from the dsh
+  profile; otherwise the plugin resolves `beepress/package.json`.
 - The client panel uses the session's `cwd`; use dsh's `working_directory` tool
   (or a new session in the target workspace) before opening it.
 - The package is `private` and versioned as a spike. The dsh package is
   `0.2.1-rc.2`; pin a compatible version before publishing.
+- `ctx.beepress` is registered as a Cordis service, so other plugins can
+  `inject: ["beepress"]` instead of reaching into the bundle internals.

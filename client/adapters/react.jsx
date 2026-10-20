@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 
-import { AGENT_PROMPT, FRS_REGISTRY, barExtras, barLinks } from "virtual:builder-kit/host";
+import { AGENT_PROMPT, FRS_REGISTRY, barExtras, barLinks } from "virtual:beepress/host";
 
 import { mountKit } from "../core/mount";
 import "./react.less";
@@ -12,9 +12,9 @@ import "./react.less";
  * The toolkit UI is React, so a React prototype needs no bridge library —
  * only the three layout slots and a router contract.
  *
- *   <BuilderKitRoot router={router}>
+ *   <BeePressRoot router={router}>
  *     <App />
- *   </BuilderKitRoot>
+ *   </BeePressRoot>
  *
  * The component is dev-only in practice: import it behind
  * `if (import.meta.env.DEV)` from the host entry.
@@ -90,3 +90,6 @@ export function BuilderKitRoot({
     </div>
   );
 }
+
+/** Bee Press name for the same adapter. */
+export const BeePressRoot = BuilderKitRoot;

@@ -3,12 +3,12 @@
  * 原型截图批量抓取
  * ------------------------------------------------------------------
  * 按 FRS.json 的 `shots` 配方，把原型页面逐张截到 docs/features/<KEY>/shots/。
- * 抓下来的图由 builder-kit prd 追加到云文档换取 imageId，再写进 PRD 的「参考图」列。
+ * 抓下来的图由 beepress prd 追加到云文档换取 imageId，再写进 PRD 的「参考图」列。
  *
  * 用法：
  *   cd web && npm run dev            # 另开一个终端，默认 5273
- *   npx builder-kit capture-shots 09071618_EVAL_CASE_BULK_VISIBILITY
- *   npx builder-kit capture-shots <KEY> --only case-list-bulk-confirm --headed
+ *   npx beepress capture-shots 09071618_EVAL_CASE_BULK_VISIBILITY
+ *   npx beepress capture-shots <KEY> --only case-list-bulk-confirm --headed
  *
  * 驱动的是本机已装的 Chrome，零依赖（见 lib/cdp.mjs）。
  * 配方里的 clip 是选择器，截那一块而不是整屏，所以 dev 的评审工具栏不会入镜；
@@ -207,7 +207,7 @@ async function main() {
   if (args.help || !args.key) {
     console.log(
       [
-        "用法: npx builder-kit capture-shots <FEATURE_KEY> [选项]",
+        "用法: npx beepress capture-shots <FEATURE_KEY> [选项]",
         "",
         "  --base-url <地址>  原型地址，默认 http://localhost:5273",
         "  --only <shotKey>   只抓某几张，可重复",

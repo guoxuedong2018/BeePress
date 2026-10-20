@@ -3,8 +3,8 @@
 **A hive of agents. One source of truth.**
 
 Bee Press is the product name for the prototype-native content production and
-publishing layer. The npm package and import paths remain `builder-kit`, and the
-`bk` / `builder-kit` CLIs remain aliases, so the rebrand does not break existing
+publishing layer. The npm package and import paths are `beepress`; the
+`builder-kit` / `bk` CLIs remain compatibility aliases, so the rebrand does not break existing
 hosts.
 
 ## Why Bee Press
@@ -30,7 +30,7 @@ workers, one source of truth.
 | Context | Name |
 | :-- | :-- |
 | Product name | **Bee Press** |
-| Package | `builder-kit` (compatibility) |
+| Package | `beepress` (current); `builder-kit` (compatibility) |
 | CLI | `beepress`, `builder-kit`, `bk` |
 | Review capability | Bee Review |
 | Content capability | Bee Studio |

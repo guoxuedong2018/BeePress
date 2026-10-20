@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.6.0 — 2026-10-20
+
+- **Package rename** — the npm package is now `beepress`; imports are
+  `beepress`, `beepress/react`, `beepress/vue2` and `beepress/vite`. The CLI
+  keeps `beepress`, `builder-kit` and `bk` aliases.
+- **Compatibility package** — `compat/builder-kit` re-exports `beepress` for
+  existing `builder-kit/*` imports and the `builder-kit` CLI. The legacy
+  `BUILDER_KIT_*` environment variables and `virtual:builder-kit/host` module
+  remain accepted; new code should use `BEEPRESS_*` and
+  `virtual:beepress/host`.
+- **`ctx.beepress` service** — the dsh bundle registers a Cordis service and
+  routes both tools and HTTP handlers through it.
+- **Content confirmation tools** — `beepress_content_status` reads
+  `docs/kb/_lock.json` via `beepress kb status --json`;
+  `beepress_content_confirm` records reviewed refs via `beepress kb ack`.
+- **Publish plan** — `beepress_publish_plan` compares local pages with
+  `docs/kb/_published.json`, reports the configured destination and exposes the
+  plan in the right-sidebar panel.
+- **Media capture tool** — `beepress_capture_media` rebuilds screenshots or
+  clips with the existing reproducible `capture-kb-shots` /
+  `record-kb-clips` recipe runner instead of ad-hoc screenshots.
+- **Panel** — added content-lock and publish-plan sections, plus a content
+  check action backed by `/beepress/api/content`.
+- **Thin desktop shell** — added `integrations/desktop`, an Electron wrapper
+  that boots an upstream dsh profile and loads its Web UI, plus an
+  `install-profile` helper for the preinstalled Bee Press bundle.
+
 ## 0.5.0 — 2026-10-19
 
 - **DeepSeek Harness + MCP integration** — added `integrations/` with
@@ -20,7 +47,7 @@
   “a hive of agents. One source of truth.” The name reflects the operating
   model: specialised agents coordinate through shared artifacts (fact refs,
   review locks, media ledgers, publish state), not a human-in-the-loop chat.
-- **Compatible CLI aliases** — `beepress` is added alongside `builder-kit` and
+- **Compatible CLI aliases** — `beepress` was added alongside `builder-kit` and
   `bk`. The npm package name, import paths and `BUILDER_KIT_*` environment
   variables are unchanged.
 - **Brand guide** — added `docs/brand.md` covering naming, taglines, voice and
@@ -54,7 +81,7 @@
 
 ## 0.2.0
 
-- **React adapter** — `builder-kit/react` mounts the toolkit in React prototypes;
+- **React adapter** — `beepress/react` mounts the toolkit in React prototypes;
   `hashRouter()` provides a router-library-free bridge.
 - **React source anchors** — `anchorLoc: "auto" | "react" | "vue" | false`;
   the JSX plugin injects `data-loc` / `data-comp` on intrinsic elements in dev.
@@ -62,7 +89,7 @@
   workspace with review comments, a command palette, async dialog states, dark
   mode and the content studio.
 - **Tool UI Spec** — `ui-spec/` now ships tokens, Tailwind config and canonical
-  React components. Export `builder-kit/ui` and `builder-kit/tokens.css`.
+  React components. Export `beepress/ui` and `beepress/tokens.css`.
 - **UI conformance gate** — `scripts/check-ui-spec.mjs` checks raw colors,
   transitions, viewport breakpoints, spacing, radii, focus compensation and
   icon-button labels.

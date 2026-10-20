@@ -53,8 +53,10 @@ const KIT_PREBUNDLE = ["react", "react/jsx-runtime", "react/jsx-dev-runtime", "r
  *
  * In other words, coupling lives in one integration line.
  */
-const HOST_ID = "virtual:builder-kit/host";
+const HOST_ID = "virtual:beepress/host";
+const LEGACY_HOST_ID = "virtual:builder-kit/host";
 const HOST_RESOLVED = `\0${HOST_ID}`;
+const LEGACY_HOST_RESOLVED = `\0${LEGACY_HOST_ID}`;
 
 /** Absolute paths outside Vite's root must go through /@fs/ in dev. */
 function fsSpec(abs) {
@@ -63,13 +65,15 @@ function fsSpec(abs) {
 
 function hostBridge({ root, frsRegistry, barExtras, barLinks, agentPrompt }) {
   return {
-    name: "builder-kit:host-bridge",
+    name: "beepress:host-bridge",
     apply: "serve",
     resolveId(id) {
-      return id === HOST_ID ? HOST_RESOLVED : null;
+      if (id === HOST_ID) return HOST_RESOLVED;
+      if (id === LEGACY_HOST_ID) return LEGACY_HOST_RESOLVED;
+      return null;
     },
     load(id) {
-      if (id !== HOST_RESOLVED) return null;
+      if (id !== HOST_RESOLVED && id !== LEGACY_HOST_RESOLVED) return null;
       const lines = [];
 
       // Requirement region registry. Without wiring it stays empty and every
@@ -102,7 +106,7 @@ function hostBridge({ root, frsRegistry, barExtras, barLinks, agentPrompt }) {
  * ==================================================================
  * Add one line to the host's `vite.config.js`:
  *
- *   builderKit({ root, ... })
+ *   beePress({ root, ... })
  *
  * and the host gets:
  *
@@ -114,7 +118,7 @@ function hostBridge({ root, frsRegistry, barExtras, barLinks, agentPrompt }) {
  *
  * Both suites are peers: review collects opinions about the prototype, the
  * studio tracks whether the documentation keeps up with it. The UI is React;
- * a thin host adapter mounts it (`builder-kit/vue2` for Vue 2).
+ * a thin host adapter mounts it (`beepress/vue2` for Vue 2).
  *
  * @param {object}   options
  * @param {string}   [options.root]          host app root (source paths are relative to it)
@@ -127,7 +131,7 @@ function hostBridge({ root, frsRegistry, barExtras, barLinks, agentPrompt }) {
  *                                           source-anchor injection: auto (both), vue, react, or false
  * @param {string}   [options.agentPrompt]   optional prompt prefix for "copy for Agent" buttons
  */
-export function builderKit({
+export function beePress({
   root = process.cwd(),
   frsRegistry,
   barExtras = [],
@@ -138,13 +142,13 @@ export function builderKit({
 } = {}) {
   return [
     {
-      name: "builder-kit:config",
+      name: "beepress:config",
       config() {
         return {
           resolve: {
             alias: [
               // The host may import the toolkit by bare specifier.
-              { find: /^builder-kit$/, replacement: path.join(CLIENT_DIR, "index.js") },
+              { find: /^beepress$/, replacement: path.join(CLIENT_DIR, "index.js") },
               // Toolkit runtime dependencies may be installed locally (vendored
               // checkout) or hoisted by the host package manager. Alias only
               // when the local copy exists, so hoisted installs still resolve.
@@ -166,7 +170,7 @@ export function builderKit({
             include: KIT_PREBUNDLE,
             // Toolkit entry points are source files with a virtual host module;
             // pre-bundling them with esbuild would fail to resolve it.
-            exclude: ["builder-kit", "builder-kit/vue2", "builder-kit/core"],
+            exclude: ["beepress", "beepress/vue2", "beepress/core", "builder-kit", "builder-kit/vue2", "builder-kit/core"],
           },
           // The toolkit UI is React (.jsx). The host may be Vue and have no .jsx.
           esbuild: { jsx: "automatic", jsxImportSource: "react" },
@@ -190,3 +194,6 @@ export function builderKit({
     studioServer(),
   ];
 }
+
+/** Legacy name for the same Vite integration. */
+export const builderKit = beePress;

@@ -92,7 +92,7 @@ const importCache = new Map();
 
 /** Prototype source root, relative to the project root. */
 function srcRootOf(repoRoot) {
-  const configured = process.env.BUILDER_KIT_WEB_DIR;
+  const configured = process.env.BEEPRESS_WEB_DIR || process.env.BUILDER_KIT_WEB_DIR;
   const web = configured || (existsSync(path.join(repoRoot, "web")) ? "web" : "");
   return path.normalize(path.join(web, "src"));
 }

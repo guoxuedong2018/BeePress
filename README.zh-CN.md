@@ -9,7 +9,7 @@ Bee Press 是原型原生的内容生产与发布层。把运行中的原型变�
 
 [English](./README.md) · [品牌说明](./docs/brand.md)
 
-> **命名：** Bee Press 是产品名。npm 包、导入路径、环境变量和 `bk` CLI 继续使用 `builder-kit` / `BUILDER_KIT_*`，保证兼容；`beepress` 是新增别名。
+> **命名：** Bee Press 是产品名。npm 包和导入路径是 `beepress`；`builder-kit` 包与 CLI 作为兼容别名保留，`BUILDER_KIT_*` 环境变量也继续接受。
 
 两个平级工具，都挂在运行中的原型上：
 
@@ -18,7 +18,7 @@ Bee Press 是原型原生的内容生产与发布层。把运行中的原型变�
 | `client/review` | 收集对原型的**意见** —— 圈选批注、定位源码 | `docs/reviews/<区域>.json` |
 | `client/studio` | 把原型变成可发布的**内容资源** —— 操作手册、上线通知、消息卡片、宣传图文 | `docs/kb/*.md` + `images/` + `media/` + 发布状态 |
 
-界面是 **React**，挂在 `<body>` 下独立的根上；原型保持自己的框架，不用装 React。**React 是主适配层**（`builder-kit/react`）；**Vue 2**（`builder-kit/vue2`）是可选的兼容适配层。换框架只需按 `client/core/host.js` 写一层很薄的适配。
+界面是 **React**，挂在 `<body>` 下独立的根上；原型保持自己的框架，不用装 React。**React 是主适配层**（`beepress/react`）；**Vue 2**（`beepress/vue2`）是可选的兼容适配层。换框架只需按 `client/core/host.js` 写一层很薄的适配。
 
 套件**只在 dev 生效**：入口组件的 `import.meta.env.DEV` 动态 import 在生产构建期被消除，产物里不留任何套件代码。
 
@@ -74,7 +74,7 @@ Bee Press 不是“人类和 AI 一起写文档”的聊天框，而是一个 Ag
 ## 安装
 
 ```bash
-npm install --save-dev builder-kit
+npm install --save-dev beepress
 # CLI 别名：beepress、builder-kit、bk
 # 宿主还没有这些 peer 时
 npm install --save-dev vite less
@@ -82,7 +82,10 @@ npm install --save-dev vite less
 npm install --save-dev vue@2.7
 ```
 
-要求：Node.js >= 18、Vite >= 5、Vue 2.7（可选，仅使用 Vue 2 适配层与 Vue 源码坐标注入时）、React 18/19（使用 React 适配层时，套件自身已依赖 React）、Tailwind >= 4（使用 `builder-kit/ui` 的规范组件时）、Less >= 3（使用自带样式时）。
+已有项目迁移期可以安装 `builder-kit` 兼容包，继续使用旧导入；它只是
+`beepress` 的薄转发。新代码应使用 `beepress/*` 和 `BEEPRESS_*`。
+
+要求：Node.js >= 18、Vite >= 5、Vue 2.7（可选，仅使用 Vue 2 适配层与 Vue 源码坐标注入时）、React 18/19（使用 React 适配层时，套件自身已依赖 React）、Tailwind >= 4（使用 `beepress/ui` 的规范组件时）、Less >= 3（使用自带样式时）。
 
 ## 目录约定
 
@@ -97,12 +100,12 @@ my-prototype/
 │   │   └── *.md                     # 正文，唯一真源
 │   ├── prd/                         # 生成的 PRD
 │   └── reviews/                     # 批注（生成）
-├── web/                             # 原型工程（可用 BUILDER_KIT_WEB_DIR 改）
+├── web/                             # 原型工程（可用 BEEPRESS_WEB_DIR 改）
 │   └── src/
 └── package.json
 ```
 
-项目根从当前工作目录向上找：最近的包含 `docs/`、`builder-kit.config.*`，或 `package.json` 依赖 `builder-kit` 的目录。也可以用 `BUILDER_KIT_ROOT` 显式指定。
+项目根从当前工作目录向上找：最近的包含 `docs/`、`beepress.config.*`，或 `package.json` 依赖 `beepress` 的目录。也可以用 `BEEPRESS_ROOT` 显式指定；`BUILDER_KIT_ROOT` 仍兼容。
 
 ## 接入
 
@@ -112,20 +115,20 @@ my-prototype/
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue2";
-import { builderKit } from "builder-kit/vite";
+import { beePress } from "beepress/vite";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
   plugins: [
-    builderKit({
+    beePress({
       root,
       frsRegistry: "src/config/frs-map.js",   // 需求区域注册表（业务数据）
       barExtras: ["src/components/common/ThemeToggle.vue"], // 注入工具栏的宿主控件
       barLinks: [{ label: "设计规范", route: { name: "design-system" } }],
       agentPrompt: "",                        // “复制给 Agent”的指令前缀
     }),
-    vue(),   // builderKit 内的 anchor-loc 必须先拿到原始 SFC
+    vue(),   // beePress 内的 anchor-loc 必须先拿到原始 SFC
   ],
 });
 ```
@@ -138,7 +141,7 @@ export default {
   data: () => ({ kitRoot: null }),
   mounted() {
     if (import.meta.env.DEV) {
-      import("builder-kit/vue2").then((m) => { this.kitRoot = m.BuilderKitRoot; });
+      import("beepress/vue2").then((m) => { this.kitRoot = m.BeePressRoot; });
     }
   },
 };
@@ -153,22 +156,22 @@ export default {
 </template>
 ```
 
-React 原型用 `builder-kit/react`：
+React 原型用 `beepress/react`：
 
 ```jsx
 // main.jsx
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
-import { hashRouter } from "builder-kit/react";
+import { hashRouter } from "beepress/react";
 
 const root = createRoot(document.getElementById("root"));
 
 if (import.meta.env.DEV) {
-  import("builder-kit/react").then(({ BuilderKitRoot }) => {
+  import("beepress/react").then(({ BeePressRoot }) => {
     root.render(
-      <BuilderKitRoot router={hashRouter()}>
+      <BeePressRoot router={hashRouter()}>
         <App />
-      </BuilderKitRoot>,
+      </BeePressRoot>,
     );
   });
 } else {
@@ -187,7 +190,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
-const kitRoot = path.dirname(require.resolve("builder-kit/package.json"));
+const kitRoot = path.dirname(require.resolve("beepress/package.json"));
 const themeDefaults = path.join(kitRoot, "client/core/theme-defaults.less");
 
 export default defineConfig({
@@ -212,8 +215,8 @@ export default defineConfig({
 仓库内置 **Tool UI Spec**（[`ui-spec/`](./ui-spec)）：令牌、Tailwind 配置与 React 参考组件。
 
 ```jsx
-import { Badge, Button, Card, Dialog, EmptyState, SegmentedControl, Table } from "builder-kit/ui";
-import "builder-kit/tokens.css";
+import { Badge, Button, Card, Dialog, EmptyState, SegmentedControl, Table } from "beepress/ui";
+import "beepress/tokens.css";
 ```
 
 令牌管线、Less 桥接与门禁见 [docs/ui-spec.md](./docs/ui-spec.md)。
@@ -241,13 +244,14 @@ npm run build:demo  # 生产构建
 [`integrations/`](./integrations) 把 Bee Press 接到 Agent runtime 上：
 
 - [`integrations/host`](./integrations/host) — `@beepress/dsh-bundle`，包含 DeepSeek Harness 插件、右侧栏 Bee Press 面板、评论写工具，以及 `beepress-mcp` stdio 入口，可接 Cursor、Claude、Codex 或其他 MCP 客户端。
+- [`integrations/desktop`](./integrations/desktop) — 薄 Electron 壳，启动上游 dsh profile 并加载 Web UI，不 fork 内核。
 - 所有入口共用同一个无依赖的工作区读取器，项目文件仍是契约。
 
 ```bash
 npm run test:integrations
 ```
 
-dsh 插件可以检查工作区、列出内容与评论、新增评论并解决评论；媒体抓取和发布仍是独立步骤。
+dsh 插件可以检查工作区、列出内容与评论、新增并解决评论、读取/确认内容锁、查看发布计划，并用可复现的配方重建截图或录屏。同一组能力通过 `ctx.beepress` 服务暴露；MCP 仍只读。
 
 ![DeepSeek Harness 中的 Bee Press 面板](./docs/assets/dsh-bee-press-panel.png)
 
@@ -272,7 +276,7 @@ DEPLOY_SKILL=/path/to/deploy.mjs npm run test:deploy-skill
 ## 配置
 
 ```js
-builderKit({
+beePress({
   root,                 // 宿主应用根，默认 process.cwd()
   frsRegistry,          // 导出 FRS_REGISTRY 的模块，相对 root
   barExtras: [],        // 注入评审工具栏的宿主组件
@@ -287,12 +291,12 @@ builderKit({
 
 | 变量 | 含义 | 默认 |
 |---|---|---|
-| `BUILDER_KIT_ROOT` | 宿主项目根 | 自动探测 |
-| `BUILDER_KIT_DOCS_DIR` | 文档目录，相对项目根 | `docs` |
-| `BUILDER_KIT_WEB_DIR` | 原型工程目录，相对项目根 | 有 `web/` 用 `web`，否则项目根 |
-| `BUILDER_KIT_ADAPTER` | 管线适配器名 | `vue2-vite` |
-| `BUILDER_KIT_PUBLISH_GATEWAY` | 发布目标适配器：路径、`file:` URL 或包名 | 未配置 |
-| `BUILDER_KIT_DOCS_CLI` | 内置 `docs-cli` 适配器的命令前缀 | `docs-cli` |
+| `BEEPRESS_ROOT` | 宿主项目根（`BUILDER_KIT_ROOT` 兼容） | 自动探测 |
+| `BEEPRESS_DOCS_DIR` | 文档目录，相对项目根（`BUILDER_KIT_DOCS_DIR` 兼容） | `docs` |
+| `BEEPRESS_WEB_DIR` | 原型工程目录，相对项目根（`BUILDER_KIT_WEB_DIR` 兼容） | 有 `web/` 用 `web`，否则项目根 |
+| `BEEPRESS_ADAPTER` | 管线适配器名（`BUILDER_KIT_ADAPTER` 兼容） | `vue2-vite` |
+| `BEEPRESS_PUBLISH_GATEWAY` | 发布目标适配器：路径、`file:` URL 或包名（`BUILDER_KIT_PUBLISH_GATEWAY` 兼容） | 未配置 |
+| `BEEPRESS_DOCS_CLI` | 内置 `docs-cli` 适配器的命令前缀（`BUILDER_KIT_DOCS_CLI` 兼容） | `docs-cli` |
 
 ## 内容工作台
 
@@ -321,23 +325,23 @@ builderKit({
 
 ## 命令行
 
-安装后提供统一入口，三个别名等价：`beepress`、`builder-kit`、`bk`。下面仍用 `builder-kit`，因为 npm 包名保持不变；`beepress` 行为完全一致。
+安装后提供统一入口，三个别名等价：`beepress`、`builder-kit`、`bk`。
 
 ```bash
-npx builder-kit kb status            # 哪些内容待确认、哪些图该重拍
-npx builder-kit kb context <页|路由>  # 给 Agent：引用、可用媒体配方、可引的规格原文
-npx builder-kit kb shoot --stale     # 只重拍源码真变了的
-npx builder-kit kb ack <页> [<id>…]  # 我看过了
-npx builder-kit kb where <配方|路由|依据> # 谁在引用它
-npx builder-kit kb check             # 引用断了才失败，要审只提醒
-npx builder-kit kb new <页> <类型> "<话题>" --pages=/a,/b
-npx builder-kit review open          # 未解决的批注，带源码坐标
-npx builder-kit review resolve <id…> --note "…"
-npx builder-kit export-review-notes --status open
-npx builder-kit prd <KEY> --scope delta
+npx beepress kb status            # 哪些内容待确认、哪些图该重拍
+npx beepress kb context <页|路由>  # 给 Agent：引用、可用媒体配方、可引的规格原文
+npx beepress kb shoot --stale     # 只重拍源码真变了的
+npx beepress kb ack <页> [<id>…]  # 我看过了
+npx beepress kb where <配方|路由|依据> # 谁在引用它
+npx beepress kb check             # 引用断了才失败，要审只提醒
+npx beepress kb new <页> <类型> "<话题>" --pages=/a,/b
+npx beepress review open          # 未解决的批注，带源码坐标
+npx beepress review resolve <id…> --note "…"
+npx beepress export-review-notes --status open
+npx beepress prd <KEY> --scope delta
 ```
 
-完整列表见 `npx builder-kit --help`。`pipeline/` 下的脚本也可以直接用 `node` 运行。
+完整列表见 `npx beepress --help`。`pipeline/` 下的脚本也可以直接用 `node` 运行。
 
 `check-ui` / `check-routes` / `check-frs` 是**宿主符合性检查的参考实现**，写死了一套设计体系约定（iView 组件、token 文件、导航登记）。换产品时照抄约定或改这三份脚本；其余能力与框架无关。
 
@@ -346,17 +350,17 @@ npx builder-kit prd <KEY> --scope delta
 发布是可选的。Bee Press 只提供核心流程——内容 bundle、计划确认、可续跑状态和内容工作台 UI；**投递到哪个载体**由宿主自己的适配器决定：
 
 ```bash
-BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx builder-kit kb-publish --dry-run
+BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx beepress kb-publish --dry-run
 ```
 
 适配器可以接飞书文档、腾讯文档、内部 Wiki/CMS、IM 机器人等内容平台。发布物不只长文：操作手册、上线通知、消息卡片、截图/录屏/GIF/视频都可以走同一个接入层。接口契约和最小示例见
 [`docs/publishing.zh-CN.md`](./docs/publishing.zh-CN.md)（接口契约见 [publishing.md](./docs/publishing.md)）。未配置时发布功能关闭；要使用内置的
-[`docs-cli` 参考适配器](./pipeline/destinations/docs-cli.mjs)，设置 `BUILDER_KIT_PUBLISH_GATEWAY=docs-cli`（它仍通过
-`BUILDER_KIT_DOCS_CLI` 接收外部 CLI 命令前缀）。完全不接发布目标时，本地批注、内容清单、截图录屏都照常可用。
+[`docs-cli` 参考适配器](./pipeline/destinations/docs-cli.mjs)，设置 `BEEPRESS_PUBLISH_GATEWAY=docs-cli`（它仍通过
+`BEEPRESS_DOCS_CLI` 接收外部 CLI 命令前缀；`BUILDER_KIT_*` 仍兼容）。完全不接发布目标时，本地批注、内容清单、截图录屏都照常可用。
 
 ## 边界规矩
 
-套件**不得 import 任何产品模块**。需要业务侧的东西一律走 `virtual:builder-kit/host` 虚拟模块，由宿主在 Vite 配置里接线。反过来产品代码也只在入口组件一处引用套件。
+套件**不得 import 任何产品模块**。需要业务侧的东西一律走 `virtual:beepress/host` 虚拟模块，由宿主在 Vite 配置里接线。反过来产品代码也只在入口组件一处引用套件。
 
 知识库侧同理：产品内容全在 `docs/kb/` 的几份配置里，套件不含一个产品词。
 

@@ -15,8 +15,8 @@
  *
  * 用法：
  *   cd web && npm run dev                     # 另开终端，固定 5273
- *   npx builder-kit capture-kb-shots
- *   npx builder-kit capture-kb-shots --only step1-overview --headed
+ *   npx beepress capture-kb-shots
+ *   npx beepress capture-kb-shots --only step1-overview --headed
  */
 
 import { promises as fs } from "node:fs";
@@ -319,7 +319,7 @@ async function main() {
   if (args.help) {
     console.log(
       [
-        "用法: npx builder-kit capture-kb-shots [选项]",
+        "用法: npx beepress capture-kb-shots [选项]",
         "",
         "  --base-url <地址>  原型地址，默认 http://localhost:5273",
         "  --only <shotKey>   只抓某几张，可重复",

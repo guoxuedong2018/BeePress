@@ -89,9 +89,9 @@ interface ContentBundle {
 
 | 方式 | 适合场景 | 配置 |
 | :-- | :-- | :-- |
-| 内置 `docs-cli` 参考适配器 | 已有兼容的文档 CLI | `BUILDER_KIT_PUBLISH_GATEWAY=docs-cli` |
-| 宿主项目内的适配器文件 | 内部 Wiki、CMS、业务 API、IM 机器人 | `BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs` |
-| 独立 npm 包 | 多个原型共享同一套发布能力 | `BUILDER_KIT_PUBLISH_GATEWAY=@acme/builder-kit-publish` |
+| 内置 `docs-cli` 参考适配器 | 已有兼容的文档 CLI | `BEEPRESS_PUBLISH_GATEWAY=docs-cli` |
+| 宿主项目内的适配器文件 | 内部 Wiki、CMS、业务 API、IM 机器人 | `BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs` |
+| 独立 npm 包 | 多个原型共享同一套发布能力 | `BEEPRESS_PUBLISH_GATEWAY=@acme/beepress-publish` |
 
 ### 2. 在宿主项目里创建适配器
 
@@ -148,7 +148,7 @@ type Source =
 环境变量必须设置在启动 Vite 的进程上：
 
 ```bash
-BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npm run dev
+BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npm run dev
 ```
 
 配置后需要重启 dev server；修改适配器文件本身通常由 Node 重新加载，但环境变量不会自动更新。
@@ -160,7 +160,7 @@ BUILDER_KIT_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npm run dev
 curl http://localhost:5173/__builder_studio/publish-config
 
 # 2. 只算发布计划，不写目标端（首次需要根节点和地址前缀）
-npx builder-kit kb-publish --root <目标根 id> --doc-base https://your-destination.example --dry-run
+npx beepress kb-publish --root <目标根 id> --doc-base https://your-destination.example --dry-run
 
 # 3. 在内容检查台打开「发布」，先看计划，再确认
 ```
@@ -258,7 +258,7 @@ Bee Press 的内容创作不是“让模型凭空写一篇文章”，而是把 
 
 | 现象 | 检查 |
 | :-- | :-- |
-| UI 显示「发布（未配置）」 | 是否设置了 `BUILDER_KIT_PUBLISH_GATEWAY`，是否重启了 dev server |
+| UI 显示「发布（未配置）」 | 是否设置了 `BEEPRESS_PUBLISH_GATEWAY`，是否重启了 dev server |
 | `加载发布目标失败` | 相对路径是否相对宿主项目根；包名是否安装在宿主 `node_modules` |
 | `缺少 createDoc、writeDoc…` | 对照接口补齐核心方法 |
 | `发布计划没算出来` | 先看适配器抛出的错误，再用 `kb-publish --dry-run` 复现 |
@@ -273,9 +273,9 @@ Bee Press 的内容创作不是“让模型凭空写一篇文章”，而是把 
 只使用内置 `docs-cli` 参考实现时：
 
 ```bash
-BUILDER_KIT_PUBLISH_GATEWAY=docs-cli \
-BUILDER_KIT_DOCS_CLI="docs-cli" \
+BEEPRESS_PUBLISH_GATEWAY=docs-cli \
+BEEPRESS_DOCS_CLI="docs-cli" \
 npm run dev
 ```
 
-旧的 `BUILDER_KIT_DOCS_CLI=...` 单独设置也会自动选用内置适配器；新的接入建议显式设置 `BUILDER_KIT_PUBLISH_GATEWAY`。
+只设置 `BEEPRESS_DOCS_CLI=...`（或兼容的 `BUILDER_KIT_DOCS_CLI`）也会自动选用内置适配器；新接入建议显式设置 `BEEPRESS_PUBLISH_GATEWAY`。

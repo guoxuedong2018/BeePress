@@ -52,19 +52,19 @@ written to `examples/react-tailwind/docs/reviews/`.
 The Vite config aliases the in-repo package subpaths:
 
 ```js
-{ find: /^builder-kit\/react$/, replacement: path.join(kitRoot, "client/adapters/react.jsx") }
-{ find: /^builder-kit\/ui$/, replacement: path.join(kitRoot, "ui-spec/impl/react/index.ts") }
+{ find: /^beepress\/react$/, replacement: path.join(kitRoot, "client/adapters/react.jsx") }
+{ find: /^beepress\/ui$/, replacement: path.join(kitRoot, "ui-spec/impl/react/index.ts") }
 ```
 
 A project that installs the published package does not need those aliases; it
-imports `builder-kit/react` and `builder-kit/ui` directly.
+imports `beepress/react` and `beepress/ui` directly.
 
 ## Copy it out
 
 To use this as a starting point for a real prototype:
 
 1. Copy the folder.
-2. Replace `"builder-kit": "file:../.."` with the published version.
+2. Replace `"beepress": "file:../.."` with the published version.
 3. Keep `docs/` next to `src/`; Bee Press detects the project root from it.
 4. Run `npm install && npm run dev`.
 5. Keep the dev-only dynamic import in `src/main.jsx`; production builds strip

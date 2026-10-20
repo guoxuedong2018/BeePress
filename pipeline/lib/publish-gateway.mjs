@@ -2,18 +2,18 @@
  * Publish destination loader
  * ------------------------------------------------------------------
  * The publishing workflow (planning, state, retries, review UI) belongs to
- * builder-kit. The destination belongs to the host: a docs service, an internal
+ * beepress. The destination belongs to the host: a docs service, an internal
  * wiki, a CMS, or anything else with an adapter.
  *
  * Pick an adapter with:
  *
- *   BUILDER_KIT_PUBLISH_GATEWAY=./tools/my-publish-gateway.mjs
- *   BUILDER_KIT_PUBLISH_GATEWAY=@acme/builder-kit-publish
+ *   BEEPRESS_PUBLISH_GATEWAY=./tools/my-publish-gateway.mjs
+ *   BEEPRESS_PUBLISH_GATEWAY=@acme/beepress-publish
  *
  * The value may be a package name, a `file:` URL, or a path relative to the
  * host project root. Publishing is opt-in: without a destination the core
  * still supports review, content status, screenshots and clips, but cannot
- * publish. `BUILDER_KIT_DOCS_CLI` is kept as a compatibility switch for the
+ * publish. `BEEPRESS_DOCS_CLI` is kept as a compatibility switch for the
  * bundled `docs-cli` reference adapter. See `docs/publishing.md`.
  */
 import { createRequire } from "node:module";
@@ -35,13 +35,15 @@ let cachedSpec = null;
 
 function gatewaySpec() {
   const value = (
-    process.env.BUILDER_KIT_PUBLISH_GATEWAY ||
+    process.env.BEEPRESS_PUBLISH_GATEWAY ||
+    process.env.BEEPRESS_PUBLISH_GATEWAY ||
+    process.env.BEEPRESS_PUBLISH_DESTINATION ||
     process.env.BUILDER_KIT_PUBLISH_DESTINATION ||
     ""
   ).trim();
   if (value) return value;
   // Backwards compatibility: the old docs-cli switch is an explicit opt-in.
-  return process.env.BUILDER_KIT_DOCS_CLI ? DEFAULT_GATEWAY : "";
+  return process.env.BEEPRESS_DOCS_CLI || process.env.BEEPRESS_DOCS_CLI ? DEFAULT_GATEWAY : "";
 }
 
 async function importGateway(spec) {
@@ -50,7 +52,7 @@ async function importGateway(spec) {
   if (spec.startsWith(".") || path.isAbsolute(spec)) {
     return import(pathToFileURL(path.resolve(REPO_ROOT, spec)).href);
   }
-  // Resolve bare package names from the host project, not from builder-kit.
+  // Resolve bare package names from the host project, not from beepress.
   try {
     const hostRequire = createRequire(path.join(REPO_ROOT, "package.json"));
     return import(pathToFileURL(hostRequire.resolve(spec)).href);
@@ -77,7 +79,7 @@ export async function loadPublishGateway({ methods = CORE_METHODS } = {}) {
   const spec = gatewaySpec();
   if (!spec) {
     throw new Error(
-      "未配置发布目标：设置 BUILDER_KIT_PUBLISH_GATEWAY 指向宿主的发布适配器；" +
+      "未配置发布目标：设置 BEEPRESS_PUBLISH_GATEWAY（兼容 BEEPRESS_PUBLISH_GATEWAY）指向宿主的发布适配器；" +
         "使用内置参考适配器时设为 docs-cli，改完重启 dev server。接口见 docs/publishing.zh-CN.md",
     );
   }

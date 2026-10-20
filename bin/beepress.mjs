@@ -2,15 +2,15 @@
 /**
  * Bee Press CLI dispatcher.
  *
- * The npm package is still `builder-kit`; `beepress`, `builder-kit` and `bk`
- * are aliases for this entry point. All pipeline scripts live in `pipeline/`:
+ * The package is `beepress`; `builder-kit` and `bk` remain aliases for this
+ * entry point. All pipeline scripts live in `pipeline/`:
  *
  *   beepress kb status
  *   beepress review open
  *   beepress prd MY_FEATURE --scope delta
  *
  * Commands run with the current working directory as the host project root
- * (or `BUILDER_KIT_ROOT` when set).
+ * (or `BEEPRESS_ROOT` / `BUILDER_KIT_ROOT` when set).
  */
 import { spawnSync } from "node:child_process";
 import path from "node:path";
@@ -73,12 +73,13 @@ Commands:
   kb-add-shot              Add a captured screenshot to a section
 
 Environment:
-  BUILDER_KIT_ROOT         Host project root (default: auto-detect from cwd)
-  BUILDER_KIT_DOCS_DIR     Docs directory inside the project (default: docs)
-  BUILDER_KIT_WEB_DIR      Prototype app directory (default: web, or project root)
-  BUILDER_KIT_ADAPTER      Pipeline adapter (default: vue2-vite)
-  BUILDER_KIT_PUBLISH_GATEWAY  Publish destination adapter (default: disabled)
-  BUILDER_KIT_DOCS_CLI     Command prefix for the bundled docs-cli adapter
+  BEEPRESS_ROOT            Host project root (default: auto-detect from cwd)
+  BEEPRESS_DOCS_DIR        Docs directory inside the project (default: docs)
+  BEEPRESS_WEB_DIR         Prototype app directory (default: web, or project root)
+  BEEPRESS_ADAPTER         Pipeline adapter (default: vue2-vite)
+  BEEPRESS_PUBLISH_GATEWAY Publish destination adapter (default: disabled)
+  BEEPRESS_DOCS_CLI        Command prefix for the bundled docs-cli adapter
+  BUILDER_KIT_*            Legacy aliases for the variables above
 
 Run \`beepress kb --help\` for command-specific options.`);
   process.exit(code);

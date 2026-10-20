@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Dialog, Field, Input } from "builder-kit/ui";
+import { Button, Dialog, Field, Input } from "beepress/ui";
 
 import { Icon } from "./Icons";
 
