@@ -133,6 +133,46 @@ window.__ModuleLoader__.load({
       );
     }
 
+    const ICON_PATHS = {
+      baseline: "M3 5h10M3 11h10M6 3v4M10 9v4",
+      requirements: "M4 2.5h5l3 3v8H4zM9 2.5v3h3M6 8.5h4M6 10.5h4",
+      prototype: "M5.5 4.2 12 8l-6.5 3.8z",
+      review: "M3 3.5h10v7H8l-3 2.5v-2.5H3z",
+      content: "M8 2.2 14 5.5 8 8.8 2 5.5zM2 8.6 8 12l6-3.4M2 11.4 8 14.8l6-3.4",
+      publish: "M8 10.5V2.8M5 5.8 8 2.8l3 3M3.5 9.5v3h9v-3",
+      refresh: "M13 8a5 5 0 1 1-1.6-3.7M13 2.5V5h-2.5",
+      help: "M6.2 6.2a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.7-.8 1.2v.3M8 11.6v.4",
+      chat: "M3 3.5h10v7.2H8.2L5.4 13v-2.3H3z",
+      comments: "M2.5 3.5h7v5h-4L3.8 10v-1.5H2.5zM11 6.2h2.5v5h-1.3V13l-1.8-1.8H9",
+      panel: "M3 3.5h10v9H3zM9.5 3.5v9",
+      external: "M9 3.5h3.5V7M12.5 3.5 8 8M6.5 4.5H4v7.5h7.5V9.5",
+      monitor: "M2.5 4h11v6.5h-11zM6 13h4M8 10.5V13",
+      tablet: "M4 2.8h8v10.4H4zM7 11.8h2",
+      phone: "M5.5 2.6h5v10.8h-5zM7 11.8h2",
+      close: "M4 4l8 8M12 4l-8 8",
+      sparkles: "M8 2.5 9.2 6 12.5 7.2 9.2 8.4 8 12 6.8 8.4 3.5 7.2 6.8 6zM12 11l.5 1.4L14 13l-1.5.6L12 15l-.5-1.4L10 13l1.5-.6z",
+      chevron: "M6.5 4 10 8l-3.5 4",
+    };
+
+    function Icon({ name, size = 15, filled = false }) {
+      return h(
+        "svg",
+        {
+          width: size,
+          height: size,
+          viewBox: "0 0 16 16",
+          fill: filled ? "currentColor" : "none",
+          stroke: "currentColor",
+          "stroke-width": filled ? 0 : 1.3,
+          "stroke-linecap": "round",
+          "stroke-linejoin": "round",
+          "aria-hidden": true,
+          focusable: "false",
+        },
+        h("path", { d: ICON_PATHS[name] || ICON_PATHS.help }),
+      );
+    }
+
     function BeeTitle({ useTabInfo }) {
       const { tab } = useTabInfo();
       return h("span", { style: styles.brand }, h(BeeIcon), tab.title);
@@ -507,216 +547,254 @@ window.__ModuleLoader__.load({
 
     const cockpitCss = `
       .bp-cockpit {
-        --bp-accent: var(--dsh-accent-default, #0969da);
+        --bp-accent: var(--dsh-accent-default, #3b6ef5);
         --bp-success: var(--dsh-success-default, #1a7f37);
         --bp-warning: var(--dsh-warning-default, #9a6700);
         --bp-danger: var(--dsh-danger-default, #cf222e);
+        --bp-bg: var(--dsh-surface-subtle, #f5f5f4);
+        --bp-card: var(--dsh-surface-default, #ffffff);
+        --bp-border: var(--dsh-border-default, #e4e4e2);
+        --bp-text: var(--dsh-text-primary, #1f2328);
+        --bp-muted: var(--dsh-text-secondary, #6b7280);
         position: relative;
         display: flex;
         flex-direction: column;
         height: 100%;
         min-height: 0;
         overflow: hidden;
-        color: var(--dsh-text-primary, #1f2328);
-        background: var(--dsh-surface-default, #ffffff);
+        color: var(--bp-text);
+        background: var(--bp-bg);
         font: 13px/1.5 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
       .bp-cockpit *, .bp-cockpit *::before, .bp-cockpit *::after { box-sizing: border-box; }
-      .bp-top {
+      .bp-shell { display: flex; flex: 1; min-height: 0; }
+      .bp-rail {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        width: 46px;
+        flex: none;
+        padding: 10px 0;
+        border-right: 1px solid var(--bp-border);
+      }
+      .bp-rail-spacer { flex: 1; min-height: 8px; }
+      .bp-rail-item {
+        position: relative;
         display: flex;
         align-items: center;
-        gap: 14px;
-        flex: none;
-        height: 50px;
-        padding: 0 14px;
-        border-bottom: 1px solid var(--dsh-border-default, #d8dee4);
-        background: var(--dsh-surface-default, #ffffff);
-      }
-      .bp-brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
-      .bp-brand-mark {
-        display: flex; align-items: center; justify-content: center;
-        width: 29px; height: 29px; flex: none;
-        color: var(--bp-accent);
-        background: color-mix(in srgb, var(--bp-accent) 10%, transparent);
-        border: 1px solid color-mix(in srgb, var(--bp-accent) 24%, transparent);
-        border-radius: 8px;
-      }
-      .bp-brand-name { font-size: 13px; font-weight: 700; letter-spacing: -0.01em; }
-      .bp-brand-sub { margin-top: 1px; color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 650; letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap; }
-      .bp-project { min-width: 0; padding-left: 14px; border-left: 1px solid var(--dsh-border-default, #d8dee4); }
-      .bp-project-label { color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 650; letter-spacing: 0.09em; text-transform: uppercase; }
-      .bp-project-name { margin-top: 2px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-      .bp-project-path { display: block; max-width: 36vw; overflow: hidden; color: var(--dsh-text-secondary, #656d76); font: 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; text-overflow: ellipsis; white-space: nowrap; }
-      .bp-top-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-      .bp-btn {
-        display: inline-flex; align-items: center; gap: 5px;
-        height: 27px; padding: 0 9px;
-        color: var(--dsh-text-secondary, #656d76);
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        color: color-mix(in srgb, var(--bp-muted) 74%, var(--bp-text));
         background: transparent;
-        border: 1px solid var(--dsh-border-default, #d8dee4);
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .bp-rail-item:hover { color: var(--bp-text); background: color-mix(in srgb, var(--bp-text) 6%, transparent); }
+      .bp-rail-item[data-active="true"] { color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 10%, transparent); }
+      .bp-rail-dot { position: absolute; right: 5px; bottom: 5px; width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+      .bp-rail-item[data-ready="true"] .bp-rail-dot { background: var(--bp-success); }
+      .bp-stage-area { position: relative; display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
+      .bp-canvas-body { flex: 1; min-height: 0; overflow: auto; margin: 8px; padding: 22px 24px 32px; background: var(--bp-card); border: 1px solid var(--bp-border); border-radius: 12px; }
+      .bp-canvas-body > * { width: 100%; max-width: 860px; margin: 0 auto; }
+      .bp-floatbar {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        z-index: 6;
+        display: flex;
+        align-items: center;
+        gap: 1px;
+        padding: 3px 4px;
+        background: color-mix(in srgb, var(--bp-card) 86%, transparent);
+        border: 1px solid var(--bp-border);
+        border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .05);
+        backdrop-filter: blur(8px);
+      }
+      .bp-workspace { max-width: 150px; margin: 0 6px; overflow: hidden; color: var(--bp-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+      .bp-icon-btn {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 27px;
+        height: 27px;
+        color: var(--bp-muted);
+        background: transparent;
+        border: 0;
         border-radius: 7px;
-        font: 11px/1 ui-sans-serif, -apple-system, sans-serif;
+        cursor: pointer;
+      }
+      .bp-icon-btn:hover:not(:disabled) { color: var(--bp-text); background: color-mix(in srgb, var(--bp-text) 7%, transparent); }
+      .bp-icon-btn[data-on="true"] { color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 12%, transparent); }
+      .bp-icon-btn:disabled { opacity: .4; cursor: not-allowed; }
+      .bp-icon-badge { position: absolute; top: 1px; right: 0; min-width: 13px; padding: 0 3px; color: #fff; background: var(--bp-accent); border-radius: 999px; font-size: 8px; line-height: 13px; text-align: center; }
+      .bp-next-chip {
+        position: absolute;
+        left: 50%;
+        bottom: 14px;
+        z-index: 6;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        max-width: min(520px, calc(100% - 40px));
+        padding: 7px 12px;
+        color: var(--bp-text);
+        background: color-mix(in srgb, var(--bp-card) 92%, transparent);
+        border: 1px solid var(--bp-border);
+        border-radius: 999px;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, .08);
+        font-size: 11px;
+        cursor: pointer;
+        transform: translateX(-50%);
+      }
+      .bp-next-chip > span:first-child { color: var(--bp-muted); }
+      .bp-next-chip:hover { border-color: color-mix(in srgb, var(--bp-accent) 40%, var(--bp-border)); }
+      .bp-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        height: 28px;
+        padding: 0 10px;
+        color: var(--bp-text);
+        background: transparent;
+        border: 1px solid var(--bp-border);
+        border-radius: 7px;
+        font: inherit;
+        font-size: 11px;
         cursor: pointer;
         white-space: nowrap;
       }
-      .bp-btn:hover:not(:disabled) { color: var(--dsh-text-primary, #1f2328); background: var(--dsh-surface-subtle, #f6f8fa); }
-      .bp-btn[data-on="true"] { color: var(--bp-accent); border-color: color-mix(in srgb, var(--bp-accent) 42%, var(--dsh-border-default, #d8dee4)); background: color-mix(in srgb, var(--bp-accent) 8%, transparent); }
+      .bp-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--bp-text) 6%, transparent); }
       .bp-btn:disabled { opacity: .45; cursor: not-allowed; }
-      .bp-body { display: grid; grid-template-columns: 190px minmax(0, 1fr) 280px; flex: 1; min-height: 0; }
-      .bp-rail { min-height: 0; overflow: auto; padding: 13px 9px; border-right: 1px solid var(--dsh-border-default, #d8dee4); background: var(--dsh-surface-subtle, #f6f8fa); }
-      .bp-rail-label { padding: 0 8px 8px; color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
-      .bp-stage {
-        display: flex; align-items: flex-start; gap: 8px;
-        width: 100%; padding: 8px; margin: 1px 0;
-        color: var(--dsh-text-primary, #1f2328);
-        text-align: left;
-        background: transparent;
-        border: 1px solid transparent;
-        border-radius: 8px;
-        cursor: pointer;
+      .bp-btn-primary { color: #fff; background: var(--bp-accent); border-color: var(--bp-accent); }
+      .bp-btn-primary:hover:not(:disabled) { color: #fff; filter: brightness(.96); }
+      .bp-link { padding: 0; color: var(--bp-muted); background: none; border: 0; font: inherit; font-size: 11px; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+      .bp-btn:focus-visible, .bp-rail-item:focus-visible, .bp-input:focus-visible, .bp-icon-btn:focus-visible, .bp-start-step:focus-visible, .bp-next-chip:focus-visible { outline: 2px solid var(--bp-accent); outline-offset: 2px; }
+      .bp-input { height: 28px; min-width: 180px; padding: 0 9px; color: inherit; background: var(--bp-card); border: 1px solid var(--bp-border); border-radius: 7px; font: inherit; font-size: 11px; }
+      .bp-panel {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        bottom: 8px;
+        z-index: 12;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 296px;
+        overflow: auto;
+        padding: 12px;
+        background: var(--bp-card);
+        border: 1px solid var(--bp-border);
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, .14);
       }
-      .bp-stage:hover { background: color-mix(in srgb, var(--dsh-text-primary, #1f2328) 4%, transparent); }
-      .bp-stage[data-active="true"] { background: var(--dsh-surface-default, #ffffff); border-color: var(--dsh-border-default, #d8dee4); box-shadow: 0 1px 2px rgba(0,0,0,.04); }
-      .bp-stage-icon { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex: none; color: var(--dsh-text-secondary, #656d76); background: color-mix(in srgb, var(--dsh-text-primary, #1f2328) 5%, transparent); border-radius: 6px; font-size: 11px; }
-      .bp-stage[data-active="true"] .bp-stage-icon { color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 9%, transparent); }
-      .bp-stage-title { font-size: 12px; font-weight: 600; line-height: 1.35; }
-      .bp-stage-desc { margin-top: 2px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; line-height: 1.4; }
-      .bp-stage-state { margin-top: 4px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; }
-      .bp-dot { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: currentColor; vertical-align: 1px; }
-      .bp-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; background: var(--dsh-surface-default, #ffffff); }
-      .bp-canvas { flex: 1; min-height: 0; overflow: auto; padding: 22px 24px 32px; }
-      .bp-canvas > * { width: 100%; max-width: 860px; margin: 0 auto; }
-      .bp-preview-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 12px 14px 14px; }
-      .bp-preview-head { display: flex; align-items: center; gap: 10px; flex: none; min-height: 38px; padding: 5px 9px 5px 11px; border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 10px 10px 0 0; background: var(--dsh-surface-subtle, #f6f8fa); }
-      .bp-preview-url { display: flex; align-items: center; gap: 7px; min-width: 0; color: var(--dsh-text-secondary, #656d76); font: 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
-      .bp-preview-url code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .bp-live { width: 6px; height: 6px; flex: none; border-radius: 50%; background: var(--bp-success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bp-success) 13%, transparent); }
-      .bp-preview-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-      .bp-seg { display: inline-flex; overflow: hidden; border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 6px; }
-      .bp-seg button { height: 24px; padding: 0 7px; color: var(--dsh-text-secondary, #656d76); background: var(--dsh-surface-default, #fff); border: 0; font: 10px/1 sans-serif; cursor: pointer; }
-      .bp-seg button + button { border-left: 1px solid var(--dsh-border-default, #d8dee4); }
-      .bp-seg button[data-on="true"] { color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 9%, var(--dsh-surface-default, #fff)); }
-      .bp-review-strip { display: flex; align-items: center; gap: 8px; flex: none; min-height: 35px; padding: 4px 10px; border: 1px solid var(--dsh-border-default, #d8dee4); border-top: 0; background: var(--dsh-surface-default, #ffffff); overflow: hidden; }
-      .bp-review-frs { display: flex; align-items: center; gap: 5px; min-width: 0; }
-      .bp-review-label { color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 700; letter-spacing: .08em; }
-      .bp-tag { max-width: 160px; padding: 2px 6px; overflow: hidden; color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 8%, transparent); border: 1px solid color-mix(in srgb, var(--bp-accent) 20%, transparent); border-radius: 999px; font: 9px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; text-overflow: ellipsis; white-space: nowrap; }
-      .bp-review-actions { display: flex; align-items: center; gap: 5px; margin-left: auto; }
-      .bp-warn { display: inline-flex; align-items: center; gap: 4px; color: var(--bp-warning); font-size: 10px; white-space: nowrap; }
-      .bp-count { padding: 2px 6px; color: var(--dsh-text-secondary, #656d76); background: var(--dsh-surface-subtle, #f6f8fa); border-radius: 999px; font-size: 10px; white-space: nowrap; }
-      .bp-review-strip .bp-btn { height: 24px; padding: 0 7px; font-size: 10px; }
-      .bp-preview-stage { display: flex; justify-content: center; flex: 1; min-height: 0; overflow: auto; padding: 0; background: var(--dsh-surface-subtle, #f6f8fa); border: 1px solid var(--dsh-border-default, #d8dee4); border-top: 0; border-radius: 0 0 10px 10px; }
-      .bp-preview-frame { position: relative; width: 100%; height: 100%; min-height: 320px; background: #fff; transition: max-width .18s ease; }
-      .bp-preview-frame iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
-      .bp-preview-frame > .bp-preview-loading { position: absolute; inset: 0; min-height: 0; background: var(--dsh-surface-subtle, #f6f8fa); }
-      .bp-preview-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 320px; padding: 28px; color: var(--dsh-text-secondary, #656d76); text-align: center; }
-      .bp-preview-empty strong { color: var(--dsh-text-primary, #1f2328); font-size: 14px; }
-      .bp-preview-empty span { max-width: 460px; line-height: 1.65; }
-      .bp-preview-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
-      .bp-preview-meta { padding: 4px 8px; color: var(--dsh-text-primary, #1f2328); background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
-      .bp-preview-scanned { color: var(--dsh-text-secondary, #656d76); font-size: 9px; opacity: .8; }
-      .bp-preview-loading { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 320px; color: var(--dsh-text-secondary, #656d76); font-size: 12px; }
-      .bp-inspector { min-height: 0; overflow: auto; padding: 14px 13px 20px; border-left: 1px solid var(--dsh-border-default, #d8dee4); background: var(--dsh-surface-subtle, #f6f8fa); }
-      .bp-inspector-block { margin-bottom: 16px; }
-      .bp-inspector-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-      .bp-card { padding: 9px 10px; background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 8px; }
-      .bp-card + .bp-card { margin-top: 6px; }
-      .bp-pipeline-row { display: flex; align-items: center; gap: 7px; min-height: 27px; padding: 0 2px; font-size: 11px; }
-      .bp-pipeline-row + .bp-pipeline-row { border-top: 1px solid color-mix(in srgb, var(--dsh-border-default, #d8dee4) 65%, transparent); }
-      .bp-pipeline-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .bp-pipeline-state { margin-left: auto; color: var(--dsh-text-secondary, #656d76); font-size: 10px; white-space: nowrap; }
-      .bp-pipeline-row[data-ready="true"] .bp-pipeline-state { color: var(--bp-success); }
-      .bp-next { padding: 10px; background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 8px; }
-      .bp-next-label { color: var(--bp-accent); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-      .bp-next-title { margin-top: 4px; font-size: 12px; font-weight: 650; line-height: 1.45; }
-      .bp-next-detail { margin-top: 3px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; line-height: 1.5; }
+      .bp-panel-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+      .bp-panel-block { display: flex; flex-direction: column; gap: 6px; }
+      .bp-panel-label { color: var(--bp-muted); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+      .bp-panel-item { padding: 9px; border: 1px solid var(--bp-border); border-radius: 9px; }
+      .bp-panel-item .bp-btn { height: 22px; margin-top: 6px; padding: 0 7px; font-size: 9px; }
+      .bp-panel-empty { color: var(--bp-muted); font-size: 11px; line-height: 1.6; }
+      .bp-next { padding: 10px; background: color-mix(in srgb, var(--bp-accent) 4%, var(--bp-card)); border: 1px solid color-mix(in srgb, var(--bp-accent) 18%, var(--bp-border)); border-radius: 9px; }
+      .bp-next-title { font-size: 12px; font-weight: 650; }
+      .bp-next-detail { margin-top: 3px; color: var(--bp-muted); font-size: 10px; line-height: 1.55; }
       .bp-next .bp-btn { margin-top: 8px; }
-      .bp-review-item { padding: 8px 9px; }
       .bp-review-body { display: -webkit-box; overflow: hidden; font-size: 11px; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
-      .bp-review-meta { margin-top: 4px; color: var(--dsh-text-secondary, #656d76); font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }
-      .bp-review-item .bp-btn { height: 22px; margin-top: 6px; padding: 0 7px; font-size: 9px; }
-      .bp-capabilities { display: flex; flex-direction: column; gap: 6px; }
-      .bp-capability { display: flex; align-items: flex-start; gap: 7px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; line-height: 1.5; }
-      .bp-capability b { display: block; color: var(--dsh-text-primary, #1f2328); font-size: 11px; font-weight: 600; }
-      .bp-capability-mark { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex: none; margin-top: 1px; color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 8%, transparent); border-radius: 4px; font-size: 9px; }
+      .bp-review-meta { margin-top: 4px; color: var(--bp-muted); font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }
+      .bp-help {
+        position: absolute;
+        top: 48px;
+        right: 12px;
+        z-index: 20;
+        width: min(340px, calc(100% - 24px));
+        padding: 12px;
+        background: var(--bp-card);
+        border: 1px solid var(--bp-border);
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, .16);
+      }
+      .bp-help-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
+      .bp-help-list { display: flex; flex-direction: column; gap: 7px; }
+      .bp-help-item { display: flex; gap: 7px; color: var(--bp-muted); font-size: 10px; line-height: 1.55; }
+      .bp-help-item b { display: block; color: var(--bp-text); font-size: 11px; font-weight: 600; }
+      .bp-help-icon { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex: none; margin-top: 1px; color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 8%, transparent); border-radius: 4px; font-size: 9px; }
+      .bp-help-title { margin: 12px 0 6px; color: var(--bp-muted); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+      .bp-help-keys > div { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; color: var(--bp-muted); font-size: 10px; }
+      .bp-help-keys kbd { min-width: 54px; padding: 1px 6px; color: var(--bp-text); background: var(--bp-bg); border: 1px solid var(--bp-border); border-radius: 4px; font: inherit; font-size: 9px; text-align: center; }
+      .bp-help > .bp-btn { width: 100%; margin-top: 10px; justify-content: center; }
+      .bp-preview-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 8px; overflow: hidden; background: var(--bp-card); border: 1px solid var(--bp-border); border-radius: 12px; }
+      .bp-canvas-bar { display: flex; align-items: center; gap: 10px; flex: none; min-height: 38px; padding: 0 8px 0 12px; background: color-mix(in srgb, var(--bp-bg) 52%, var(--bp-card)); border-bottom: 1px solid var(--bp-border); }
+      .bp-canvas-url { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--bp-muted); font-size: 10px; }
+      .bp-canvas-url code { max-width: 34vw; overflow: hidden; color: var(--bp-text); font: 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; text-overflow: ellipsis; white-space: nowrap; }
+      .bp-route { color: var(--bp-muted); }
+      .bp-live { width: 6px; height: 6px; flex: none; background: var(--bp-success); border-radius: 50%; }
+      .bp-live[data-off="true"] { background: var(--bp-muted); opacity: .45; }
+      .bp-canvas-frs { display: flex; align-items: center; gap: 4px; margin-left: auto; min-width: 0; overflow: hidden; }
+      .bp-tag { padding: 1px 6px; color: var(--bp-muted); background: var(--bp-bg); border: 1px solid var(--bp-border); border-radius: 5px; font-size: 9px; white-space: nowrap; }
+      .bp-tag-open { color: var(--bp-accent); border-color: color-mix(in srgb, var(--bp-accent) 30%, var(--bp-border)); }
+      .bp-warn { color: var(--bp-warning); font-size: 10px; }
+      .bp-canvas-actions { display: flex; align-items: center; gap: 1px; flex: none; }
+      .bp-preview-stage { position: relative; display: flex; flex: 1; min-height: 0; padding: 10px; background: var(--bp-bg); }
+      .bp-preview-frame { position: relative; width: 100%; height: 100%; min-height: 320px; margin: 0 auto; overflow: hidden; background: #fff; border: 1px solid var(--bp-border); border-radius: 8px; transition: max-width .18s ease; }
+      .bp-preview-frame iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+      .bp-preview-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; flex: 1; min-height: 260px; padding: 28px; color: var(--bp-muted); text-align: center; }
+      .bp-preview-empty strong { color: var(--bp-text); font-size: 13px; font-weight: 650; }
+      .bp-preview-empty span { max-width: 460px; line-height: 1.65; font-size: 11px; }
+      .bp-preview-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
+      .bp-preview-meta { padding: 4px 8px; color: var(--bp-text); background: var(--bp-bg); border: 1px solid var(--bp-border); border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
+      .bp-preview-scanned { color: var(--bp-muted); font-size: 9px; opacity: .8; }
+      .bp-banner { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: var(--bp-warning); background: color-mix(in srgb, var(--bp-warning) 7%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--bp-warning) 24%, transparent); font-size: 10px; }
+      .bp-banner span { flex: 1; }
+      .bp-skeleton { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 260px; padding: 14px; }
+      .bp-skeleton-bar { display: flex; align-items: center; gap: 6px; color: var(--bp-muted); font-size: 10px; }
+      .bp-skeleton-dot { width: 6px; height: 6px; background: var(--bp-accent); border-radius: 50%; animation: bp-pulse 1.1s ease-in-out infinite; }
+      .bp-skeleton-canvas { display: flex; flex: 1; flex-direction: column; justify-content: center; gap: 10px; padding: 24px; background: var(--bp-bg); border-radius: 8px; }
+      .bp-skeleton-line { height: 12px; background: linear-gradient(90deg, #eceef0, #e2e5e8, #eceef0); background-size: 200% 100%; border-radius: 6px; animation: bp-shimmer 1.5s linear infinite; }
+      .bp-skeleton-detail { margin: 0; color: var(--bp-muted); font-size: 10px; }
+      .bp-error { padding: 9px 10px; color: var(--bp-danger); font-size: 11px; white-space: pre-wrap; }
+      .bp-error-brief { width: 100%; max-height: 64px; overflow: auto; margin: 0; padding: 8px; color: var(--bp-danger); background: var(--bp-bg); border: 1px solid var(--bp-border); border-radius: 6px; font: 10px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: left; white-space: pre-wrap; }
+      .bp-log { width: 100%; max-height: 190px; overflow: auto; margin: 0; padding: 8px; color: #e2e8f0; background: #0f172a; border-radius: 6px; font: 10px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: left; white-space: pre-wrap; }
+      .bp-start-wrap { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0; overflow: auto; padding: 32px 20px; }
+      .bp-start-card { width: min(560px, 100%); padding: 16px 18px; background: var(--bp-card); border: 1px solid var(--bp-border); border-radius: 14px; box-shadow: 0 8px 28px rgba(15, 23, 42, .06); }
+      .bp-start-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+      .bp-kicker { color: var(--bp-muted); font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+      .bp-start-head h2 { margin: 4px 0 0; font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+      .bp-start-steps { display: flex; gap: 4px; margin: 14px 0 12px; }
+      .bp-start-step { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 4px; color: var(--bp-muted); background: var(--bp-bg); border: 1px solid transparent; border-radius: 999px; font: inherit; font-size: 10px; cursor: pointer; }
+      .bp-start-step[data-active="true"] { color: var(--bp-text); border-color: color-mix(in srgb, var(--bp-accent) 34%, var(--bp-border)); background: color-mix(in srgb, var(--bp-accent) 7%, var(--bp-card)); }
+      .bp-start-step[data-done="true"] { color: var(--bp-success); }
+      .bp-start-step-dot { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: var(--bp-card); font-size: 8px; }
+      .bp-start-step[data-active="true"] .bp-start-step-dot { color: #fff; background: var(--bp-accent); }
+      .bp-start-step[data-done="true"] .bp-start-step-dot { color: var(--bp-success); background: color-mix(in srgb, var(--bp-success) 14%, transparent); }
+      .bp-start-body { min-height: 86px; }
+      .bp-start-desc { margin: 0 0 10px; color: var(--bp-muted); font-size: 11px; line-height: 1.65; }
+      .bp-start-evidence { margin: -4px 0 10px; color: var(--bp-muted); font: 9px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+      .bp-start-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+      .bp-start-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--bp-border); color: var(--bp-muted); font-size: 10px; }
       .bp-empty { flex: 1; min-height: 0; overflow: auto; padding: 46px 28px 40px; }
       .bp-empty-inner { width: 100%; max-width: 720px; margin: 0 auto; }
-      .bp-kicker { color: var(--bp-accent); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
       .bp-empty h1 { max-width: 640px; margin: 10px 0 8px; font-size: clamp(26px, 3.4vw, 40px); font-weight: 700; letter-spacing: -.04em; line-height: 1.13; }
-      .bp-empty p { max-width: 560px; margin: 0; color: var(--dsh-text-secondary, #656d76); font-size: 13px; line-height: 1.7; }
+      .bp-empty p { max-width: 560px; margin: 0; color: var(--bp-muted); font-size: 13px; line-height: 1.7; }
       .bp-empty-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
       .bp-empty-actions .bp-btn { height: 32px; padding: 0 12px; font-size: 12px; }
       .bp-empty-actions .bp-btn[data-primary="true"] { color: #fff; background: var(--bp-accent); border-color: var(--bp-accent); }
-      .bp-empty-actions .bp-btn[data-primary="true"]:hover { color: #fff; filter: brightness(.96); }
       .bp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 30px; }
-      .bp-grid-card { padding: 11px; background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 9px; }
+      .bp-grid-card { padding: 11px; background: var(--bp-card); border: 1px solid var(--bp-border); border-radius: 9px; }
       .bp-grid-card b { display: block; margin: 6px 0 3px; font-size: 12px; }
-      .bp-grid-card span { color: var(--dsh-text-secondary, #656d76); font-size: 10px; line-height: 1.5; }
+      .bp-grid-card span { color: var(--bp-muted); font-size: 10px; line-height: 1.5; }
       .bp-grid-icon { color: var(--bp-accent); font-size: 14px; }
-      .bp-loading { padding: 30px 4px; color: var(--dsh-text-secondary, #656d76); font-size: 12px; }
-      .bp-error { padding: 10px; color: var(--bp-danger); font-size: 11px; white-space: pre-wrap; }
-      .bp-btn[data-primary="true"] { color: #fff; background: var(--bp-accent); border-color: var(--bp-accent); }
-      .bp-btn[data-primary="true"]:hover:not(:disabled) { color: #fff; filter: brightness(.96); }
-      .bp-btn:focus-visible, .bp-stage:focus-visible, .bp-input:focus-visible { outline: 2px solid var(--bp-accent); outline-offset: 2px; }
-      .bp-top-actions .bp-btn[data-badge="true"] { color: var(--bp-accent); border-color: color-mix(in srgb, var(--bp-accent) 34%, var(--dsh-border-default, #d8dee4)); }
-      .bp-start { flex: 1; height: 100%; min-height: 0; overflow: auto; padding: 26px 28px 24px; }
-      .bp-start-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; max-width: 760px; margin: 0 auto 16px; }
-      .bp-start-head h2 { margin: 6px 0; font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
-      .bp-start-head p { max-width: 560px; margin: 0; color: var(--dsh-text-secondary, #656d76); font-size: 12px; line-height: 1.65; }
-      .bp-start-time { flex: none; padding: 3px 9px; color: var(--dsh-text-secondary, #656d76); background: var(--dsh-surface-subtle, #f6f8fa); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 999px; font-size: 10px; white-space: nowrap; }
-      .bp-step { display: flex; gap: 12px; max-width: 760px; margin: 0 auto 10px; padding: 14px; background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 10px; }
-      .bp-step[data-active="true"] { border-color: color-mix(in srgb, var(--bp-accent) 36%, var(--dsh-border-default, #d8dee4)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bp-accent) 7%, transparent); }
-      .bp-step[data-done="true"] { background: color-mix(in srgb, var(--bp-success) 4%, var(--dsh-surface-default, #fff)); }
-      .bp-step-index { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex: none; color: var(--dsh-text-secondary, #656d76); background: var(--dsh-surface-subtle, #f6f8fa); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 50%; font-size: 11px; font-weight: 700; }
-      .bp-step[data-active="true"] .bp-step-index { color: #fff; background: var(--bp-accent); border-color: var(--bp-accent); }
-      .bp-step[data-done="true"] .bp-step-index { color: var(--bp-success); background: color-mix(in srgb, var(--bp-success) 12%, transparent); border-color: transparent; }
-      .bp-step-body { min-width: 0; flex: 1; }
-      .bp-step-title { font-size: 12px; font-weight: 650; }
-      .bp-step-desc { margin: 3px 0 9px; color: var(--dsh-text-secondary, #656d76); font-size: 11px; line-height: 1.6; }
-      .bp-step-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-      .bp-step-row { display: flex; flex-wrap: wrap; gap: 6px; }
-      .bp-step-note { color: var(--bp-success); font-size: 11px; }
-      .bp-step-evidence { color: var(--dsh-text-secondary, #656d76); font: 9px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
-      .bp-input { height: 27px; min-width: 190px; padding: 0 8px; color: inherit; background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 7px; font: inherit; font-size: 11px; }
-      .bp-start-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 760px; margin: 14px auto 0; padding-top: 12px; border-top: 1px solid var(--dsh-border-default, #d8dee4); color: var(--dsh-text-secondary, #656d76); font-size: 10px; }
-      .bp-help { position: absolute; top: 54px; right: 14px; z-index: 20; width: min(370px, calc(100% - 28px)); padding: 12px; background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 10px; box-shadow: 0 12px 34px rgba(15, 23, 42, .16); }
-      .bp-help-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; font-size: 12px; }
-      .bp-help-list { display: flex; flex-direction: column; gap: 7px; }
-      .bp-help-item { display: flex; gap: 7px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; line-height: 1.55; }
-      .bp-help-item b { display: block; color: var(--dsh-text-primary, #1f2328); font-size: 11px; font-weight: 600; }
-      .bp-help-icon { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex: none; margin-top: 1px; color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 8%, transparent); border-radius: 4px; font-size: 9px; }
-      .bp-help-title { margin: 12px 0 6px; color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-      .bp-help-keys > div { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; }
-      .bp-help-keys kbd { min-width: 54px; padding: 1px 6px; color: var(--dsh-text-primary, #1f2328); background: var(--dsh-surface-subtle, #f6f8fa); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 4px; font: inherit; font-size: 9px; text-align: center; }
-      .bp-help > .bp-btn { width: 100%; margin-top: 10px; justify-content: center; }
-      .bp-banner { display: flex; align-items: center; gap: 8px; margin: 0 12px 8px; padding: 8px 10px; color: var(--bp-warning); background: color-mix(in srgb, var(--bp-warning) 8%, transparent); border: 1px solid color-mix(in srgb, var(--bp-warning) 26%, transparent); border-radius: 8px; font-size: 10px; }
-      .bp-banner span { flex: 1; }
-      .bp-skeleton { display: flex; flex-direction: column; gap: 10px; width: 100%; min-height: 320px; padding: 14px; }
-      .bp-skeleton-bar { display: flex; align-items: center; gap: 6px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; }
-      .bp-skeleton-dot { width: 6px; height: 6px; background: var(--bp-accent); border-radius: 50%; animation: bp-pulse 1.1s ease-in-out infinite; }
-      .bp-skeleton-canvas { display: flex; flex: 1; flex-direction: column; justify-content: center; gap: 10px; padding: 24px; background: var(--dsh-surface-subtle, #f6f8fa); border: 1px dashed var(--dsh-border-default, #d8dee4); border-radius: 8px; }
-      .bp-skeleton-line { height: 12px; background: linear-gradient(90deg, #eef1f4, #e3e8ee, #eef1f4); background-size: 200% 100%; border-radius: 6px; animation: bp-shimmer 1.5s linear infinite; }
-      .bp-skeleton-detail { margin: 0; color: var(--dsh-text-secondary, #656d76); font-size: 10px; }
-      .bp-error-brief { width: 100%; max-height: 64px; overflow: auto; margin: 0; padding: 8px; color: var(--bp-danger); background: var(--dsh-surface-subtle, #f6f8fa); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 6px; font: 10px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: left; white-space: pre-wrap; }
-      .bp-log { width: 100%; max-height: 190px; overflow: auto; margin: 0; padding: 8px; color: #e2e8f0; background: #0f172a; border-radius: 6px; font: 10px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: left; white-space: pre-wrap; }
       @keyframes bp-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
       @keyframes bp-pulse { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
-      @media (prefers-reduced-motion: reduce) {
-        .bp-skeleton-line, .bp-skeleton-dot { animation: none; }
+      @media (prefers-reduced-motion: reduce) { .bp-skeleton-line, .bp-skeleton-dot { animation: none; } }
+      @media (max-width: 820px) {
+        .bp-workspace { display: none; }
+        .bp-canvas-frs { display: none; }
+        .bp-panel { width: min(296px, calc(100% - 16px)); }
       }
-      @media (max-width: 1280px) {
-        .bp-body { grid-template-columns: 176px minmax(0, 1fr) 256px; }
-      }
-      @media (max-width: 900px) {
-        .bp-body { grid-template-columns: 172px minmax(0, 1fr); }
-        .bp-inspector { display: none; }
-      }
-      @media (max-width: 720px) {
-        .bp-body { grid-template-columns: minmax(0, 1fr); }
-        .bp-rail { display: none; }
-        .bp-project { display: none; }
-        .bp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      }
-    `;
+`;
 
     function projectName(cwd) {
       if (!cwd) return "未打开项目";
@@ -885,38 +963,48 @@ window.__ModuleLoader__.load({
       );
     }
 
-    function CockpitRail({ data, stage, goStage }) {
+    function CockpitRail({ data, stage, goStage, openCount, panel, onPanel, onHelp, onChat, helpRef }) {
       return h(
-        "aside",
-        { className: "bp-rail" },
-        h("div", { className: "bp-rail-label" }, "生产流水线"),
+        "nav",
+        { className: "bp-rail", "aria-label": "生产流水线" },
         STAGES.map((item) => {
           const state = stageState(item.key, data);
           return h(
             "button",
             {
               key: item.key,
-              className: "bp-stage",
+              className: "bp-rail-item",
               "data-active": String(item.key === stage),
+              "data-ready": String(state.ready),
+              title: `${item.title} · ${state.label}`,
+              "aria-label": `${item.title}：${state.label}`,
               onClick: () => goStage(item.key),
             },
-            h("span", { className: "bp-stage-icon" }, item.icon),
-            h(
-              "span",
-              { style: { minWidth: 0 } },
-              h("span", { className: "bp-stage-title" }, item.title),
-              h("span", { className: "bp-stage-desc" }, item.description),
-              h("span", { className: "bp-stage-state", style: state.ready ? { color: "var(--bp-success)" } : undefined }, h("span", { className: "bp-dot" }), state.label),
-            ),
+            h(Icon, { name: item.key, size: 17 }),
+            h("span", { className: "bp-rail-dot" }),
           );
         }),
+        h("span", { className: "bp-rail-spacer" }),
+        h(
+          "button",
+          { className: "bp-icon-btn", "data-on": String(panel), onClick: onPanel, title: `待处理批注 ${openCount}`, "aria-label": `待处理批注 ${openCount}` },
+          h(Icon, { name: "comments", size: 16 }),
+          openCount ? h("span", { className: "bp-icon-badge" }, openCount > 9 ? "9+" : String(openCount)) : null,
+        ),
+        h("button", { className: "bp-icon-btn", ref: helpRef, onClick: onHelp, title: "帮助", "aria-label": "帮助" }, h(Icon, { name: "help", size: 16 })),
+        h("button", { className: "bp-icon-btn", onClick: onChat, title: "回到对话", "aria-label": "回到对话" }, h(Icon, { name: "chat", size: 16 })),
       );
     }
 
-    function CockpitInspector({ cwd, data, state, reload, goStage }) {
+    function CockpitPanel({ open, onClose, cwd, data, state, reload, goStage }) {
       const [output, setOutput] = React.useState("");
       const reviews = data?.reviews?.comments || [];
       const next = nextAction(data);
+      const closeRef = React.useRef(null);
+      React.useEffect(() => {
+        if (open) closeRef.current?.focus();
+      }, [open]);
+      if (!open) return null;
       const resolve = async (id) => {
         setOutput("处理中…");
         try {
@@ -929,35 +1017,38 @@ window.__ModuleLoader__.load({
       };
       return h(
         "aside",
-        { className: "bp-inspector" },
+        { className: "bp-panel", role: "dialog", "aria-label": "Bee Press 面板" },
+        h(
+          "div",
+          { className: "bp-panel-head" },
+          h("strong", null, "操作"),
+          h("button", { className: "bp-icon-btn", ref: closeRef, onClick: onClose, "aria-label": "关闭面板", title: "关闭" }, h(Icon, { name: "close", size: 14 })),
+        ),
         h(
           "section",
-          { className: "bp-inspector-block" },
-          h("div", { className: "bp-inspector-title" }, h("span", null, "下一步"), state.loading ? h("span", null, "刷新中") : null),
-          h(
-            "div",
-            { className: "bp-next" },
-            h("div", { className: "bp-next-label" }, "建议动作"),
+          { className: "bp-panel-block" },
+          h("div", { className: "bp-panel-label" }, "下一步"),
+          h("div", { className: "bp-next" },
             h("div", { className: "bp-next-title" }, next.label),
             h("div", { className: "bp-next-detail" }, next.detail),
-            h("button", { className: "bp-btn", onClick: () => goStage(next.stage) }, "去处理 →"),
+            h("button", { className: "bp-btn bp-btn-primary", onClick: () => { goStage(next.stage); onClose(); } }, "去处理"),
           ),
         ),
         h(
           "section",
-          { className: "bp-inspector-block" },
-          h("div", { className: "bp-inspector-title" }, h("span", null, "待处理批注"), h("span", null, String(reviews.length))),
+          { className: "bp-panel-block" },
+          h("div", { className: "bp-panel-label" }, `待处理批注 · ${reviews.length}`),
           reviews.length
-            ? reviews.slice(0, 5).map((review) =>
+            ? reviews.slice(0, 8).map((review) =>
                 h(
                   "div",
-                  { className: "bp-card bp-review-item", key: review.id },
+                  { className: "bp-panel-item", key: review.id },
                   h("div", { className: "bp-review-body" }, review.body),
                   h("div", { className: "bp-review-meta" }, [review.frs, review.route, review.author].filter(Boolean).join(" · ")),
                   h("button", { className: "bp-btn", onClick: () => resolve(review.id) }, "标记解决"),
                 ),
               )
-            : h("div", { className: "bp-card", style: { color: "var(--dsh-text-secondary, #656d76)", fontSize: "10px" } }, "没有待处理批注。原型里的评论会实时出现在这里。"),
+            : h("div", { className: "bp-panel-empty" }, "还没有批注。原型里点选元素就能留一条。"),
           output ? h("div", { className: "bp-error" }, output) : null,
         ),
       );
@@ -1103,6 +1194,22 @@ window.__ModuleLoader__.load({
         return () => window.removeEventListener("message", onMessage);
       }, []);
 
+      // A comment added inside the prototype only reaches the cockpit through the
+      // bridge; refetch once it lands so the badge and inspector stop disagreeing.
+      const lastOpen = React.useRef(null);
+      React.useEffect(() => {
+        const value = embed?.open;
+        if (typeof value !== "number") return undefined;
+        if (lastOpen.current === null) {
+          lastOpen.current = value;
+          return undefined;
+        }
+        if (lastOpen.current === value) return undefined;
+        lastOpen.current = value;
+        const timer = setTimeout(() => reload().catch(() => {}), 350);
+        return () => clearTimeout(timer);
+      }, [embed?.open, reload]);
+
       const send = (command, value) => {
         frameRef.current?.contentWindow?.postMessage({ channel: REVIEW_CHANNEL, type: "command", command, value }, "*");
       };
@@ -1161,47 +1268,42 @@ window.__ModuleLoader__.load({
         { className: "bp-preview-wrap" },
         h(
           "div",
-          { className: "bp-preview-head" },
+          { className: "bp-canvas-bar" },
           h(
             "div",
-            { className: "bp-preview-url" },
+            { className: "bp-canvas-url" },
             h("span", { className: "bp-live", "data-off": String(!url) }),
-            h("code", { title: url || "" }, url || (starting || installing ? "正在准备原型…" : "等待原型服务")),
-            embed?.route ? h("span", null, "· ", embed.route) : null,
+            h("code", { title: url || "" }, url ? url.replace(/^https?:\/\//, "") : starting || installing ? "正在准备原型…" : "等待原型服务"),
+            embed?.route ? h("span", { className: "bp-route" }, embed.route) : null,
           ),
           h(
             "div",
-            { className: "bp-preview-actions" },
+            { className: "bp-canvas-frs" },
+            frs.length ? h("span", { className: "bp-tag", title: frs.map((item) => item.key).join(" · ") }, frs[0].key) : null,
+            embed && !embed.persistent ? h("span", { className: "bp-warn", title: "评审数据没有落盘" }, "⚠") : null,
+          ),
+          h(
+            "div",
+            { className: "bp-canvas-actions" },
             h(
-              "div",
-              { className: "bp-seg" },
-              [
-                ["100%", "桌面"],
-                ["768px", "平板"],
-                ["390px", "手机"],
-              ].map(([value, label]) => h("button", { key: value, "data-on": String(width === value), onClick: () => setWidth(value) }, label)),
+              "button",
+              { className: "bp-icon-btn", "data-on": String(Boolean(embed?.commentMode)), disabled: !bridgeReady, onClick: () => send("comment-mode", !embed?.commentMode), title: embed?.commentMode ? "退出点选" : "点选元素留批注", "aria-label": "评论模式" },
+              h(Icon, { name: "review", size: 15 }),
             ),
-            h("button", { className: "bp-btn", onClick: refresh, disabled: !url, title: "刷新原型" }, "刷新"),
-            h("button", { className: "bp-btn", onClick: () => bridge.openBrowser(url), disabled: !url, title: "在 DSH 浏览器标签中打开完整评审页" }, "浏览器"),
-          ),
-        ),
-        h(
-          "div",
-          { className: "bp-review-strip" },
-          h(
-            "div",
-            { className: "bp-review-frs" },
-            h("span", { className: "bp-review-label" }, "FRS"),
-            frs.length ? frs.map((item) => h("span", { className: "bp-tag", key: item.key, title: item.title }, item.key)) : h("span", { className: "bp-tag" }, "APP_SHELL"),
-            embed && !embed.persistent ? h("span", { className: "bp-warn" }, "⚠ 未持久化") : null,
-            h("span", { className: "bp-count" }, `待解决 ${open}`),
-          ),
-          h(
-            "div",
-            { className: "bp-review-actions" },
-            h("button", { className: "bp-btn", "data-on": String(Boolean(embed?.commentMode)), disabled: !bridgeReady, onClick: () => send("comment-mode", !embed?.commentMode), title: bridgeReady ? "切换常驻评论模式；也可以按住 ⌘/Ctrl 临时圈选" : "原型还没有接入 Bee Review 桥" }, embed?.commentMode ? "点选中" : "评论"),
-            h("button", { className: "bp-btn", disabled: !bridgeReady, onClick: () => send("toggle-drawer"), title: "打开或关闭原型内的评论抽屉" }, `评论区${routeOpen ? ` · ${routeOpen}` : ""}`),
-            h("button", { className: "bp-btn", disabled: !bridgeReady, onClick: () => send("open-studio"), title: "打开内容检查台" }, "内容台"),
+            h("button", { className: "bp-icon-btn", disabled: !bridgeReady, onClick: () => send("toggle-drawer"), title: `评论抽屉${routeOpen ? ` · 本页 ${routeOpen}` : ""}`, "aria-label": "评论抽屉" }, h(Icon, { name: "panel", size: 15 })),
+            h("button", { className: "bp-icon-btn", disabled: !bridgeReady, onClick: () => send("open-studio"), title: "内容检查台", "aria-label": "内容检查台" }, h(Icon, { name: "sparkles", size: 15 })),
+            h(
+              "button",
+              {
+                className: "bp-icon-btn",
+                onClick: () => setWidth(width === "100%" ? "768px" : width === "768px" ? "390px" : "100%"),
+                title: width === "100%" ? "桌面视图" : width === "768px" ? "平板视图" : "手机视图",
+                "aria-label": "切换预览宽度",
+              },
+              h(Icon, { name: width === "100%" ? "monitor" : width === "768px" ? "tablet" : "phone", size: 15 }),
+            ),
+            h("button", { className: "bp-icon-btn", onClick: refresh, disabled: !url, title: "刷新原型", "aria-label": "刷新原型" }, h(Icon, { name: "refresh", size: 15 })),
+            h("button", { className: "bp-icon-btn", onClick: () => bridge.openBrowser(url), disabled: !url, title: "在浏览器打开", "aria-label": "在浏览器打开" }, h(Icon, { name: "external", size: 15 })),
           ),
         ),
         slow && !loaded
@@ -1265,6 +1367,16 @@ window.__ModuleLoader__.load({
       const [busy, setBusy] = React.useState("");
       const [message, setMessage] = React.useState("");
 
+      const baselineDone = Boolean(baseline.stack);
+      const requirementsDone = (features.specs || 0) > 0;
+      const prototypeDone = Boolean(runner.url);
+      const firstOpen = !baselineDone ? 1 : !requirementsDone ? 2 : 3;
+      const [view, setView] = React.useState(firstOpen);
+      React.useEffect(() => {
+        setView((current) => (current < firstOpen ? firstOpen : current));
+      }, [firstOpen]);
+
+      const status = runner.status || {};
       const adopt = async () => {
         setBusy("baseline");
         setMessage("");
@@ -1277,7 +1389,6 @@ window.__ModuleLoader__.load({
           setBusy("");
         }
       };
-
       const create = async () => {
         if (!title.trim()) return;
         setBusy("requirements");
@@ -1293,104 +1404,101 @@ window.__ModuleLoader__.load({
         }
       };
 
-      const baselineDone = Boolean(baseline.stack);
-      const requirementsDone = (features.specs || 0) > 0;
-      const prototypeDone = Boolean(runner.url);
-      const status = runner.status || {};
-      const prototypeHint = !status.found
-        ? "这个工作区没有可运行的前端应用。可以换一个工作区，或在应用目录加一个 dev 脚本。"
-        : status.installed === false
-          ? `${status.packageManager || "npm"} 依赖还没安装，Bee Press 可以直接替你装好并启动。`
-          : `将运行 ${status.packageManager || "npm"} run dev（${status.devScript}）${status.dir && status.dir !== "." ? `，应用目录 ${status.dir}` : ""}。`;
+      const steps = [
+        { index: 1, key: "baseline", label: "技术栈", done: baselineDone },
+        { index: 2, key: "requirements", label: "需求", done: requirementsDone },
+        { index: 3, key: "prototype", label: "原型", done: prototypeDone },
+      ];
+      const current = steps.find((item) => item.index === view) || steps[0];
 
-      return h(
-        "div",
-        { className: "bp-start" },
-        h(
-          "header",
-          { className: "bp-start-head" },
-          h("div", null,
-            h("div", { className: "bp-kicker" }, "首次进入"),
-            h("h2", null, "三步把原型跑起来"),
-            h("p", null, "不用先学概念。每步只做一件事，跳过任何一步都能继续用。"),
+      let body;
+      if (current.key === "baseline") {
+        body = [
+          h("p", { className: "bp-start-desc" }, detected.stack
+            ? `检测到 ${detected.label}${detected.typescript ? " · TypeScript" : ""}${detected.bundler ? ` · ${detected.bundler}` : ""}。确认后所有页面按同一套基线验收。`
+            : "没有识别出技术栈。手动选一下即可，之后可以改。"),
+          detected.evidence?.length ? h("div", { className: "bp-start-evidence" }, detected.evidence.slice(0, 3).join("  ·  ")) : null,
+          h("div", { className: "bp-start-actions" },
+            detected.stack
+              ? h("button", { className: "bp-btn bp-btn-primary", disabled: busy === "baseline", onClick: adopt }, busy === "baseline" ? "保存中…" : "采用检测结果")
+              : null,
+            h("button", { className: "bp-btn", onClick: () => goStage("baseline") }, detected.stack ? "手动选择" : "选择技术栈"),
           ),
-          h("span", { className: "bp-start-time" }, "大约 1 分钟"),
-        ),
-        h(
-          StartStep,
-          {
-            index: 1,
-            title: "确认技术栈",
-            description: detected.stack
-              ? `检测到 ${detected.label}${detected.typescript ? " · TypeScript" : ""}${detected.bundler ? ` · ${detected.bundler}` : ""}。确认后需求、原型和规范会用同一套基线。`
-              : "没有识别出技术栈，手动选一下就行，之后可以改。",
-            state: baselineDone ? "done" : "active",
-          },
-          baselineDone
-            ? h("span", { className: "bp-step-note" }, `已确认：${baseline.stack}`)
-            : [
-                detected.stack
-                  ? h("button", { className: "bp-btn", "data-primary": "true", disabled: busy === "baseline", onClick: adopt }, busy === "baseline" ? "保存中…" : "采用检测结果")
-                  : null,
-                h("button", { className: "bp-btn", onClick: () => goStage("baseline") }, detected.stack ? "手动选择" : "选择技术栈"),
-                detected.evidence?.length ? h("span", { className: "bp-step-evidence" }, detected.evidence.slice(0, 3).join(" · ")) : null,
-              ],
-        ),
-        h(
-          StartStep,
-          {
-            index: 2,
-            title: "写第一条需求",
-            description: requirementsDone
-              ? `已经有 ${features.specs} 份需求件套，可以直接在原型上批注了。`
-              : "给要做的功能起个名字，Bee Press 会生成 FRS、流程和验收模板。",
-            state: requirementsDone ? "done" : baselineDone ? "active" : "idle",
-          },
+        ];
+      } else if (current.key === "requirements") {
+        body = [
+          h("p", { className: "bp-start-desc" }, requirementsDone ? `已有 ${features.specs} 份需求件套。` : "给要做的功能起个名字，Bee Press 会生成需求、流程和验收模板。"),
           requirementsDone
-            ? h("button", { className: "bp-btn", onClick: () => goStage("requirements") }, "看需求")
-            : h(
-                "div",
-                { className: "bp-step-row" },
+            ? h("div", { className: "bp-start-actions" }, h("button", { className: "bp-btn", onClick: () => goStage("requirements") }, "看需求"))
+            : h("div", { className: "bp-start-actions" },
                 h("input", {
                   className: "bp-input",
                   placeholder: "例如：登录改版",
                   value: title,
                   onChange: (event) => setTitle(event.target.value),
-                  onKeyDown: (event) => {
-                    if (event.key === "Enter") create();
-                  },
+                  onKeyDown: (event) => { if (event.key === "Enter") create(); },
                 }),
-                h("button", { className: "bp-btn", "data-primary": "true", disabled: !title.trim() || busy === "requirements", onClick: create }, busy === "requirements" ? "创建中…" : "创建需求件套"),
+                h("button", { className: "bp-btn bp-btn-primary", disabled: !title.trim() || busy === "requirements", onClick: create }, busy === "requirements" ? "创建中…" : "创建"),
               ),
-        ),
+        ];
+      } else {
+        const hint = !status.found
+          ? "这个工作区没有可运行的前端应用。换一个工作区，或在应用目录加一个 dev 脚本。"
+          : status.installed === false
+            ? `${status.packageManager || "npm"} 依赖还没安装，Bee Press 可以直接装好并启动。`
+            : `将运行 ${status.packageManager || "npm"} run dev（${status.devScript}）${status.dir && status.dir !== "." ? `，应用目录 ${status.dir}` : ""}。`;
+        body = [
+          h("p", { className: "bp-start-desc" }, hint),
+          h("div", { className: "bp-start-actions" },
+            status.found && status.installed === false
+              ? h("button", { className: "bp-btn bp-btn-primary", disabled: runner.installing || runner.starting, onClick: runner.install }, runner.installing ? "正在安装依赖…" : runner.starting ? "正在启动…" : "安装依赖并启动")
+              : null,
+            status.found && status.installed !== false
+              ? h("button", { className: "bp-btn bp-btn-primary", disabled: runner.starting, onClick: runner.start }, runner.starting ? "正在启动…" : "启动原型")
+              : null,
+            !status.found ? h("button", { className: "bp-btn", onClick: () => bridge.pickProject().catch(() => {}) }, "切换工作区") : null,
+            h("button", { className: "bp-btn", onClick: () => goStage("prototype") }, "看详细信息"),
+          ),
+        ];
+      }
+
+      return h(
+        "div",
+        { className: "bp-start-wrap" },
         h(
-          StartStep,
-          {
-            index: 3,
-            title: "启动原型",
-            description: prototypeHint,
-            state: prototypeDone ? "done" : "active",
-          },
-          prototypeDone
-            ? h("span", { className: "bp-step-note" }, `已运行：${runner.url}`)
-            : [
-                status.found && status.installed === false
-                  ? h("button", { className: "bp-btn", "data-primary": "true", disabled: runner.installing || runner.starting, onClick: runner.install }, runner.installing ? "正在安装依赖…" : runner.starting ? "正在启动…" : "安装依赖并启动")
-                  : null,
-                status.found && status.installed !== false
-                  ? h("button", { className: "bp-btn", "data-primary": "true", disabled: runner.starting, onClick: runner.start }, runner.starting ? "正在启动…" : "启动原型")
-                  : null,
-                !status.found ? h("button", { className: "bp-btn", onClick: () => bridge.pickProject().catch(() => {}) }, "切换工作区") : null,
-                h("button", { className: "bp-btn", onClick: () => goStage("prototype") }, "看详细信息"),
-              ],
-        ),
-        runner.error ? h(PrototypeFailure, { error: runner.error, found: runner.found, installing: runner.installing, onRetry: runner.start, onInstall: runner.install, onSwitch: () => bridge.pickProject().catch(() => {}) }) : null,
-        message ? h("div", { className: "bp-error" }, message) : null,
-        h(
-          "footer",
-          { className: "bp-start-foot" },
-          h("span", null, "引导只在原型未就绪时出现。"),
-          h("button", { className: "bp-btn", onClick: onSkip }, "跳过引导，直接使用操作台"),
+          "section",
+          { className: "bp-start-card" },
+          h(
+            "header",
+            { className: "bp-start-head" },
+            h("div", null,
+              h("div", { className: "bp-kicker" }, "开始"),
+              h("h2", null, "把原型跑起来"),
+            ),
+            h("button", { className: "bp-icon-btn", onClick: onSkip, title: "跳过引导", "aria-label": "跳过引导" }, h(Icon, { name: "close", size: 14 })),
+          ),
+          h(
+            "div",
+            { className: "bp-start-steps" },
+            steps.map((item) =>
+              h("button", {
+                key: item.key,
+                className: "bp-start-step",
+                "data-done": String(item.done),
+                "data-active": String(item.index === view),
+                onClick: () => setView(item.index),
+              }, h("span", { className: "bp-start-step-dot" }, item.done ? "✓" : String(item.index)), item.label),
+            ),
+          ),
+          h("div", { className: "bp-start-body" }, body),
+          runner.error ? h(PrototypeFailure, { error: runner.error, found: runner.found, installing: runner.installing, onRetry: runner.start, onInstall: runner.install, onSwitch: () => bridge.pickProject().catch(() => {}) }) : null,
+          message ? h("div", { className: "bp-error" }, message) : null,
+          h(
+            "footer",
+            { className: "bp-start-foot" },
+            h("span", null, "引导只在原型未就绪时出现"),
+            h("button", { className: "bp-link", onClick: onSkip }, "跳过"),
+          ),
         ),
       );
     }
@@ -1461,6 +1569,7 @@ window.__ModuleLoader__.load({
       const [state, reload] = useBeeState(cwd);
       const [stage, setStageState] = React.useState(readCockpitStage);
       const [help, setHelp] = React.useState(false);
+      const [panel, setPanel] = React.useState(false);
       const [skipStart, setSkipStart] = React.useState(() => readStartSkip(cwd));
       const [forceGuide, setForceGuide] = React.useState(false);
       const helpButton = React.useRef(null);
@@ -1480,13 +1589,18 @@ window.__ModuleLoader__.load({
         setSkipStart(readStartSkip(cwd));
         setForceGuide(false);
         setHelp(false);
+        setPanel(false);
       }, [cwd]);
 
       React.useEffect(() => {
         const onKey = (event) => {
-          if (event.key === "Escape" && help) {
-            setHelp(false);
-            helpButton.current?.focus();
+          if (event.key === "Escape") {
+            if (help) {
+              setHelp(false);
+              helpButton.current?.focus();
+              return;
+            }
+            if (panel) setPanel(false);
             return;
           }
           if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
@@ -1498,66 +1612,72 @@ window.__ModuleLoader__.load({
         };
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-      }, [help]);
+      }, [help, panel]);
+
+      const openCount = openReviewCount(data);
+      const next = nextAction(data);
+
       return h(
         "div",
         { className: "bp-cockpit", "data-beepress-cockpit": stage },
         h("style", null, cockpitCss),
-        h(
-          "header",
-          { className: "bp-top" },
-          h(
-            "div",
-            { className: "bp-brand" },
-            h("div", { className: "bp-brand-mark" }, h(BeeIcon, { size: 17 })),
-            h("div", null, h("div", { className: "bp-brand-name" }, "Bee Press"), h("div", { className: "bp-brand-sub" }, "Prototype to production")),
-          ),
-          h(
-            "div",
-            { className: "bp-project" },
-            h("div", { className: "bp-project-label" }, "当前工作区"),
-            h("div", { className: "bp-project-name" }, projectName(cwd)),
-            cwd ? h("code", { className: "bp-project-path", title: cwd }, cwd) : null,
-          ),
-          h(
-            "div",
-            { className: "bp-top-actions" },
-            h("button", { className: "bp-btn", "data-badge": String(openReviewCount(data) > 0), onClick: () => setStage("review") }, `批注 ${openReviewCount(data)}`),
-            h("button", { className: "bp-btn", ref: helpButton, onClick: () => setHelp((value) => !value), "aria-expanded": String(help), title: "术语、快捷键和重新显示引导" }, "帮助"),
-            h("button", { className: "bp-btn", onClick: () => bridge.openChat(), title: "回到 DSH 对话" }, "回到对话"),
-            h("button", { className: "bp-btn", onClick: reload, disabled: state.loading }, state.loading ? "刷新中" : "刷新"),
-          ),
-        ),
-        help ? h(CockpitHelp, { cwd, onClose: () => { setHelp(false); helpButton.current?.focus(); }, onShowGuide: () => { writeStartSkip(cwd, false); setSkipStart(false); setForceGuide(true); setStage("prototype"); setHelp(false); } }) : null,
         !cwd
           ? h(CockpitEmpty)
           : h(
               "div",
-              { className: "bp-body" },
-              h(CockpitRail, { data, stage, goStage: setStage }),
+              { className: "bp-shell" },
+              h(CockpitRail, {
+                data,
+                stage,
+                goStage: setStage,
+                openCount,
+                panel,
+                onPanel: () => setPanel((value) => !value),
+                onHelp: () => setHelp((value) => !value),
+                onChat: () => bridge.openChat(),
+                helpRef: helpButton,
+              }),
               h(
                 "main",
-                { className: "bp-main" },
+                { className: "bp-stage-area" },
                 state.loading && !state.data
                   ? h(PrototypeSkeleton, { label: "正在读取工作区…" })
                   : showStart
-                  ? h(StartFlow, {
-                      cwd,
-                      data,
-                      state,
-                      reload,
-                      goStage: setStage,
-                      onSkip: () => {
-                        writeStartSkip(cwd, true);
-                        setSkipStart(true);
-                        setForceGuide(false);
-                      },
-                    })
-                  : preview
-                    ? h(PrototypePanel, { cwd, state, reload, stage })
-                    : h("div", { className: "bp-canvas" }, h(Component, { stage: stageMeta, cwd, state, reload, embedded: true })),
+                    ? h(StartFlow, {
+                        cwd,
+                        data,
+                        state,
+                        reload,
+                        goStage: setStage,
+                        onSkip: () => {
+                          writeStartSkip(cwd, true);
+                          setSkipStart(true);
+                          setForceGuide(false);
+                        },
+                      })
+                    : preview
+                      ? h(PrototypePanel, { cwd, state, reload, stage })
+                      : h("div", { className: "bp-canvas-body" }, h(Component, { stage: stageMeta, cwd, state, reload, embedded: true })),
+                preview && !showStart
+                  ? null
+                  : h(
+                      "div",
+                      { className: "bp-floatbar" },
+                      h("span", { className: "bp-workspace", title: cwd }, projectName(cwd)),
+                      h("button", { className: "bp-icon-btn", onClick: reload, disabled: state.loading, title: "刷新", "aria-label": "刷新" }, h(Icon, { name: "refresh", size: 15 })),
+                    ),
+                showStart || next.stage === stage
+                  ? null
+                  : h("button", { className: "bp-next-chip", onClick: () => setPanel(true), title: next.detail }, h("span", null, "下一步"), next.label, h(Icon, { name: "chevron", size: 13 })),
               ),
-              h(CockpitInspector, { cwd, data, state, reload, goStage: setStage }),
+              h(CockpitPanel, { open: panel, onClose: () => setPanel(false), cwd, data, state, reload, goStage: setStage }),
+              help
+                ? h(CockpitHelp, {
+                    cwd,
+                    onClose: () => { setHelp(false); helpButton.current?.focus(); },
+                    onShowGuide: () => { writeStartSkip(cwd, false); setSkipStart(false); setForceGuide(true); setStage("prototype"); setHelp(false); },
+                  })
+                : null,
             ),
       );
     }

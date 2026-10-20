@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.7.6 — 2026-10-20
+
+- **One canvas, one rail, one toolbar** — removed the Bee Press brand header
+  and the always-on inspector. The prototype canvas now fills the panel, a
+  46px icon rail carries the six stages plus comments/help/chat, and a single
+  38px canvas bar holds the address, FRS, comment mode, drawer, studio, preview
+  width, refresh and open-in-browser.
+- **Complexity on demand** — “next step” is a floating hint; the panel with next
+  action and open comments slides in only when asked and leaves the canvas width
+  untouched. Help, guide and errors are overlays instead of extra columns.
+- **One-card onboarding** — the first-run guide shows a single step card with a
+  step switcher, one primary action and a skip, replacing three stacked cards.
+- **Unified surfaces** — rail, toolbar and panels share one grey chrome; only
+  the web canvas is white, so the prototype reads as the product.
+- The cockpit refreshes its badge and comment list when the embedded bridge
+  reports a changed comment count, instead of waiting for a manual refresh.
+- Desktop: DSH now prefers a stable local port so localStorage (stage, skipped
+  guide, last workspace) survives app restarts, falling back to an ephemeral
+  port only when it is taken.
+
 ## 0.7.5 — 2026-10-20
 
 - **Bee Press now hosts itself** — `beepress init` ran in this repository:

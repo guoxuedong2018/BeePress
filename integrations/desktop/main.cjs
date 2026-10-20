@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require("electron");
 const { execFile, spawn, spawnSync } = require("node:child_process");
+const net = require("node:net");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -259,11 +260,29 @@ async function createFeature(root, title) {
   };
 }
 
-function startHarness(projectRoot) {
+const PREFERRED_PORT = Number(process.env.BEEPRESS_DSH_PORT || 43117);
+
+/**
+ * A random DSH port changes the browser origin on every launch, which wipes
+ * localStorage: remembered stage, skipped guide and last workspace would all
+ * reset. Prefer a stable port and only fall back to an ephemeral one on
+ * conflicts.
+ */
+function isPortFree(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.once("error", () => resolve(false));
+    server.once("listening", () => server.close(() => resolve(true)));
+    server.listen(port, "127.0.0.1");
+  });
+}
+
+async function startHarness(projectRoot) {
   stopHarness();
   const dsh = resolveDsh();
-  console.log(`[beepress-desktop] profile=${PROFILE} dsh=${dsh} project=${projectRoot}`);
-  child = spawn(dsh, ["--profile", PROFILE, "--no-open", "--port", "0"], {
+  const port = (await isPortFree(PREFERRED_PORT)) ? PREFERRED_PORT : 0;
+  console.log(`[beepress-desktop] profile=${PROFILE} dsh=${dsh} project=${projectRoot} port=${port}`);
+  child = spawn(dsh, ["--profile", PROFILE, "--no-open", "--port", String(port)], {
     cwd: projectRoot,
     env: { ...kitEnv(projectRoot) },
     stdio: ["ignore", "pipe", "pipe"],
