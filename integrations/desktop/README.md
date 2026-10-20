@@ -5,6 +5,20 @@ does not fork the kernel: the shell starts `dsh --profile <name>`, waits for
 the printed local URL, and loads it in a native window. Upstream plugin,
 model and update support stays intact.
 
+The first screen is a Bee Press launcher, not a chat box:
+
+1. **Import an existing project** — pick a directory with `package.json`,
+   `docs/` or `beepress.config.*`.
+2. **Create a new project** — choose a parent directory and name; the shell
+   copies the FRS/knowledge-base scaffold and creates a blank knowledge-base
+   outline.
+3. **Recent projects** — open the last workspace without going through the
+   picker again.
+
+After selection the shell starts dsh in that workspace, adds it as a dsh
+workspace and opens a session. The dsh sidebar brand is replaced with Bee
+Press; the rest of the upstream chat, model and plugin UI remains available.
+
 ## Install and test locally
 
 ```bash
@@ -19,10 +33,11 @@ npm install
 npm start
 ```
 
-A successful start prints:
+A successful start first opens the launcher window. After choosing a project,
+the log prints:
 
 ```text
-[beepress-desktop] profile=web dsh=/Users/.../.npm-global/bin/dsh
+[beepress-desktop] profile=web dsh=/Users/.../.npm-global/bin/dsh project=/path/to/project
 [beepress-desktop] loading http://127.0.0.1:<port>/?token=...
 ```
 

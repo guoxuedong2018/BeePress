@@ -397,8 +397,10 @@ reference. Every value comes from the same tokens as the toolkit UI.
   DeepSeek Harness plugin, a right-sidebar Bee Press panel, review write tools
   and a `beepress-mcp` stdio entrypoint for Cursor, Claude, Codex or another MCP
   client.
-- [`integrations/desktop`](./integrations/desktop) — a thin Electron shell that
-  boots an upstream dsh profile and loads the Web UI; no kernel fork.
+- [`integrations/desktop`](./integrations/desktop) — a branded Electron shell
+  that boots an upstream dsh profile and loads the Web UI; no kernel fork. Its
+  first screen is a Bee Press launcher for importing an existing project,
+  creating a scaffolded one, or reopening a recent workspace.
 - All faces share the same dependency-free workspace reader, so the project
   files stay the contract.
 

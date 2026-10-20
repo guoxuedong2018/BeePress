@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.3 — 2026-10-20
+
+- **Branded desktop onboarding** — the desktop app now opens a Bee Press
+  launcher instead of the chat surface: import an existing project, create a
+  scaffolded project, or reopen a recent one.
+- **Project-aware launch** — the selected path becomes the dsh workspace and
+  opens a session; `uiWorkspace` + `workspaces` are used from the client
+  bundle instead of asking the user to pick the folder again.
+- **Sidebar branding** — the dsh sidebar brand mark/name are replaced with
+  Bee Press through `sidebar.brand.*` slots.
+- **Safer project creation** — CLI subprocesses run through Electron's Node
+  mode; the launcher never invokes the Electron binary as a script.
+- **Workflow status** — the Bee Press panel now shows requirement, prototype,
+  review, content and publish stages.
+- **Desktop assets/packaging** — added the Bee Press icon, macOS dock icon and
+  an `electron-builder` macOS target configuration; signing and notarization
+  remain release work.
+
 ## 0.6.2 — 2026-10-20
 
 - **Desktop launcher** — resolves `dsh` from `BEEPRESS_DSH_BIN`, the common

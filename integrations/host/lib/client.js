@@ -62,6 +62,10 @@ window.__ModuleLoader__.load({
         fontSize: "11px",
       },
       metrics: { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "6px" },
+      workflow: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "6px" },
+      workflowItem: { border: `1px solid ${colors.border}`, borderRadius: "6px", padding: "6px 8px", background: colors.surface2 },
+      workflowStage: { color: colors.weak, fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.04em" },
+      workflowValue: { marginTop: "2px", fontSize: "12px", fontWeight: 600 },
       metric: {
         border: `1px solid ${colors.border}`,
         borderRadius: "6px",
@@ -85,10 +89,10 @@ window.__ModuleLoader__.load({
       loading: { color: colors.weak },
     };
 
-    function BeeIcon() {
+    function BeeIcon({ size = 16 } = {}) {
       return h(
         "svg",
-        { width: 16, height: 16, viewBox: "0 0 16 16", fill: "none", "aria-hidden": true },
+        { width: size, height: size, viewBox: "0 0 16 16", fill: "none", "aria-hidden": true },
         h("path", { d: "M8 1.4 13.7 4.7v6.6L8 14.6 2.3 11.3V4.7L8 1.4Z", stroke: "currentColor", "stroke-width": 1.2 }),
         h("path", { d: "M5 6.2h6M5 8h6M5 9.8h6", stroke: "currentColor", "stroke-width": 1.2, "stroke-linecap": "round" }),
       );
@@ -97,6 +101,14 @@ window.__ModuleLoader__.load({
     function BeeTitle({ useTabInfo }) {
       const { tab } = useTabInfo();
       return h("span", { style: styles.brand }, h(BeeIcon), tab.title);
+    }
+
+    function BeeBrandMark() {
+      return h("span", { style: { display: "flex", alignItems: "center", justifyContent: "center" } }, h(BeeIcon, { size: 24 }));
+    }
+
+    function BeeBrandName() {
+      return h("span", { style: { fontWeight: 700, letterSpacing: "-0.02em" } }, "Bee Press");
     }
 
     function Metric({ label, value }) {
@@ -189,6 +201,20 @@ window.__ModuleLoader__.load({
                   h(
                     "section",
                     { style: styles.section },
+                    h("div", { style: styles.sectionTitle }, "Workflow"),
+                    h(
+                      "div",
+                      { style: styles.workflow },
+                      h("div", { style: styles.workflowItem }, h("div", { style: styles.workflowStage }, "需求规格"), h("div", { style: styles.workflowValue }, `${status?.docs?.features?.specs ?? 0} FRS`)),
+                      h("div", { style: styles.workflowItem }, h("div", { style: styles.workflowStage }, "原型"), h("div", { style: styles.workflowValue }, status?.prototype?.devScript ? `dev: ${status.prototype.devScript}` : "not configured")),
+                      h("div", { style: styles.workflowItem }, h("div", { style: styles.workflowStage }, "评审"), h("div", { style: styles.workflowValue }, `${status?.docs?.reviews?.open ?? 0} open`)),
+                      h("div", { style: styles.workflowItem }, h("div", { style: styles.workflowStage }, "内容"), h("div", { style: styles.workflowValue }, `${status?.docs?.kb?.files ?? 0} pages`)),
+                      h("div", { style: styles.workflowItem }, h("div", { style: styles.workflowStage }, "发布"), h("div", { style: styles.workflowValue }, publish?.configured ? "configured" : "not configured")),
+                    ),
+                  ),
+                  h(
+                    "section",
+                    { style: styles.section },
                     h("div", { style: styles.sectionTitle }, "Content"),
                     pages.length === 0
                       ? h("div", { style: styles.empty }, "No docs/kb pages yet.")
@@ -277,9 +303,17 @@ window.__ModuleLoader__.load({
       );
     }
 
-    const inject = ["slots", "sidebarRightTabs", "sidebarRight", "shortcuts"];
+    const inject = ["slots", "sidebarRightTabs", "sidebarRight", "shortcuts", "uiWorkspace", "workspaces"];
 
     function install(ctx) {
+      window.__beepressDesktop = {
+        async openProject(root) {
+          const workspace = await ctx.workspaces.create({ path: root });
+          await ctx.uiWorkspace.openWorkspace(workspace.workspaceId);
+          return { workspaceId: workspace.workspaceId, path: root };
+        },
+      };
+
       ctx.effect(
         () =>
           ctx.shortcuts.register({
@@ -296,6 +330,22 @@ window.__ModuleLoader__.load({
             },
           }),
         "beepress: shortcut",
+      );
+
+      ctx.effect(
+        () =>
+          ctx.slots.inject("sidebar.brand.mark", () =>
+            ctx.slots.register({ name: "sidebar.brand.mark", priority: -100 }, BeeBrandMark),
+          ),
+        "beepress: brand mark",
+      );
+
+      ctx.effect(
+        () =>
+          ctx.slots.inject("sidebar.brand.name", () =>
+            ctx.slots.register({ name: "sidebar.brand.name", priority: -100 }, BeeBrandName),
+          ),
+        "beepress: brand name",
       );
 
       ctx.effect(

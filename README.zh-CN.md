@@ -265,7 +265,7 @@ npm run build:demo  # 生产构建
 [`integrations/`](./integrations) 把 Bee Press 接到 Agent runtime 上：
 
 - [`integrations/host`](./integrations/host) — `@beepress/dsh-bundle`，包含 DeepSeek Harness 插件、右侧栏 Bee Press 面板、评论写工具，以及 `beepress-mcp` stdio 入口，可接 Cursor、Claude、Codex 或其他 MCP 客户端。
-- [`integrations/desktop`](./integrations/desktop) — 薄 Electron 壳，启动上游 dsh profile 并加载 Web UI，不 fork 内核。
+- [`integrations/desktop`](./integrations/desktop) — 品牌化薄 Electron 壳，启动上游 dsh profile 并加载 Web UI，不 fork 内核。首屏是 Bee Press 启动器：导入已有项目、新建脚手架项目，或打开最近工作区。
 - 所有入口共用同一个无依赖的工作区读取器，项目文件仍是契约。
 
 ```bash

@@ -1,15 +1,41 @@
 {
   "name": "@beepress/desktop",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Thin Bee Press desktop shell around an upstream DeepSeek Harness profile.",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
-    "install-profile": "node install-profile.mjs"
+    "install-profile": "node install-profile.mjs",
+    "dist:mac": "electron-builder --mac"
   },
   "devDependencies": {
-    "electron": "^38.0.0"
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "productName": "Bee Press",
+  "build": {
+    "appId": "com.beepress.desktop",
+    "productName": "Bee Press",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "onboarding.html",
+      "onboarding.css",
+      "onboarding.js",
+      "assets/**/*"
+    ],
+    "mac": {
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    }
+  }
 }

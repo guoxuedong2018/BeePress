@@ -1,12 +1,65 @@
-const { app, BrowserWindow, dialog } = require("electron");
-const { spawn } = require("node:child_process");
+const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { execFile, spawn } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { promisify } = require("node:util");
 
+const execFileAsync = promisify(execFile);
+
+const KIT_ROOT = path.resolve(__dirname, "../..");
 const PROFILE = process.env.BEEPRESS_DSH_PROFILE || "web";
+const CONFIG_FILE = () => path.join(app.getPath("userData"), "desktop.json");
+const ONBOARDING = path.join(__dirname, "onboarding.html");
+
 let child;
 let window;
+
+app.setName("Bee Press");
+try {
+  app.setPath("userData", path.join(app.getPath("appData"), "Bee Press"));
+} catch {
+  // Keep Electron's default when appData is unavailable.
+}
+
+function readConfig() {
+  try {
+    return JSON.parse(fs.readFileSync(CONFIG_FILE(), "utf8"));
+  } catch {
+    return { recent: [] };
+  }
+}
+
+function writeConfig(config) {
+  fs.mkdirSync(path.dirname(CONFIG_FILE()), { recursive: true });
+  fs.writeFileSync(CONFIG_FILE(), `${JSON.stringify(config, null, 2)}\n`);
+}
+
+function rememberProject(root) {
+  const config = readConfig();
+  const entry = {
+    root,
+    name: path.basename(root),
+    lastUsed: new Date().toISOString(),
+  };
+  config.recent = [entry, ...(config.recent || []).filter((item) => item.root !== root)].slice(0, 8);
+  config.lastProject = root;
+  writeConfig(config);
+  return config.recent;
+}
+
+async function isProject(root) {
+  const checks = ["package.json", "docs", "beepress.config.mjs", "beepress.config.js", "beepress.config.json"];
+  for (const name of checks) {
+    try {
+      await fs.promises.access(path.join(root, name));
+      return true;
+    } catch {
+      // Try the next marker.
+    }
+  }
+  return false;
+}
 
 function resolveDsh() {
   const candidates = [
@@ -28,12 +81,18 @@ function resolveDsh() {
   return "dsh";
 }
 
-function startHarness() {
+function stopHarness() {
+  if (child && !child.killed) child.kill("SIGTERM");
+  child = undefined;
+}
+
+function startHarness(projectRoot) {
+  stopHarness();
   const dsh = resolveDsh();
-  console.log(`[beepress-desktop] profile=${PROFILE} dsh=${dsh}`);
+  console.log(`[beepress-desktop] profile=${PROFILE} dsh=${dsh} project=${projectRoot}`);
   child = spawn(dsh, ["--profile", PROFILE, "--no-open", "--port", "0"], {
-    cwd: path.resolve(__dirname, "../.."),
-    env: { ...process.env, BEEPRESS_KIT_ROOT: path.resolve(__dirname, "../..") },
+    cwd: projectRoot,
+    env: { ...process.env, BEEPRESS_KIT_ROOT: KIT_ROOT },
     stdio: ["ignore", "pipe", "pipe"],
   });
 
@@ -43,16 +102,15 @@ function startHarness() {
     const timer = setTimeout(() => {
       if (settled) return;
       settled = true;
-      if (child && !child.killed) child.kill("SIGTERM");
+      stopHarness();
       reject(new Error(`DeepSeek Harness 没有在 30 秒内启动：\n${output}`));
     }, 30_000);
     const onData = (chunk) => {
       output += chunk.toString();
       const match = output.match(/https?:\/\/[^\s]+/);
-      if (!match) return;
-      clearTimeout(timer);
-      if (settled) return;
+      if (!match || settled) return;
       settled = true;
+      clearTimeout(timer);
       console.log(`[beepress-desktop] loading ${match[0]}`);
       resolve(match[0]);
     };
@@ -75,36 +133,134 @@ function startHarness() {
   });
 }
 
-async function createWindow() {
-  window = new BrowserWindow({
-    width: 1440,
-    height: 960,
-    minWidth: 960,
-    minHeight: 640,
-    title: "Bee Press",
-    backgroundColor: "#ffffff",
-    webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-    },
-  });
+async function loadHarness(projectRoot) {
+  const root = path.resolve(projectRoot);
+  if (!(await isProject(root))) {
+    throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 beepress.config.*。");
+  }
+  const url = await startHarness(root);
+  rememberProject(root);
+  await window.loadURL(url);
+  window.setTitle("Bee Press");
   try {
-    const url = await startHarness();
-    await window.loadURL(url);
+    await openProjectInUi(root);
   } catch (error) {
-    await dialog.showMessageBox({
-      type: "error",
-      title: "Bee Press",
-      message: "无法启动 DeepSeek Harness",
-      detail: error instanceof Error ? error.message : String(error),
-    });
-    app.quit();
+    console.warn(`[beepress-desktop] workspace selection failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
-app.whenReady().then(createWindow);
-app.on("window-all-closed", () => app.quit());
-app.on("before-quit", () => {
-  if (child && !child.killed) child.kill("SIGTERM");
+async function openProjectInUi(root) {
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    const ready = await window.webContents
+      .executeJavaScript("Boolean(window.__beepressDesktop?.openProject)")
+      .catch(() => false);
+    if (ready) {
+      await window.webContents.executeJavaScript(
+        `window.__beepressDesktop.openProject(${JSON.stringify(root)})`,
+        true,
+      );
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  console.warn("[beepress-desktop] Bee Press client helper did not load; open the workspace manually.");
+}
+
+function createWindow() {
+  window = new BrowserWindow({
+    width: 1180,
+    height: 800,
+    minWidth: 960,
+    minHeight: 640,
+    title: "Bee Press",
+    icon: path.join(__dirname, "assets", "icon.png"),
+    backgroundColor: "#f7f4ec",
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: path.join(__dirname, "preload.cjs"),
+      sandbox: true,
+    },
+  });
+  window.on("page-title-updated", (event) => {
+    event.preventDefault();
+    window.setTitle("Bee Press");
+  });
+  window.loadFile(ONBOARDING);
+}
+
+ipcMain.handle("beepress:recent", () => readConfig());
+ipcMain.handle("beepress:choose-parent", async () => {
+  const result = await dialog.showOpenDialog(window, {
+    title: "选择项目所在目录",
+    properties: ["openDirectory", "createDirectory"],
+  });
+  return result.canceled ? null : result.filePaths[0];
 });
+ipcMain.handle("beepress:choose-existing", async () => {
+  const result = await dialog.showOpenDialog(window, {
+    title: "导入已有开发项目",
+    properties: ["openDirectory"],
+  });
+  if (result.canceled) return null;
+  const root = result.filePaths[0];
+  if (!(await isProject(root))) throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 beepress.config.*。");
+  return root;
+});
+ipcMain.handle("beepress:create-project", async (_event, { parent, name }) => {
+  const safeName = String(name || "").trim();
+  if (!safeName || /[\\/:*?"<>|]/.test(safeName) || safeName.startsWith(".")) {
+    throw new Error("项目名不能为空，也不能包含 \\ / : * ? \" < > |，或从 . 开头。");
+  }
+  const root = path.join(parent, safeName);
+  try {
+    const entries = await fs.promises.readdir(root);
+    if (entries.length) throw new Error(`目录已经存在且不为空：${root}`);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  await fs.promises.mkdir(root, { recursive: true });
+  const bin = path.join(KIT_ROOT, "bin", "beepress.mjs");
+  const nodeEnv = { ...process.env, ELECTRON_RUN_AS_NODE: "1", BEEPRESS_KIT_ROOT: KIT_ROOT };
+  await execFileAsync(process.execPath, [bin, "init", "--target", root], {
+    cwd: root,
+    env: nodeEnv,
+    maxBuffer: 20 * 1024 * 1024,
+  });
+  await execFileAsync(process.execPath, [bin, "kb-scaffold"], {
+    cwd: root,
+    env: { ...nodeEnv, BEEPRESS_ROOT: root },
+    maxBuffer: 20 * 1024 * 1024,
+  }).catch(() => {
+    // The outline is optional; project creation should still succeed.
+  });
+  await fs.promises.writeFile(
+    path.join(root, "package.json"),
+    `${JSON.stringify({ name: safeName.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase() || "bee-press-project", private: true, type: "module" }, null, 2)}\n`,
+  );
+  return root;
+});
+ipcMain.handle("beepress:start", async (_event, root) => {
+  try {
+    await loadHarness(root);
+    return { ok: true };
+  } catch (error) {
+    await dialog.showMessageBox(window, {
+      type: "error",
+      title: "Bee Press",
+      message: "无法打开项目",
+      detail: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+});
+ipcMain.on("beepress:quit", () => app.quit());
+
+app.whenReady().then(() => {
+  if (process.platform === "darwin" && app.dock) {
+    app.dock.setIcon(path.join(__dirname, "assets", "icon.png"));
+  }
+  createWindow();
+});
+app.on("window-all-closed", () => app.quit());
+app.on("before-quit", stopHarness);
