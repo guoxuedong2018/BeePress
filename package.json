@@ -1,6 +1,6 @@
 {
   "name": "beepress",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Bee Press — a hive of agents for prototype-native content production and publishing: source-anchored review, Agent-ready content studio, a DeepSeek Harness host plugin, an MCP bridge, reproducible media, and pluggable destinations.",
   "license": "MIT",
   "type": "module",
@@ -71,6 +71,7 @@
     "examples/react-tailwind/docs/kb",
     "integrations",
     "pipeline",
+    "scaffold",
     "server",
     "ui-spec",
     "vite.mjs",
@@ -81,7 +82,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "check": "node scripts/check.mjs && node scripts/check-ui-spec.mjs && node scripts/check-public-deps.mjs && node integrations/test-integrations.mjs",
+    "check": "node scripts/check.mjs && node scripts/check-ui-spec.mjs && node scripts/check-public-deps.mjs && node integrations/test-integrations.mjs && node scripts/test-scaffold.mjs",
+    "test:scaffold": "node scripts/test-scaffold.mjs",
     "test:deploy-skill": "node scripts/test-deploy-skill-e2e.mjs",
     "test:publish-gateway": "node scripts/test-publish-gateway.mjs",
     "test:integrations": "node integrations/test-integrations.mjs",

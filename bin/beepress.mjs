@@ -20,6 +20,7 @@ const KIT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const PIPELINE_DIR = path.join(KIT_ROOT, "pipeline");
 
 const COMMANDS = {
+  init: "init.mjs",
   kb: "kb.mjs",
   review: "review.mjs",
   prd: "prd.mjs",
@@ -51,6 +52,7 @@ Usage:
   bk <command> [options]            # short compatibility alias
 
 Commands:
+  init                     Copy the project scaffold (docs/templates, skills, kb configs)
   kb                       Content workspace CLI (status / shoot / ack / check / new …)
   review                   Review comments CLI (open / resolve / reply …)
   prd                      Build and publish a PRD from a feature spec

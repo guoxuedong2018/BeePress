@@ -1,0 +1,17 @@
+# Bee Press generated artifacts
+docs/reviews/*.json
+!docs/reviews/.gitignore
+docs/prd/
+docs/features/*/shots/
+docs/kb/_sources/
+docs/kb/_blobs/
+docs/kb/_media.json
+docs/kb/_index.json
+docs/kb/_published.json
+
+# Never commit local credentials or real customer data
+.env
+.env.*
+!.env.example
+**/*.local
+.DS_Store

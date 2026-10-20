@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.1 — 2026-10-20
+
+- **Project scaffold restored** — added `scaffold/` with the FRS templates
+  (`docs/templates/`), workflow, kb writing guide, kb/media config starters,
+  `src/config/frs-map.js`, project guides and core `.agent/skills/`.
+- **`beepress init`** — copies the scaffold into a host project without
+  overwriting existing files; supports `--list`, `--only`, `--force` and
+  `--target`.
+- **`check-frs` unblocked on new projects** — the scaffold includes the
+  zero-dependency `frs-map.js` that the check imports.
+
 ## 0.6.0 — 2026-10-20
 
 - **Package rename** — the npm package is now `beepress`; imports are

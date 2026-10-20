@@ -92,6 +92,8 @@ npm install --save-dev vue@2.7
 ```text
 my-prototype/
 ├── docs/
+│   ├── templates/                   # FRS / FLOW / STATE / ACCEPTANCE 模板
+│   ├── WORKFLOW.md                  # 需求 → FRS → 原型 → 内容 → 发布
 │   ├── features/<KEY>/FRS.json      # 需求件套（可选）
 │   ├── kb/
 │   │   ├── outline.config.mjs       # 内容大纲
@@ -102,12 +104,31 @@ my-prototype/
 │   └── reviews/                     # 批注（生成）
 ├── web/                             # 原型工程（可用 BEEPRESS_WEB_DIR 改）
 │   └── src/
+├── .agent/skills/                   # 需求 / PRD / 内容 / 评审技能
 └── package.json
 ```
 
 项目根从当前工作目录向上找：最近的包含 `docs/`、`beepress.config.*`，或 `package.json` 依赖 `beepress` 的目录。也可以用 `BEEPRESS_ROOT` 显式指定；`BUILDER_KIT_ROOT` 仍兼容。
 
 ## 接入
+
+### 0. 初始化新工程
+
+```bash
+cd my-prototype
+npx beepress init
+# 先看会复制什么：npx beepress init --list
+# 覆盖已生成的文件：npx beepress init --force
+```
+
+会把 `docs/templates/`、`docs/WORKFLOW.md`、`docs/kb/CONTRIBUTING.md`、
+知识库配置骨架、`src/config/frs-map.js`、`AGENTS.md` / `CLAUDE.md` 和核心
+`.agent/skills/` 复制到宿主项目。已存在的文件默认保留，只有 `--force` 才覆盖。
+然后运行：
+
+```bash
+npx beepress kb-scaffold
+```
 
 ### 1. 宿主 `vite.config.js`
 
@@ -376,6 +397,7 @@ npm run test:publish-gateway
 
 ## 更多文档
 
+- [工程脚手架与模板](./scaffold/README.md)
 - [架构与三层锚点](./docs/architecture.md)
 - [宿主与管线适配器](./docs/adapters.md)
 - [内容模型](./docs/content-model.md)

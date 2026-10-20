@@ -154,6 +154,8 @@ Bee Press reads and writes a small, conventional directory tree in the host proj
 ```text
 my-prototype/
 ├── docs/
+│   ├── templates/                   # FRS / FLOW / STATE / ACCEPTANCE templates
+│   ├── WORKFLOW.md                  # requirement → FRS → prototype → content → publish
 │   ├── features/<KEY>/FRS.json      # feature specs (optional)
 │   ├── kb/
 │   │   ├── outline.config.mjs       # content outline
@@ -164,12 +166,31 @@ my-prototype/
 │   └── reviews/                     # review comments (generated)
 ├── web/                             # your prototype app (configurable)
 │   └── src/
+├── .agent/skills/                   # requirement / PRD / content / review skills
 └── package.json
 ```
 
 The project root is detected by walking up from the current working directory to the nearest ancestor containing `docs/`, a `beepress.config.*` file, or a `package.json` that depends on `beepress`. Override it with `BEEPRESS_ROOT`; `BUILDER_KIT_ROOT` remains an alias.
 
 ## Quick start
+
+### 0. Initialize a new workspace
+
+```bash
+cd my-prototype
+npx beepress init
+# preview first: npx beepress init --list
+# overwrite generated files: npx beepress init --force
+```
+
+This copies `docs/templates/`, `docs/WORKFLOW.md`, `docs/kb/CONTRIBUTING.md`,
+starter kb configurations, `src/config/frs-map.js`, `AGENTS.md` / `CLAUDE.md`
+and the core `.agent/skills/` into the host project. Existing files are kept
+unless `--force` is passed. Then run:
+
+```bash
+npx beepress kb-scaffold
+```
 
 ### 1. Add the Vite plugin
 
@@ -494,6 +515,7 @@ npm run test:publish-gateway
 ## Design notes
 
 - [Architecture and anchors](./docs/architecture.md)
+- [Project scaffold and templates](./scaffold/README.md)
 - [Host and pipeline adapters](./docs/adapters.md)
 - [Content model](./docs/content-model.md)
 - [Styling and tokens](./docs/styling.md)
