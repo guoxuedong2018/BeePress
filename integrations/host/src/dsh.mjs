@@ -364,6 +364,32 @@ export function apply(ctx, config = {}) {
         () =>
           webCtx.webServer.register({
             kind: "exact",
+            path: "/beepress/api/prototype/install",
+            async handler(req, res) {
+              if (req.method !== "POST") {
+                res.statusCode = 405;
+                res.end("Method Not Allowed");
+                return;
+              }
+              try {
+                const body = await readBody(req);
+                const result = await beepress.installPrototype(body.root);
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify(result, null, 2));
+              } catch (error) {
+                res.statusCode = 400;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+              }
+            },
+          }),
+        "beepress: http install prototype deps",
+      );
+      webCtx.effect(
+        () =>
+          webCtx.webServer.register({
+            kind: "exact",
             path: "/beepress/api/content/capture",
             async handler(req, res) {
               if (req.method !== "POST") {

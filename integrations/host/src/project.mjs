@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { detectPrototype } from "./prototype.mjs";
 
 const MAX_SCAN_FILES = 400;
 const MAX_CONTEXT_FILES = 20;
@@ -164,16 +165,7 @@ export async function readStatus(inputRoot) {
     pages.push({ file: path.relative(kbDir, file), title: titleOf(text, file) });
   }
 
-  let devScript = null;
-  const packageFile = path.join(root, "package.json");
-  try {
-    const pkg = JSON.parse(await fs.readFile(packageFile, "utf8"));
-    devScript = pkg.scripts?.dev ?? null;
-  } catch {
-    // A workspace without a package.json is still inspectable.
-  }
-
-  const webDir = (await statSafe(path.join(root, "web"))) ? "web" : ".";
+  const prototype = await detectPrototype(root);
   const gateway = process.env.BEEPRESS_PUBLISH_GATEWAY || process.env.BUILDER_KIT_PUBLISH_GATEWAY || null;
   const legacyDocsCli = process.env.BEEPRESS_DOCS_CLI || process.env.BUILDER_KIT_DOCS_CLI || null;
   const published = await readPublishedState(root);
@@ -185,7 +177,14 @@ export async function readStatus(inputRoot) {
       reviews: await reviewSummary(root),
       features: await featureSummary(root),
     },
-    prototype: { dir: webDir, devScript },
+    prototype: {
+      dir: prototype.dir,
+      devScript: prototype.devScript,
+      found: prototype.found,
+      installed: prototype.installed,
+      packageManager: prototype.packageManager,
+      reason: prototype.reason,
+    },
     publish: {
       configured: Boolean(gateway || legacyDocsCli),
       gateway,

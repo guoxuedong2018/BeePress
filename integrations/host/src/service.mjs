@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { addReview, readContext, readOpenReviews, readPublishPlan, readStatus, resolveReview } from "./project.mjs";
 import { resolveKitRoot, runKit } from "./kit.mjs";
+import { detectPrototype, devCommand, installCommand } from "./prototype.mjs";
 
 const prototypeProcesses = new Map();
 
@@ -87,17 +88,59 @@ async function createFeature(root, title) {
   return { key, relativePath: path.relative(project, featureDir), checkCommand: `npx beepress check-frs ${key}` };
 }
 
+const ANSI = /\u001b\[[0-9;?]*[A-Za-z]/g;
+
+function stripAnsi(text) {
+  return text.replace(ANSI, "");
+}
+
+function runPrototypeCommand(command, args, cwd) {
+  return spawn(command, args, {
+    cwd,
+    env: { ...process.env, BROWSER: "none", FORCE_COLOR: "0" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+}
+
+async function installPrototype(root) {
+  const detected = await detectPrototype(root);
+  if (!detected.found) throw new Error(detected.reason);
+  if (detected.installed) return { ok: true, dir: detected.dir, installed: true, reused: true, packageManager: detected.packageManager };
+  const { command, args } = installCommand(detected.packageManager);
+  return new Promise((resolve, reject) => {
+    const child = runPrototypeCommand(command, args, detected.absoluteDir);
+    let output = "";
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error(`${command} ${args.join(" ")} 超过 5 分钟未完成：\n${output.slice(-4000)}`));
+    }, 5 * 60_000);
+    const collect = (chunk) => {
+      output += stripAnsi(chunk.toString());
+      if (output.length > 20_000) output = output.slice(-20_000);
+    };
+    child.stdout.on("data", collect);
+    child.stderr.on("data", collect);
+    child.once("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.once("exit", (code) => {
+      clearTimeout(timer);
+      if (code === 0) resolve({ ok: true, dir: detected.dir, installed: true, reused: false, packageManager: detected.packageManager });
+      else reject(new Error(`${command} ${args.join(" ")} 退出（${code}）：\n${output.slice(-4000)}`));
+    });
+  });
+}
+
 async function startPrototype(root) {
   const cwd = path.resolve(root);
   const existing = prototypeProcesses.get(cwd);
   if (existing?.url) return { ok: true, url: existing.url, reused: true };
-  const pkg = JSON.parse(await fs.readFile(path.join(cwd, "package.json"), "utf8").catch(() => "{}"));
-  if (!pkg.scripts?.dev) throw new Error("package.json 没有 dev 脚本。");
-  const child = spawn(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "dev"], {
-    cwd,
-    env: { ...process.env, BROWSER: "none" },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const detected = await detectPrototype(cwd);
+  if (!detected.found) throw new Error(detected.reason);
+  if (!detected.installed) throw new Error(detected.reason);
+  const { command, args } = devCommand(detected.packageManager, "dev");
+  const child = runPrototypeCommand(command, args, detected.absoluteDir);
   return new Promise((resolve, reject) => {
     let output = "";
     let settled = false;
@@ -108,13 +151,13 @@ async function startPrototype(root) {
       reject(new Error(`dev server 没有在 25 秒内输出 URL：\n${output}`));
     }, 25_000);
     const onData = (chunk) => {
-      output += chunk.toString();
+      output += stripAnsi(chunk.toString());
       const match = output.match(/https?:\/\/(?:localhost|127\.0\.0\.1|\[[^\]]+\]):\d+\/?/i);
       if (!match || settled) return;
       settled = true;
       clearTimeout(timer);
-      prototypeProcesses.set(cwd, { child, url: match[0] });
-      resolve({ ok: true, url: match[0], reused: false });
+      prototypeProcesses.set(cwd, { child, url: match[0], dir: detected.dir });
+      resolve({ ok: true, url: match[0], reused: false, dir: detected.dir, devScript: detected.devScript });
     };
     child.stdout.on("data", onData);
     child.stderr.on("data", onData);
@@ -184,8 +227,16 @@ export function createBeePressService() {
       return writeSettings(root, { stack, uiPreset, sourceUrl });
     },
 
-    status(root) {
-      return readStatus(root);
+    async status(root) {
+      const data = await readStatus(root);
+      const running = prototypeProcesses.get(path.resolve(data.root));
+      return {
+        ...data,
+        prototype: {
+          ...data.prototype,
+          url: running?.url ?? null,
+        },
+      };
     },
 
     context(root, options) {
@@ -242,6 +293,10 @@ export function createBeePressService() {
 
     startPrototype(root) {
       return startPrototype(root);
+    },
+
+    installPrototype(root) {
+      return installPrototype(root);
     },
 
     async publishDryRun(root) {

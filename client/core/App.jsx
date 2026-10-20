@@ -9,7 +9,19 @@ import { ReviewBar } from "../review/ReviewBar";
 import { loadAll, reviewState, setRoute } from "../review/store";
 import { StudioEntry } from "../studio/StudioEntry";
 import { StudioRoot } from "../studio/StudioRoot";
+import { openStudio } from "../studio/store";
 import { getHost } from "./host";
+
+const REVIEW_CHANNEL = "beepress-review";
+const EMBED_QUERY = "beepress_embed";
+
+function embeddedInCockpit() {
+  try {
+    return new URLSearchParams(window.location.search).get(EMBED_QUERY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 /**
  * 套件根：把两个平级套件组装起来。
@@ -24,6 +36,9 @@ import { getHost } from "./host";
 export function App() {
   const host = getHost();
   const snap = useSnapshot(reviewState);
+  const embedded = embeddedInCockpit();
+  const totalOpen = snap.comments.filter((c) => c.status === "open").length;
+  const routeOpen = snap.comments.filter((c) => c.route === snap.route && c.status === "open").length;
 
   useEffect(() => {
     loadAll();
@@ -37,9 +52,45 @@ export function App() {
     host.slots.content.setAttribute("data-frs", list.length > 0 ? list[0].key : "APP_SHELL");
   }, [host, snap.route]);
 
+  // Cockpit 模式：工具栏由 DSH 主面板承接，原型内只保留圈选层与评论抽屉。
+  useEffect(() => {
+    if (!embedded) return undefined;
+    const post = () =>
+      window.parent.postMessage(
+        {
+          channel: REVIEW_CHANNEL,
+          type: "state",
+          route: snap.route,
+          frs: frsForRoute(snap.route).map((item) => ({ key: item.key, title: item.title })),
+          persistent: snap.persistent,
+          open: totalOpen,
+          routeOpen,
+          commentMode: snap.commentMode,
+          drawerOpen: snap.drawerOpen,
+        },
+        "*",
+      );
+    post();
+    return undefined;
+  }, [embedded, snap.commentMode, snap.comments.length, snap.drawerOpen, snap.persistent, snap.route, routeOpen, totalOpen]);
+
+  useEffect(() => {
+    if (!embedded) return undefined;
+    const onMessage = (event) => {
+      if (event.source !== window.parent) return;
+      const data = event.data;
+      if (!data || data.channel !== REVIEW_CHANNEL || data.type !== "command") return;
+      if (data.command === "comment-mode") reviewState.commentMode = Boolean(data.value);
+      else if (data.command === "toggle-drawer") reviewState.drawerOpen = !reviewState.drawerOpen;
+      else if (data.command === "open-studio") openStudio();
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [embedded]);
+
   return (
     <>
-      {createPortal(<ReviewBar tools={<StudioEntry />} />, host.slots.bar)}
+      {!embedded && createPortal(<ReviewBar tools={<StudioEntry />} />, host.slots.bar)}
       {createPortal(<CommentDrawer />, host.slots.drawer)}
       <CommentLayer />
       <StudioRoot />

@@ -98,6 +98,7 @@ window.__ModuleLoader__.load({
       stageHead: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" },
       stageTitle: { fontSize: "15px", fontWeight: 650, letterSpacing: "-0.01em" },
       stageDesc: { marginTop: "2px", color: colors.weak, fontSize: "11px", lineHeight: 1.55 },
+      embeddedBody: { display: "flex", flexDirection: "column", gap: "14px" },
     };
 
     const STAGES = [
@@ -109,10 +110,18 @@ window.__ModuleLoader__.load({
       { key: "publish", title: "发布", description: "目标适配器、dry-run 和发布状态。", icon: "↗" },
     ];
 
+    const COCKPIT_PANEL_ID = "beepress-workbench";
+    const REVIEW_CHANNEL = "beepress-review";
+    const EMBED_QUERY = "beepress_embed";
+
     const bridge = {
       openBrowser(url) {},
       openTerminal() {},
       openFiles() {},
+      openChat() {},
+      openWorkbench() {},
+      pickProject() {},
+      startSession() {},
     };
 
     function BeeIcon({ size = 16 } = {}) {
@@ -189,7 +198,15 @@ window.__ModuleLoader__.load({
       return [state, load];
     }
 
-    function StageFrame({ stage, cwd, state, reload, children }) {
+    function StageFrame({ stage, cwd, state, reload, embedded = false, children }) {
+      const body = !cwd
+        ? h("div", { style: styles.loading }, "打开一个 Session 后使用 Bee Press。")
+        : state.error
+          ? h("div", { style: styles.error }, state.error)
+          : state.loading && !state.data
+            ? h("div", { style: styles.loading }, "读取 Bee Press 工作区…")
+            : children;
+      if (embedded) return h("div", { style: styles.embeddedBody, "data-beepress-panel": stage.key }, body);
       return h(
         "div",
         { style: styles.root, "data-beepress-panel": stage.key },
@@ -200,17 +217,11 @@ window.__ModuleLoader__.load({
           h(Button, { onClick: reload, disabled: state.loading }, state.loading ? "刷新中…" : "刷新"),
         ),
         h("div", { style: styles.rootLine, title: cwd }, "Workspace: ", h("code", { style: styles.code }, cwd || "waiting for session")),
-        !cwd
-          ? h("div", { style: styles.loading }, "打开一个 Session 后使用 Bee Press。")
-          : state.error
-            ? h("div", { style: styles.error }, state.error)
-            : state.loading && !state.data
-              ? h("div", { style: styles.loading }, "读取 Bee Press 工作区…")
-              : children,
+        body,
       );
     }
 
-    function BaselineStage({ stage, cwd, state, reload }) {
+    function BaselineStage({ stage, cwd, state, reload, embedded }) {
       const [stack, setStack] = React.useState("existing");
       const [uiPreset, setUiPreset] = React.useState("bee-press");
       const [output, setOutput] = React.useState("");
@@ -232,7 +243,7 @@ window.__ModuleLoader__.load({
       };
       return h(
         StageFrame,
-        { stage, cwd, state, reload },
+        { stage, cwd, state, reload, embedded },
         h(
           Section,
           { title: "技术栈" },
@@ -264,7 +275,7 @@ window.__ModuleLoader__.load({
       );
     }
 
-    function RequirementsStage({ stage, cwd, state, reload }) {
+    function RequirementsStage({ stage, cwd, state, reload, embedded }) {
       const [title, setTitle] = React.useState("");
       const [output, setOutput] = React.useState("");
       const features = state.data?.status?.docs?.features || { specs: 0, keys: [] };
@@ -290,7 +301,7 @@ window.__ModuleLoader__.load({
       };
       return h(
         StageFrame,
-        { stage, cwd, state, reload },
+        { stage, cwd, state, reload, embedded },
         h("div", { style: styles.metrics }, h(Metric, { label: "FRS", value: features.specs || 0 })),
         h(
           Section,
@@ -309,8 +320,9 @@ window.__ModuleLoader__.load({
       );
     }
 
-    function PrototypeStage({ stage, cwd, state, reload }) {
+    function PrototypeStage({ stage, cwd, state, reload, embedded }) {
       const [output, setOutput] = React.useState("");
+      const prototype = state.data?.status?.prototype || {};
       const start = async () => {
         setOutput("正在启动 dev server…");
         try {
@@ -321,17 +333,33 @@ window.__ModuleLoader__.load({
           setOutput(error instanceof Error ? error.message : String(error));
         }
       };
+      const install = async () => {
+        setOutput("正在安装依赖…");
+        try {
+          await request("/prototype/install", { root: cwd });
+          await reload();
+          setOutput("依赖已安装，可以启动原型。");
+        } catch (error) {
+          setOutput(error instanceof Error ? error.message : String(error));
+        }
+      };
       return h(
         StageFrame,
-        { stage, cwd, state, reload },
+        { stage, cwd, state, reload, embedded },
         h(
           Section,
           { title: "原型服务" },
-          h("div", { style: styles.item }, h("div", { style: styles.itemTitle }, state.data?.status?.prototype?.devScript ? `npm run ${state.data.status.prototype.devScript}` : "未配置 dev 脚本"), h("div", { style: styles.itemMeta }, state.data?.status?.prototype?.dir || ".")),
+          h(
+            "div",
+            { style: styles.item },
+            h("div", { style: styles.itemTitle }, prototype.devScript ? `${prototype.packageManager || "npm"} run ${prototype.devScript}` : "没找到 dev 脚本"),
+            h("div", { style: styles.itemMeta }, prototype.reason || prototype.dir || "."),
+          ),
           h(
             "div",
             { style: styles.row },
             h(Button, { primary: true, onClick: start }, "启动并在浏览器打开"),
+            prototype.found && prototype.installed === false ? h(Button, { onClick: install }, "安装依赖") : null,
             h(Button, { onClick: () => bridge.openTerminal() }, "打开终端"),
             h(Button, { onClick: () => bridge.openFiles() }, "浏览文件"),
           ),
@@ -340,7 +368,7 @@ window.__ModuleLoader__.load({
       );
     }
 
-    function ReviewStage({ stage, cwd, state, reload }) {
+    function ReviewStage({ stage, cwd, state, reload, embedded }) {
       const [output, setOutput] = React.useState("");
       const reviews = state.data?.reviews?.comments || [];
       const resolve = async (id) => {
@@ -365,7 +393,7 @@ window.__ModuleLoader__.load({
       };
       return h(
         StageFrame,
-        { stage, cwd, state, reload },
+        { stage, cwd, state, reload, embedded },
         h("div", { style: styles.metrics }, h(Metric, { label: "open reviews", value: state.data?.status?.docs?.reviews?.open ?? 0 })),
         h("div", { style: styles.row }, h(Button, { primary: true, onClick: openReview }, "打开评审页"), h(Button, { onClick: () => bridge.openBrowser("http://localhost:5173/") }, "打开 localhost:5173")),
         h(
@@ -387,7 +415,7 @@ window.__ModuleLoader__.load({
       );
     }
 
-    function ContentStage({ stage, cwd, state, reload }) {
+    function ContentStage({ stage, cwd, state, reload, embedded }) {
       const [content, setContent] = React.useState(null);
       const [output, setOutput] = React.useState("");
       const check = async () => {
@@ -414,7 +442,7 @@ window.__ModuleLoader__.load({
       };
       return h(
         StageFrame,
-        { stage, cwd, state, reload },
+        { stage, cwd, state, reload, embedded },
         h("div", { style: styles.metrics }, h(Metric, { label: "KB pages", value: state.data?.status?.docs?.kb?.files ?? 0 }), h(Metric, { label: "open reviews", value: state.data?.status?.docs?.reviews?.open ?? 0 })),
         h("div", { style: styles.row }, h(Button, { primary: true, onClick: check }, "检查内容锁"), h(Button, { onClick: () => capture("shot") }, "重拍截图"), h(Button, { onClick: () => capture("clip") }, "重建录屏")),
         content
@@ -429,7 +457,7 @@ window.__ModuleLoader__.load({
       );
     }
 
-    function PublishStage({ stage, cwd, state, reload }) {
+    function PublishStage({ stage, cwd, state, reload, embedded }) {
       const [output, setOutput] = React.useState("");
       const plan = state.data?.publish;
       const dryRun = async () => {
@@ -444,7 +472,7 @@ window.__ModuleLoader__.load({
       };
       return h(
         StageFrame,
-        { stage, cwd, state, reload },
+        { stage, cwd, state, reload, embedded },
         h(
           Section,
           { title: "发布计划" },
@@ -464,6 +492,702 @@ window.__ModuleLoader__.load({
       publish: PublishStage,
     };
 
+    const cockpitCss = `
+      .bp-cockpit {
+        --bp-accent: var(--dsh-accent-default, #0969da);
+        --bp-success: var(--dsh-success-default, #1a7f37);
+        --bp-warning: var(--dsh-warning-default, #9a6700);
+        --bp-danger: var(--dsh-danger-default, #cf222e);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+        color: var(--dsh-text-primary, #1f2328);
+        background: var(--dsh-surface-default, #ffffff);
+        font: 13px/1.5 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .bp-cockpit *, .bp-cockpit *::before, .bp-cockpit *::after { box-sizing: border-box; }
+      .bp-top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex: none;
+        height: 50px;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--dsh-border-default, #d8dee4);
+        background: var(--dsh-surface-default, #ffffff);
+      }
+      .bp-brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
+      .bp-brand-mark {
+        display: flex; align-items: center; justify-content: center;
+        width: 29px; height: 29px; flex: none;
+        color: var(--bp-accent);
+        background: color-mix(in srgb, var(--bp-accent) 10%, transparent);
+        border: 1px solid color-mix(in srgb, var(--bp-accent) 24%, transparent);
+        border-radius: 8px;
+      }
+      .bp-brand-name { font-size: 13px; font-weight: 700; letter-spacing: -0.01em; }
+      .bp-brand-sub { margin-top: 1px; color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 650; letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap; }
+      .bp-project { min-width: 0; padding-left: 14px; border-left: 1px solid var(--dsh-border-default, #d8dee4); }
+      .bp-project-label { color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 650; letter-spacing: 0.09em; text-transform: uppercase; }
+      .bp-project-name { margin-top: 2px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+      .bp-project-path { display: block; max-width: 36vw; overflow: hidden; color: var(--dsh-text-secondary, #656d76); font: 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; text-overflow: ellipsis; white-space: nowrap; }
+      .bp-top-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+      .bp-btn {
+        display: inline-flex; align-items: center; gap: 5px;
+        height: 27px; padding: 0 9px;
+        color: var(--dsh-text-secondary, #656d76);
+        background: transparent;
+        border: 1px solid var(--dsh-border-default, #d8dee4);
+        border-radius: 7px;
+        font: 11px/1 ui-sans-serif, -apple-system, sans-serif;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .bp-btn:hover:not(:disabled) { color: var(--dsh-text-primary, #1f2328); background: var(--dsh-surface-subtle, #f6f8fa); }
+      .bp-btn[data-on="true"] { color: var(--bp-accent); border-color: color-mix(in srgb, var(--bp-accent) 42%, var(--dsh-border-default, #d8dee4)); background: color-mix(in srgb, var(--bp-accent) 8%, transparent); }
+      .bp-btn:disabled { opacity: .45; cursor: not-allowed; }
+      .bp-body { display: grid; grid-template-columns: 190px minmax(0, 1fr) 280px; flex: 1; min-height: 0; }
+      .bp-rail { min-height: 0; overflow: auto; padding: 13px 9px; border-right: 1px solid var(--dsh-border-default, #d8dee4); background: var(--dsh-surface-subtle, #f6f8fa); }
+      .bp-rail-label { padding: 0 8px 8px; color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+      .bp-stage {
+        display: flex; align-items: flex-start; gap: 8px;
+        width: 100%; padding: 8px; margin: 1px 0;
+        color: var(--dsh-text-primary, #1f2328);
+        text-align: left;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .bp-stage:hover { background: color-mix(in srgb, var(--dsh-text-primary, #1f2328) 4%, transparent); }
+      .bp-stage[data-active="true"] { background: var(--dsh-surface-default, #ffffff); border-color: var(--dsh-border-default, #d8dee4); box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+      .bp-stage-icon { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex: none; color: var(--dsh-text-secondary, #656d76); background: color-mix(in srgb, var(--dsh-text-primary, #1f2328) 5%, transparent); border-radius: 6px; font-size: 11px; }
+      .bp-stage[data-active="true"] .bp-stage-icon { color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 9%, transparent); }
+      .bp-stage-title { font-size: 12px; font-weight: 600; line-height: 1.35; }
+      .bp-stage-desc { margin-top: 2px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; line-height: 1.4; }
+      .bp-stage-state { margin-top: 4px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; }
+      .bp-dot { display: inline-block; width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: currentColor; vertical-align: 1px; }
+      .bp-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; background: var(--dsh-surface-default, #ffffff); }
+      .bp-canvas { flex: 1; min-height: 0; overflow: auto; padding: 22px 24px 32px; }
+      .bp-canvas > * { width: 100%; max-width: 860px; margin: 0 auto; }
+      .bp-preview-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 12px 14px 14px; }
+      .bp-preview-head { display: flex; align-items: center; gap: 10px; flex: none; min-height: 38px; padding: 5px 9px 5px 11px; border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 10px 10px 0 0; background: var(--dsh-surface-subtle, #f6f8fa); }
+      .bp-preview-url { display: flex; align-items: center; gap: 7px; min-width: 0; color: var(--dsh-text-secondary, #656d76); font: 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .bp-preview-url code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .bp-live { width: 6px; height: 6px; flex: none; border-radius: 50%; background: var(--bp-success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bp-success) 13%, transparent); }
+      .bp-preview-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+      .bp-seg { display: inline-flex; overflow: hidden; border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 6px; }
+      .bp-seg button { height: 24px; padding: 0 7px; color: var(--dsh-text-secondary, #656d76); background: var(--dsh-surface-default, #fff); border: 0; font: 10px/1 sans-serif; cursor: pointer; }
+      .bp-seg button + button { border-left: 1px solid var(--dsh-border-default, #d8dee4); }
+      .bp-seg button[data-on="true"] { color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 9%, var(--dsh-surface-default, #fff)); }
+      .bp-review-strip { display: flex; align-items: center; gap: 8px; flex: none; min-height: 35px; padding: 4px 10px; border: 1px solid var(--dsh-border-default, #d8dee4); border-top: 0; background: var(--dsh-surface-default, #ffffff); overflow: hidden; }
+      .bp-review-frs { display: flex; align-items: center; gap: 5px; min-width: 0; }
+      .bp-review-label { color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 700; letter-spacing: .08em; }
+      .bp-tag { max-width: 160px; padding: 2px 6px; overflow: hidden; color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 8%, transparent); border: 1px solid color-mix(in srgb, var(--bp-accent) 20%, transparent); border-radius: 999px; font: 9px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; text-overflow: ellipsis; white-space: nowrap; }
+      .bp-review-actions { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+      .bp-warn { display: inline-flex; align-items: center; gap: 4px; color: var(--bp-warning); font-size: 10px; white-space: nowrap; }
+      .bp-count { padding: 2px 6px; color: var(--dsh-text-secondary, #656d76); background: var(--dsh-surface-subtle, #f6f8fa); border-radius: 999px; font-size: 10px; white-space: nowrap; }
+      .bp-review-strip .bp-btn { height: 24px; padding: 0 7px; font-size: 10px; }
+      .bp-preview-stage { display: flex; justify-content: center; flex: 1; min-height: 0; overflow: auto; padding: 0; background: var(--dsh-surface-subtle, #f6f8fa); border: 1px solid var(--dsh-border-default, #d8dee4); border-top: 0; border-radius: 0 0 10px 10px; }
+      .bp-preview-frame { position: relative; width: 100%; height: 100%; min-height: 320px; background: #fff; transition: max-width .18s ease; }
+      .bp-preview-frame iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+      .bp-preview-frame > .bp-preview-loading { position: absolute; inset: 0; min-height: 0; background: var(--dsh-surface-subtle, #f6f8fa); }
+      .bp-preview-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 320px; padding: 28px; color: var(--dsh-text-secondary, #656d76); text-align: center; }
+      .bp-preview-empty strong { color: var(--dsh-text-primary, #1f2328); font-size: 14px; }
+      .bp-preview-empty span { max-width: 460px; line-height: 1.65; }
+      .bp-preview-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
+      .bp-preview-meta { padding: 4px 8px; color: var(--dsh-text-primary, #1f2328); background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
+      .bp-preview-scanned { color: var(--dsh-text-secondary, #656d76); font-size: 9px; opacity: .8; }
+      .bp-preview-loading { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 320px; color: var(--dsh-text-secondary, #656d76); font-size: 12px; }
+      .bp-inspector { min-height: 0; overflow: auto; padding: 14px 13px 20px; border-left: 1px solid var(--dsh-border-default, #d8dee4); background: var(--dsh-surface-subtle, #f6f8fa); }
+      .bp-inspector-block { margin-bottom: 16px; }
+      .bp-inspector-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; color: var(--dsh-text-secondary, #656d76); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+      .bp-card { padding: 9px 10px; background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 8px; }
+      .bp-card + .bp-card { margin-top: 6px; }
+      .bp-pipeline-row { display: flex; align-items: center; gap: 7px; min-height: 27px; padding: 0 2px; font-size: 11px; }
+      .bp-pipeline-row + .bp-pipeline-row { border-top: 1px solid color-mix(in srgb, var(--dsh-border-default, #d8dee4) 65%, transparent); }
+      .bp-pipeline-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .bp-pipeline-state { margin-left: auto; color: var(--dsh-text-secondary, #656d76); font-size: 10px; white-space: nowrap; }
+      .bp-pipeline-row[data-ready="true"] .bp-pipeline-state { color: var(--bp-success); }
+      .bp-next { padding: 10px; background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 8px; }
+      .bp-next-label { color: var(--bp-accent); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+      .bp-next-title { margin-top: 4px; font-size: 12px; font-weight: 650; line-height: 1.45; }
+      .bp-next-detail { margin-top: 3px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; line-height: 1.5; }
+      .bp-next .bp-btn { margin-top: 8px; }
+      .bp-review-item { padding: 8px 9px; }
+      .bp-review-body { display: -webkit-box; overflow: hidden; font-size: 11px; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+      .bp-review-meta { margin-top: 4px; color: var(--dsh-text-secondary, #656d76); font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }
+      .bp-review-item .bp-btn { height: 22px; margin-top: 6px; padding: 0 7px; font-size: 9px; }
+      .bp-capabilities { display: flex; flex-direction: column; gap: 6px; }
+      .bp-capability { display: flex; align-items: flex-start; gap: 7px; color: var(--dsh-text-secondary, #656d76); font-size: 10px; line-height: 1.5; }
+      .bp-capability b { display: block; color: var(--dsh-text-primary, #1f2328); font-size: 11px; font-weight: 600; }
+      .bp-capability-mark { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex: none; margin-top: 1px; color: var(--bp-accent); background: color-mix(in srgb, var(--bp-accent) 8%, transparent); border-radius: 4px; font-size: 9px; }
+      .bp-empty { flex: 1; min-height: 0; overflow: auto; padding: 46px 28px 40px; }
+      .bp-empty-inner { width: 100%; max-width: 720px; margin: 0 auto; }
+      .bp-kicker { color: var(--bp-accent); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+      .bp-empty h1 { max-width: 640px; margin: 10px 0 8px; font-size: clamp(26px, 3.4vw, 40px); font-weight: 700; letter-spacing: -.04em; line-height: 1.13; }
+      .bp-empty p { max-width: 560px; margin: 0; color: var(--dsh-text-secondary, #656d76); font-size: 13px; line-height: 1.7; }
+      .bp-empty-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+      .bp-empty-actions .bp-btn { height: 32px; padding: 0 12px; font-size: 12px; }
+      .bp-empty-actions .bp-btn[data-primary="true"] { color: #fff; background: var(--bp-accent); border-color: var(--bp-accent); }
+      .bp-empty-actions .bp-btn[data-primary="true"]:hover { color: #fff; filter: brightness(.96); }
+      .bp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 30px; }
+      .bp-grid-card { padding: 11px; background: var(--dsh-surface-default, #fff); border: 1px solid var(--dsh-border-default, #d8dee4); border-radius: 9px; }
+      .bp-grid-card b { display: block; margin: 6px 0 3px; font-size: 12px; }
+      .bp-grid-card span { color: var(--dsh-text-secondary, #656d76); font-size: 10px; line-height: 1.5; }
+      .bp-grid-icon { color: var(--bp-accent); font-size: 14px; }
+      .bp-loading { padding: 30px 4px; color: var(--dsh-text-secondary, #656d76); font-size: 12px; }
+      .bp-error { padding: 10px; color: var(--bp-danger); font-size: 11px; white-space: pre-wrap; }
+      @media (max-width: 1240px) {
+        .bp-body { grid-template-columns: 180px minmax(0, 1fr); }
+        .bp-inspector { display: none; }
+      }
+      @media (max-width: 980px) {
+        .bp-body { grid-template-columns: minmax(0, 1fr); }
+        .bp-rail { display: none; }
+        .bp-project { display: none; }
+        .bp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+    `;
+
+    function projectName(cwd) {
+      if (!cwd) return "未打开项目";
+      return cwd.split(/[\\/]/).filter(Boolean).pop() || cwd;
+    }
+
+    function openReviewCount(data) {
+      return data?.status?.docs?.reviews?.open ?? data?.reviews?.comments?.length ?? 0;
+    }
+
+    function stageState(key, data) {
+      const status = data?.status;
+      const features = status?.docs?.features?.specs ?? 0;
+      const kb = status?.docs?.kb?.files ?? 0;
+      const reviews = openReviewCount(data);
+      if (key === "baseline") {
+        const stack = data?.baseline?.stack;
+        return { label: stack ? `已设置 · ${stack}` : "未设置", ready: Boolean(stack) };
+      }
+      if (key === "requirements") return { label: features ? `${features} 份 FRS` : "还没有 FRS", ready: features > 0 };
+      if (key === "prototype") {
+        const prototype = status?.prototype || {};
+        if (!prototype.devScript) return { label: "没找到 dev 脚本", ready: false };
+        if (prototype.installed === false) return { label: "依赖未安装", ready: false };
+        if (prototype.url) return { label: "dev server 运行中", ready: true };
+        return { label: prototype.dir && prototype.dir !== "." ? `${prototype.dir} · 待启动` : "待启动", ready: false };
+      }
+      if (key === "review") return { label: reviews ? `${reviews} 条待处理` : "没有待处理批注", ready: reviews === 0 };
+      if (key === "content") return { label: kb ? `${kb} 页内容` : "还没有内容", ready: kb > 0 };
+      if (key === "publish") return { label: data?.publish?.configured ? "已配置目标" : "未配置目标", ready: Boolean(data?.publish?.configured) };
+      return { label: "", ready: false };
+    }
+
+    function nextAction(data) {
+      const status = data?.status;
+      if (!data?.baseline?.stack) return { stage: "baseline", label: "设置生产基线", detail: "先锁定技术栈和 UI 规范，后面的原型与评审才有可对齐的标准。" };
+      if (!(status?.docs?.features?.specs > 0)) return { stage: "requirements", label: "创建第一份 FRS", detail: "把要做的功能写成可验收的需求件套，评审批注才能归档到具体功能。" };
+      if (!status?.prototype?.devScript) return { stage: "prototype", label: "接入原型 dev server", detail: status?.prototype?.reason || "在工作区的应用目录 package.json 添加 dev 脚本，Bee Press 会启动真实原型并把它嵌进操作台。" };
+      if (status?.prototype?.installed === false) return { stage: "prototype", label: "安装原型依赖", detail: status.prototype.reason || "先安装依赖，Bee Press 才能启动真实原型。" };
+      if (openReviewCount(data) > 0) return { stage: "review", label: "处理待解决批注", detail: `${openReviewCount(data)} 条批注还没有关闭；在原型里点选元素，或者在右侧逐条处理。` };
+      if (!(status?.docs?.kb?.files > 0)) return { stage: "content", label: "建立内容锁", detail: "把文档、截图和引用纳入 _lock.json，确认哪些内容已经随原型一起验收。" };
+      if (!data?.publish?.configured) return { stage: "publish", label: "配置发布目的地", detail: "接上发布适配器，先跑 dry-run，确认新增页面和覆盖范围。" };
+      return { stage: "publish", label: "流水线已就绪", detail: "基线、需求、原型、评审和内容都已齐备，可以运行发布 dry-run。" };
+    }
+
+    function withEmbed(url) {
+      try {
+        const parsed = new URL(url);
+        parsed.searchParams.set(EMBED_QUERY, "1");
+        return parsed.toString();
+      } catch {
+        return url;
+      }
+    }
+
+    function readCockpitStage() {
+      try {
+        return localStorage.getItem("beepress.cockpit.stage") || "prototype";
+      } catch {
+        return "prototype";
+      }
+    }
+
+    function writeCockpitStage(stage) {
+      try {
+        localStorage.setItem("beepress.cockpit.stage", stage);
+      } catch {
+        // Keep the in-memory stage when storage is unavailable.
+      }
+    }
+
+    const COCKPIT_CWD_KEY = "beepress.cockpit.cwd";
+
+    function rememberCockpitCwd(cwd) {
+      try {
+        if (cwd && localStorage.getItem(COCKPIT_CWD_KEY) !== cwd) localStorage.setItem(COCKPIT_CWD_KEY, cwd);
+      } catch {
+        // Private mode or a blocked storage quota should not break the cockpit.
+      }
+    }
+
+    function readRememberedCockpitCwd() {
+      try {
+        return localStorage.getItem(COCKPIT_CWD_KEY) || null;
+      } catch {
+        return null;
+      }
+    }
+
+    /**
+     * The cockpit must follow the session the user is looking at, not whichever
+     * session changed last. `retainedBy.mainView` is DSH's own notion of the
+     * visible conversation; while a global panel covers the main view it drops
+     * to zero, so the last known cwd is kept as the fallback.
+     */
+    function selectCockpitCwd(sessions) {
+      const rows = Object.values(sessions.byId).filter((row) => row && row.cwd && !row.parentId);
+      const visible = rows.find((row) => (row.retainedBy?.mainView ?? 0) > 0);
+      if (visible) {
+        rememberCockpitCwd(visible.cwd);
+        return visible.cwd;
+      }
+      const remembered = readRememberedCockpitCwd();
+      if (remembered && rows.some((row) => row.cwd === remembered)) return remembered;
+      let best;
+      for (const row of rows) if (!best || row.updatedAt > best.updatedAt) best = row;
+      if (best) rememberCockpitCwd(best.cwd);
+      return best?.cwd;
+    }
+
+    function CockpitIcon({ size = 16 } = {}) {
+      return h(BeeIcon, { size });
+    }
+
+    function CockpitEmpty() {
+      const items = [
+        ["◈", "生产基线", "技术栈、UI 规范和项目上下文一次锁定。"],
+        ["▤", "需求规格", "FRS、验收标准和功能点规则。"],
+        ["▷", "真实原型", "直接运行 dev server，不再看截图猜交互。"],
+        ["◎", "源码级评审", "点选原型元素，把批注锚到源码坐标。"],
+        ["▥", "内容锁", "文档、引用、截图与录屏统一验收。"],
+        ["↗", "发布 dry-run", "目的地适配器先演练，再真正发布。"],
+      ];
+      return h(
+        "div",
+        { className: "bp-empty" },
+        h(
+          "div",
+          { className: "bp-empty-inner" },
+          h("div", { className: "bp-kicker" }, "Bee Press · Prototype to production"),
+          h("h1", null, "把你的 vibecoding 玩具", h("br"), "变成生产级产品应用"),
+          h("p", null, "Bee Press 是 DSH 之上的原型开发操作台：需求、真实原型、源码锚点评审、内容锁和发布，在同一条流水线上完成。"),
+          h(
+            "div",
+            { className: "bp-empty-actions" },
+            h("button", { className: "bp-btn", "data-primary": "true", onClick: () => bridge.pickProject().catch(() => {}) }, "导入开发项目"),
+            h("button", { className: "bp-btn", onClick: () => bridge.startSession() }, "新建项目会话"),
+            h("button", { className: "bp-btn", onClick: () => bridge.openChat() }, "回到对话"),
+          ),
+          h(
+            "div",
+            { className: "bp-grid" },
+            items.map(([icon, title, text]) =>
+              h("div", { className: "bp-grid-card", key: title }, h("span", { className: "bp-grid-icon" }, icon), h("b", null, title), h("span", null, text)),
+            ),
+          ),
+        ),
+      );
+    }
+
+    function CockpitRail({ data, stage, goStage }) {
+      return h(
+        "aside",
+        { className: "bp-rail" },
+        h("div", { className: "bp-rail-label" }, "生产流水线"),
+        STAGES.map((item) => {
+          const state = stageState(item.key, data);
+          return h(
+            "button",
+            {
+              key: item.key,
+              className: "bp-stage",
+              "data-active": String(item.key === stage),
+              onClick: () => goStage(item.key),
+            },
+            h("span", { className: "bp-stage-icon" }, item.icon),
+            h(
+              "span",
+              { style: { minWidth: 0 } },
+              h("span", { className: "bp-stage-title" }, item.title),
+              h("span", { className: "bp-stage-desc" }, item.description),
+              h("span", { className: "bp-stage-state", style: state.ready ? { color: "var(--bp-success)" } : undefined }, h("span", { className: "bp-dot" }), state.label),
+            ),
+          );
+        }),
+      );
+    }
+
+    function CockpitInspector({ cwd, data, state, reload, goStage }) {
+      const [output, setOutput] = React.useState("");
+      const reviews = data?.reviews?.comments || [];
+      const next = nextAction(data);
+      const resolve = async (id) => {
+        setOutput("处理中…");
+        try {
+          await request("/review/resolve", { root: cwd, id });
+          setOutput("");
+          await reload();
+        } catch (error) {
+          setOutput(error instanceof Error ? error.message : String(error));
+        }
+      };
+      return h(
+        "aside",
+        { className: "bp-inspector" },
+        h(
+          "section",
+          { className: "bp-inspector-block" },
+          h("div", { className: "bp-inspector-title" }, h("span", null, "下一步"), state.loading ? h("span", null, "刷新中") : null),
+          h(
+            "div",
+            { className: "bp-next" },
+            h("div", { className: "bp-next-label" }, "建议动作"),
+            h("div", { className: "bp-next-title" }, next.label),
+            h("div", { className: "bp-next-detail" }, next.detail),
+            h("button", { className: "bp-btn", onClick: () => goStage(next.stage) }, "去处理 →"),
+          ),
+        ),
+        h(
+          "section",
+          { className: "bp-inspector-block" },
+          h("div", { className: "bp-inspector-title" }, h("span", null, "流水线状态"), h("span", null, projectName(cwd))),
+          h(
+            "div",
+            { className: "bp-card" },
+            STAGES.map((item) => {
+              const status = stageState(item.key, data);
+              return h(
+                "div",
+                { className: "bp-pipeline-row", key: item.key, "data-ready": String(status.ready) },
+                h("span", { className: "bp-dot", style: { color: status.ready ? "var(--bp-success)" : "var(--dsh-text-secondary, #656d76)" } }),
+                h("span", { className: "bp-pipeline-name" }, item.title),
+                h("span", { className: "bp-pipeline-state" }, status.label),
+              );
+            }),
+          ),
+        ),
+        h(
+          "section",
+          { className: "bp-inspector-block" },
+          h("div", { className: "bp-inspector-title" }, h("span", null, "待处理批注"), h("span", null, String(reviews.length))),
+          reviews.length
+            ? reviews.slice(0, 5).map((review) =>
+                h(
+                  "div",
+                  { className: "bp-card bp-review-item", key: review.id },
+                  h("div", { className: "bp-review-body" }, review.body),
+                  h("div", { className: "bp-review-meta" }, [review.frs, review.route, review.author].filter(Boolean).join(" · ")),
+                  h("button", { className: "bp-btn", onClick: () => resolve(review.id) }, "标记解决"),
+                ),
+              )
+            : h("div", { className: "bp-card", style: { color: "var(--dsh-text-secondary, #656d76)", fontSize: "10px" } }, "没有待处理批注。原型里的评论会实时出现在这里。"),
+          output ? h("div", { className: "bp-error" }, output) : null,
+        ),
+        h(
+          "section",
+          { className: "bp-inspector-block" },
+          h("div", { className: "bp-inspector-title" }, h("span", null, "Bee Press 核心能力")),
+          h(
+            "div",
+            { className: "bp-capabilities" },
+            [
+              ["⌘", "源码锚点评审", "点选真实元素，批注落到源码坐标。"],
+              ["◉", "真实原型优先", "看运行中的交互，而不是静态稿。"],
+              ["▤", "内容锁与引用校验", "文档、截图、引用一起验收。"],
+              ["↗", "发布 dry-run", "先看清变化，再发布到目标端。"],
+            ].map(([mark, title, text]) =>
+              h(
+                "div",
+                { className: "bp-capability", key: title },
+                h("span", { className: "bp-capability-mark" }, mark),
+                h("span", null, h("b", null, title), text),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    function PrototypePanel({ cwd, state, reload, stage }) {
+      const status = state.data?.status?.prototype;
+      const devScript = status?.devScript;
+      const installed = status?.installed !== false;
+      const ready = Boolean(devScript) && installed;
+      const [url, setUrl] = React.useState("");
+      const [error, setError] = React.useState("");
+      const [starting, setStarting] = React.useState(false);
+      const [installing, setInstalling] = React.useState(false);
+      const [attempted, setAttempted] = React.useState(false);
+      const [width, setWidth] = React.useState("100%");
+      const [nonce, setNonce] = React.useState(0);
+      const [loaded, setLoaded] = React.useState(false);
+      const [embed, setEmbed] = React.useState(null);
+      const frameRef = React.useRef(null);
+
+      React.useEffect(() => {
+        if (status?.url) setUrl(status.url);
+      }, [status?.url, cwd]);
+
+      React.useEffect(() => {
+        setAttempted(false);
+        setEmbed(null);
+        setLoaded(false);
+      }, [cwd]);
+
+      const start = React.useCallback(async () => {
+        if (!cwd) return;
+        setStarting(true);
+        setError("");
+        try {
+          const result = await request("/prototype/start", { root: cwd });
+          setUrl(result.url);
+          setLoaded(false);
+          setEmbed(null);
+          await reload();
+        } catch (reason) {
+          setError(reason instanceof Error ? reason.message : String(reason));
+        } finally {
+          setStarting(false);
+        }
+      }, [cwd, reload]);
+
+      const install = React.useCallback(async () => {
+        if (!cwd || installing) return;
+        setInstalling(true);
+        setError("");
+        try {
+          await request("/prototype/install", { root: cwd });
+          await reload();
+          await start();
+        } catch (reason) {
+          setError(reason instanceof Error ? reason.message : String(reason));
+        } finally {
+          setInstalling(false);
+        }
+      }, [cwd, installing, reload, start]);
+
+      React.useEffect(() => {
+        if (!cwd || !devScript || !installed || url || starting || installing || attempted) return;
+        setAttempted(true);
+        start();
+      }, [attempted, cwd, devScript, installed, installing, start, starting, url]);
+
+      React.useEffect(() => {
+        const onMessage = (event) => {
+          const frame = frameRef.current;
+          if (!frame || event.source !== frame.contentWindow) return;
+          const data = event.data;
+          if (!data || data.channel !== REVIEW_CHANNEL || data.type !== "state") return;
+          setEmbed(data);
+        };
+        window.addEventListener("message", onMessage);
+        return () => window.removeEventListener("message", onMessage);
+      }, []);
+
+      const send = (command, value) => {
+        frameRef.current?.contentWindow?.postMessage({ channel: REVIEW_CHANNEL, type: "command", command, value }, "*");
+      };
+
+      const refresh = () => {
+        setNonce((value) => value + 1);
+        setLoaded(false);
+        setEmbed(null);
+      };
+
+      const frs = embed?.frs?.length
+        ? embed.frs
+        : (state.data?.status?.docs?.features?.keys || []).slice(0, 3).map((key) => ({ key, title: key }));
+      const open = embed?.open ?? openReviewCount(state.data);
+      const routeOpen = embed?.routeOpen ?? open;
+      const bridgeReady = Boolean(embed);
+
+      if (!ready) {
+        const reason = status?.reason || "在工作区没有找到带 dev 脚本的 package.json。";
+        const scanned = status?.scanned || [];
+        return h(
+          "div",
+          { className: "bp-preview-wrap" },
+          h(
+            "div",
+            { className: "bp-preview-empty" },
+            h("strong", null, status?.found ? "原型依赖还没安装" : "这个工作区还没有可运行的原型"),
+            h("span", null, reason),
+            status?.found
+              ? h(
+                  "span",
+                  { className: "bp-preview-meta" },
+                  `应用目录 ${status.dir} · ${status.packageManager || "npm"} · dev = ${status.devScript}`,
+                )
+              : null,
+            h(
+              "div",
+              { className: "bp-preview-empty-actions" },
+              status?.found
+                ? h("button", { className: "bp-btn", "data-primary": "true", disabled: installing, onClick: install }, installing ? "正在安装依赖…" : "安装依赖并启动")
+                : null,
+              h("button", { className: "bp-btn", disabled: !cwd, onClick: () => reload().catch(() => {}) }, "重新检测"),
+              h("button", { className: "bp-btn", onClick: () => bridge.pickProject().catch(() => {}) }, "切换工作区"),
+              status?.found ? null : h("button", { className: "bp-btn", onClick: () => bridge.openBrowser("https://vite.dev/guide/") }, "Vite 说明"),
+            ),
+            error ? h("div", { className: "bp-error" }, error) : null,
+            scanned.length ? h("span", { className: "bp-preview-scanned" }, `已检查：${scanned.join("、")}`) : null,
+          ),
+        );
+      }
+
+      return h(
+        "div",
+        { className: "bp-preview-wrap" },
+        h(
+          "div",
+          { className: "bp-preview-head" },
+          h(
+            "div",
+            { className: "bp-preview-url" },
+            h("span", { className: "bp-live" }),
+            h("code", { title: url || "" }, url || (starting ? "正在启动 dev server…" : "等待原型服务")),
+            embed?.route ? h("span", null, "· ", embed.route) : null,
+          ),
+          h(
+            "div",
+            { className: "bp-preview-actions" },
+            h(
+              "div",
+              { className: "bp-seg" },
+              [
+                ["100%", "桌面"],
+                ["768px", "平板"],
+                ["390px", "手机"],
+              ].map(([value, label]) => h("button", { key: value, "data-on": String(width === value), onClick: () => setWidth(value) }, label)),
+            ),
+            h("button", { className: "bp-btn", onClick: refresh, disabled: !url, title: "刷新原型" }, "刷新"),
+            h("button", { className: "bp-btn", onClick: () => bridge.openBrowser(url), disabled: !url, title: "在 DSH 浏览器标签中打开完整评审页" }, "浏览器"),
+          ),
+        ),
+        h(
+          "div",
+          { className: "bp-review-strip" },
+          h(
+            "div",
+            { className: "bp-review-frs" },
+            h("span", { className: "bp-review-label" }, "FRS"),
+            frs.length ? frs.map((item) => h("span", { className: "bp-tag", key: item.key, title: item.title }, item.key)) : h("span", { className: "bp-tag" }, "APP_SHELL"),
+            embed && !embed.persistent ? h("span", { className: "bp-warn" }, "⚠ 未持久化") : null,
+            h("span", { className: "bp-count" }, `待解决 ${open}`),
+          ),
+          h(
+            "div",
+            { className: "bp-review-actions" },
+            h("button", { className: "bp-btn", "data-on": String(Boolean(embed?.commentMode)), disabled: !bridgeReady, onClick: () => send("comment-mode", !embed?.commentMode), title: bridgeReady ? "切换常驻评论模式；也可以按住 ⌘/Ctrl 临时圈选" : "原型还没有接入 Bee Review 桥" }, embed?.commentMode ? "点选中" : "评论"),
+            h("button", { className: "bp-btn", disabled: !bridgeReady, onClick: () => send("toggle-drawer"), title: "打开或关闭原型内的评论抽屉" }, `评论区${routeOpen ? ` · ${routeOpen}` : ""}`),
+            h("button", { className: "bp-btn", disabled: !bridgeReady, onClick: () => send("open-studio"), title: "打开内容检查台" }, "内容台"),
+          ),
+        ),
+        h(
+          "div",
+          { className: "bp-preview-stage" },
+          error
+            ? h("div", { className: "bp-preview-empty" }, h("strong", null, "原型启动失败"), h("span", { className: "bp-error" }, error), h("button", { className: "bp-btn", onClick: start }, "重试"))
+            : url
+              ? h(
+                  "div",
+                  { className: "bp-preview-frame", style: { maxWidth: width === "100%" ? "100%" : width } },
+                  !loaded ? h("div", { className: "bp-preview-loading" }, "正在加载原型…") : null,
+                  h("iframe", {
+                    key: `${url}-${nonce}`,
+                    ref: frameRef,
+                    src: withEmbed(url),
+                    title: "Bee Press prototype",
+                    allow: "clipboard-read; clipboard-write",
+                    onLoad: () => setLoaded(true),
+                    style: { visibility: loaded ? "visible" : "hidden" },
+                  }),
+                )
+              : h("div", { className: "bp-preview-loading" }, starting ? "正在启动 dev server…" : "等待原型服务"),
+        ),
+      );
+    }
+
+    function Cockpit({ cwd }) {
+      const [state, reload] = useBeeState(cwd);
+      const [stage, setStageState] = React.useState(readCockpitStage);
+      const setStage = (key) => {
+        setStageState(key);
+        writeCockpitStage(key);
+      };
+      const data = state.data || {};
+      const stageMeta = STAGES.find((item) => item.key === stage) || STAGES[2];
+      const Component = stageComponents[stage] || PrototypeStage;
+      const preview = stage === "prototype" || stage === "review";
+      return h(
+        "div",
+        { className: "bp-cockpit", "data-beepress-cockpit": stage },
+        h("style", null, cockpitCss),
+        h(
+          "header",
+          { className: "bp-top" },
+          h(
+            "div",
+            { className: "bp-brand" },
+            h("div", { className: "bp-brand-mark" }, h(BeeIcon, { size: 17 })),
+            h("div", null, h("div", { className: "bp-brand-name" }, "Bee Press"), h("div", { className: "bp-brand-sub" }, "Prototype to production")),
+          ),
+          h(
+            "div",
+            { className: "bp-project" },
+            h("div", { className: "bp-project-label" }, "当前工作区"),
+            h("div", { className: "bp-project-name" }, projectName(cwd)),
+            cwd ? h("code", { className: "bp-project-path", title: cwd }, cwd) : null,
+          ),
+          h(
+            "div",
+            { className: "bp-top-actions" },
+            h("button", { className: "bp-btn", onClick: () => setStage("review") }, `批注 ${openReviewCount(data)}`),
+            h("button", { className: "bp-btn", onClick: () => bridge.openWorkbench(), title: "回到 Bee Press 操作台" }, "操作台"),
+            h("button", { className: "bp-btn", onClick: () => bridge.openChat() }, "对话"),
+            h("button", { className: "bp-btn", onClick: reload, disabled: state.loading }, state.loading ? "刷新中" : "刷新"),
+          ),
+        ),
+        !cwd
+          ? h(CockpitEmpty)
+          : h(
+              "div",
+              { className: "bp-body" },
+              h(CockpitRail, { data, stage, goStage: setStage }),
+              h(
+                "main",
+                { className: "bp-main" },
+                preview
+                  ? h(PrototypePanel, { cwd, state, reload, stage })
+                  : h("div", { className: "bp-canvas" }, h(Component, { stage: stageMeta, cwd, state, reload, embedded: true })),
+              ),
+              h(CockpitInspector, { cwd, data, state, reload, goStage: setStage }),
+            ),
+      );
+    }
+
+    function CockpitRoot(props) {
+      if (typeof props.useSessions !== "function") return h(Cockpit, { cwd: undefined });
+      return h(CockpitWithSessions, props);
+    }
+
+    function CockpitWithSessions({ useSessions }) {
+      const cwd = useSessions(selectCockpitCwd);
+      return h(Cockpit, { cwd });
+    }
+
     function makeStageBody(stage) {
       const Component = stageComponents[stage.key];
       return function StageBody(props) {
@@ -477,14 +1201,54 @@ window.__ModuleLoader__.load({
       bridge.openBrowser = (url) => ctx.sidebarRight.openTab("browser", { params: { url } });
       bridge.openTerminal = () => ctx.sidebarRight.openTab("terminal");
       bridge.openFiles = () => ctx.sidebarRight.openTab("files");
+      bridge.openChat = () => ctx.layout.selectPanel(null);
+      bridge.openWorkbench = () => ctx.layout.selectPanel(COCKPIT_PANEL_ID);
+      bridge.startSession = () => ctx.uiWorkspace.startSession();
+      bridge.pickProject = async () => {
+        const root = await ctx.uiWorkspace.pickDirectory();
+        if (!root) return;
+        const workspace = await ctx.workspaces.create({ path: root });
+        await ctx.uiWorkspace.openWorkspace(workspace.workspaceId);
+        rememberCockpitCwd(root);
+        ctx.layout.selectPanel(COCKPIT_PANEL_ID);
+      };
 
       window.__beepressDesktop = {
         async openProject(root) {
           const workspace = await ctx.workspaces.create({ path: root });
           await ctx.uiWorkspace.openWorkspace(workspace.workspaceId);
+          rememberCockpitCwd(root);
+          ctx.layout.selectPanel(COCKPIT_PANEL_ID);
           return { workspaceId: workspace.workspaceId, path: root };
         },
+        openWorkbench() {
+          ctx.layout.selectPanel(COCKPIT_PANEL_ID);
+        },
+        openChat() {
+          ctx.layout.selectPanel(null);
+        },
       };
+
+      ctx.effect(
+        () => ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: COCKPIT_PANEL_ID }, CockpitRoot)),
+        "beepress: cockpit",
+      );
+      ctx.effect(
+        () =>
+          ctx.slots.inject("sidebar.panellist", () =>
+            ctx.slots.register({ name: "sidebar.panellist", id: COCKPIT_PANEL_ID, order: -10, label: () => "Bee Press" }, CockpitIcon),
+          ),
+        "beepress: cockpit icon",
+      );
+      const openCockpit = (attempt = 0) => {
+        try {
+          ctx.layout.selectPanel(COCKPIT_PANEL_ID);
+        } catch (error) {
+          if (attempt < 20) setTimeout(() => openCockpit(attempt + 1), 150);
+          else console.warn("[beepress] could not open cockpit", error);
+        }
+      };
+      setTimeout(() => openCockpit(), 0);
 
       ctx.effect(
         () =>
@@ -550,7 +1314,7 @@ window.__ModuleLoader__.load({
     return {
       id: ID,
       name: "beepress-client",
-      inject: ["slots", "sidebarRightTabs", "sidebarRight", "shortcuts", "uiWorkspace", "workspaces"],
+      inject: ["slots", "layout", "sidebarRightTabs", "sidebarRight", "shortcuts", "uiWorkspace", "workspaces"],
       apply(ctx) {
         try {
           install(ctx);

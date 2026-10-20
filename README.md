@@ -404,7 +404,11 @@ reference. Every value comes from the same tokens as the toolkit UI.
   a thin project picker that opens the DSH workspace directly. Bee Press
   registers six domain tabs in DSH's own right sidebar (baseline, requirements,
   prototype, review, content and publish) and reuses DSH's files, browser and
-  terminal tabs instead of shipping a parallel workbench.
+  terminal tabs instead of shipping a parallel workbench. The cockpit opens as
+  DSH's main panel, follows the session you are looking at, and finds the real
+  dev server even when the app lives in `web/`, `app/` or `apps/*`; if its
+  dependencies are missing it installs them with the repo's own package manager
+  before embedding the running prototype.
 - All faces share the same dependency-free workspace reader, so the project
   files stay the contract.
 

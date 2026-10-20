@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { addReview, readContext, readOpenReviews, readPublishPlan, readStatus, resolveReview } from "./host/src/project.mjs";
 import { createBeePressService } from "./host/src/service.mjs";
+import { detectPrototype } from "./host/src/prototype.mjs";
 import { apply as applyDshPlugin } from "./host/src/dsh.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -93,6 +94,49 @@ async function testCore(root) {
   assert.equal(publish.configured, false);
 }
 
+async function testPrototypeDetection() {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "beepress-prototype-"));
+  try {
+    await fs.writeFile(path.join(dir, "README.md"), "# no app here\n");
+    const empty = await detectPrototype(dir);
+    assert.equal(empty.found, false);
+    assert.match(empty.reason, /package\.json/);
+
+    await fs.mkdir(path.join(dir, "web"), { recursive: true });
+    await fs.writeFile(path.join(dir, "web", "package.json"), JSON.stringify({ scripts: { dev: "vite" } }));
+    await fs.writeFile(path.join(dir, "web", "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+    const found = await detectPrototype(dir);
+    assert.equal(found.found, true);
+    assert.equal(found.dir, "web");
+    assert.equal(found.devScript, "vite");
+    assert.equal(found.packageManager, "pnpm");
+    assert.equal(found.installed, false);
+    assert.match(found.reason, /pnpm install/);
+    await assert.rejects(() => createBeePressService().startPrototype(dir), /pnpm install/);
+
+    await fs.mkdir(path.join(dir, "web", "node_modules"), { recursive: true });
+    const installed = await detectPrototype(dir);
+    assert.equal(installed.installed, true);
+    assert.equal(installed.reason, null);
+    const service = createBeePressService();
+    assert.deepEqual(await service.installPrototype(dir), {
+      ok: true,
+      dir: "web",
+      installed: true,
+      reused: true,
+      packageManager: "pnpm",
+    });
+
+    const status = await readStatus(dir);
+    assert.equal(status.prototype.dir, "web");
+    assert.equal(status.prototype.devScript, "vite");
+    assert.equal(status.prototype.found, true);
+    assert.equal(status.prototype.installed, true);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+}
+
 async function testContentService(root) {
   const service = createBeePressService();
   const status = await service.contentStatus(root);
@@ -171,6 +215,7 @@ async function testDshPlugin(root) {
     "/beepress/api/baseline",
     "/beepress/api/content",
     "/beepress/api/content/capture",
+    "/beepress/api/prototype/install",
     "/beepress/api/prototype/start",
     "/beepress/api/publish/dry-run",
     "/beepress/api/requirements/check",
@@ -300,6 +345,7 @@ const root = await fixture();
 try {
   await testManifest();
   await testCore(root);
+  await testPrototypeDetection();
   await testContentService(root);
   await testReviewWrites(root);
   await testDshPlugin(root);

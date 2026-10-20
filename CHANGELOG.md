@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.7.4 — 2026-10-20
+
+- **Prototype runs from the real app directory** — product repos usually keep
+  the dev server in `web/`, `app/`, `apps/*` or `packages/*` instead of the
+  repository root. The cockpit now scans named candidates and any one/two-level
+  subdirectory with a `dev` script, then reports the resolved directory instead
+  of claiming there is no prototype.
+- **Package-manager aware** — the detected lockfile decides whether to run
+  `npm`, `pnpm`, `yarn` or `bun`, and missing `node_modules` is reported with
+  the exact install command.
+- **One-click install** — a new `POST /beepress/api/prototype/install` route and
+  an “安装依赖并启动” action install dependencies and then start the dev server.
+- **Cockpit follows the visible session** — the workspace shown in the cockpit
+  comes from DSH's `retainedBy.mainView` session (with a remembered fallback),
+  no longer from whichever session changed most recently.
+- **ANSI-safe URL detection** — dev servers that colorize output (`vite` splits
+  the port with escape codes) are parsed correctly.
+
 ## 0.7.3 — 2026-10-20
 
 - **Corrected product boundary** — the desktop app is now a thin project
