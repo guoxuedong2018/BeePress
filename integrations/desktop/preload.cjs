@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld("beepress", {
   chooseExisting: () => ipcRenderer.invoke("beepress:choose-existing"),
   inspect: (root) => ipcRenderer.invoke("beepress:inspect", root),
   createFeature: (payload) => ipcRenderer.invoke("beepress:create-feature", payload),
+  checkFrs: (root) => ipcRenderer.invoke("beepress:check-frs", root),
   installDependencies: (root) => ipcRenderer.invoke("beepress:install-deps", root),
   startPrototype: (root) => ipcRenderer.invoke("beepress:start-prototype", root),
   openReview: (root) => ipcRenderer.invoke("beepress:open-review", root),

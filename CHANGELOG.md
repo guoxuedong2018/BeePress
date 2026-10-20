@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.7 — 2026-10-20
+
+- **FRS check action** — the project workbench can run `check-frs` directly
+  after creating a feature folder.
+
 ## 0.6.6 — 2026-10-20
 
 - **Stage actions** — the project workbench can create a feature folder from the

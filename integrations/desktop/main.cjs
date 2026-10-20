@@ -535,6 +535,7 @@ ipcMain.handle("beepress:create-project", async (_event, { parent, name }) => {
   return root;
 });
 ipcMain.handle("beepress:create-feature", (_event, { root, title }) => createFeature(root, title));
+ipcMain.handle("beepress:check-frs", (_event, root) => runKit(root, ["check-frs"], 60_000));
 ipcMain.handle("beepress:install-deps", async (_event, root) => {
   try {
     const result = await execFileAsync(resolveNpm(), ["install"], {

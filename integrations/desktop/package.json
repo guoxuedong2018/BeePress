@@ -1,7 +1,7 @@
 {
   "name": "@beepress/desktop",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Thin Bee Press desktop shell around an upstream DeepSeek Harness profile.",
   "main": "main.cjs",
   "scripts": {

@@ -112,6 +112,11 @@ async function action(name) {
       showOutput(result.output || (result.ok ? "依赖安装完成。" : "依赖安装失败。"));
       return;
     }
+    if (name === "check-frs") {
+      const result = await window.beepress.checkFrs(root);
+      showOutput(result.output || (result.ok ? "FRS 校验通过。" : "FRS 校验失败。"));
+      return;
+    }
     if (name === "start-prototype") {
       const result = await window.beepress.startPrototype(root);
       showOutput(result.ok ? `原型已启动：${result.url}\n${result.reused ? "（复用已运行的 dev server）" : ""}` : result.error);
