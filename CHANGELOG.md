@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.2 — 2026-10-20
+
+- **Desktop launcher** — resolves `dsh` from `BEEPRESS_DSH_BIN`, the common
+  npm-global/Homebrew paths, then PATH; logs the profile and loaded URL; kills
+  the child process when startup times out or the app quits.
+- **Desktop docs** — added the exact local test loop, Electron postinstall
+  recovery and a windowless verification path.
+
 ## 0.6.1 — 2026-10-20
 
 - **Project scaffold restored** — added `scaffold/` with the FRS templates
