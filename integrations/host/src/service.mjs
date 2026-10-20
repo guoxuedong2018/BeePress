@@ -132,6 +132,20 @@ async function installPrototype(root) {
   });
 }
 
+function stopPrototype(root) {
+  const key = path.resolve(root);
+  const running = prototypeProcesses.get(key);
+  if (!running) return { ok: true, stopped: false };
+  running.child.kill();
+  prototypeProcesses.delete(key);
+  return { ok: true, stopped: true };
+}
+
+function stopAllPrototypes() {
+  for (const running of prototypeProcesses.values()) running.child.kill();
+  prototypeProcesses.clear();
+}
+
 async function startPrototype(root) {
   const cwd = path.resolve(root);
   const existing = prototypeProcesses.get(cwd);
@@ -297,6 +311,14 @@ export function createBeePressService() {
 
     installPrototype(root) {
       return installPrototype(root);
+    },
+
+    stopPrototype(root) {
+      return stopPrototype(root);
+    },
+
+    stopAllPrototypes() {
+      stopAllPrototypes();
     },
 
     async publishDryRun(root) {

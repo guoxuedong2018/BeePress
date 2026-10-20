@@ -53,6 +53,14 @@
           "docs/templates/**/*",
           "package.json"
         ]
+      },
+      {
+        "from": "../../integrations/host",
+        "to": "beepress/host",
+        "filter": [
+          "**/*",
+          "!**/node_modules/**/*"
+        ]
       }
     ]
   }

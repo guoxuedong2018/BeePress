@@ -754,7 +754,7 @@ window.__ModuleLoader__.load({
         return visible.cwd;
       }
       const remembered = readRememberedCockpitCwd();
-      if (remembered && rows.some((row) => row.cwd === remembered)) return remembered;
+      if (remembered) return remembered;
       let best;
       for (const row of rows) if (!best || row.updatedAt > best.updatedAt) best = row;
       if (best) rememberCockpitCwd(best.cwd);

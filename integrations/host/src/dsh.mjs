@@ -46,6 +46,11 @@ export function apply(ctx, config = {}) {
   const fallbackRoot = config.root || undefined;
   const beepress = createBeePressService();
   if (typeof ctx.provide === "function") ctx.provide("beepress", beepress);
+  // Dev servers are children of this process; without this they outlive the
+  // harness and later launches silently talk to a stale Vite instance.
+  if (typeof ctx.effect === "function") {
+    ctx.effect(() => () => beepress.stopAllPrototypes(), "beepress: stop prototype dev servers");
+  }
 
   async function resolveToolRoot(args, exec) {
     if (args.root) return args.root;

@@ -80,7 +80,12 @@ export async function detectPrototype(inputRoot) {
     const devScript = typeof manifest.scripts?.dev === "string" ? manifest.scripts.dev : null;
     inspected.push({ dir, hasPackageJson: true, devScript });
     if (!devScript) return;
-    usable.push({ dir, devScript, depth, name: manifest.name || "" });
+    const dependencies = Object.keys({
+      ...manifest.dependencies,
+      ...manifest.devDependencies,
+      ...manifest.optionalDependencies,
+    }).length;
+    usable.push({ dir, devScript, depth, name: manifest.name || "", dependencies });
   };
 
   await consider(root, 0);
@@ -134,8 +139,11 @@ export async function detectPrototype(inputRoot) {
   }
 
   const packageManager = await detectPackageManager(pick.dir, root);
-  const installed =
+  const hasNodeModules =
     (await isDir(path.join(pick.dir, "node_modules"))) || (pick.dir !== root && (await isDir(path.join(root, "node_modules"))));
+  // A zero-dependency app runs without node_modules; requiring the folder would
+  // block projects that never needed an install in the first place.
+  const installed = hasNodeModules || pick.dependencies === 0;
 
   return {
     root,

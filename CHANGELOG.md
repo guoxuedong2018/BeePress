@@ -13,10 +13,20 @@
 - **One-click install** — a new `POST /beepress/api/prototype/install` route and
   an “安装依赖并启动” action install dependencies and then start the dev server.
 - **Cockpit follows the visible session** — the workspace shown in the cockpit
-  comes from DSH's `retainedBy.mainView` session (with a remembered fallback),
-  no longer from whichever session changed most recently.
+  comes from DSH's `retainedBy.mainView` session, falls back to the last opened
+  project, and no longer follows whichever session changed most recently.
+- **Dev servers stop with the harness** — the plugin disposes its dev server
+  children on unload, so restarts no longer leave a stale Vite instance holding
+  the port and breaking HMR in the embedded prototype.
+- **Zero-dependency apps start without an install** — a `dev` script with no
+  dependencies is treated as ready, so tiny fixtures are not blocked on a
+  `node_modules` folder that npm never creates.
 - **ANSI-safe URL detection** — dev servers that colorize output (`vite` splits
   the port with escape codes) are parsed correctly.
+- **Desktop ships and syncs its DSH bundle** — the app bundle now contains
+  `beepress/host`, installs the profile on launch when it is missing, and
+  re-syncs the bundle so new files reach the profile instead of silently running
+  an old copy.
 
 ## 0.7.3 — 2026-10-20
 

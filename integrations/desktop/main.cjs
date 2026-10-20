@@ -1,5 +1,5 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require("electron");
-const { execFile, spawn } = require("node:child_process");
+const { execFile, spawn, spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -13,14 +13,14 @@ const KIT_ROOT = process.env.BEEPRESS_KIT_ROOT || (app?.isPackaged
   ? path.join(process.resourcesPath, "beepress")
   : path.resolve(__dirname, "../.."));
 const PROFILE = process.env.BEEPRESS_DSH_PROFILE || "web";
+const HOST_BUNDLE = process.env.BEEPRESS_HOST_BUNDLE || (app?.isPackaged
+  ? path.join(process.resourcesPath, "beepress", "host")
+  : path.resolve(__dirname, "../host"));
 const CONFIG_FILE = () => path.join(app.getPath("userData"), "desktop.json");
 const ONBOARDING = path.join(__dirname, "onboarding.html");
 
 let child;
 let window;
-let prototypeChild;
-let prototypeRoot;
-let prototypeUrl;
 
 app.setName("Bee Press");
 try {
@@ -88,6 +88,50 @@ function resolveDsh() {
   return "dsh";
 }
 
+/**
+ * `dsh plugin add file:` records the dependency but pnpm keeps the previously
+ * copied bundle, so new files in the host package never reach the profile.
+ * Re-syncing the tree on launch keeps the packaged app and local development on
+ * the same code.
+ */
+function syncHostBundle() {
+  const target = path.join(os.homedir(), ".dsh", "profiles", PROFILE, "node_modules", "@beepress", "dsh-bundle");
+  if (!fs.existsSync(path.join(HOST_BUNDLE, "package.json"))) return false;
+  fs.rmSync(target, { recursive: true, force: true });
+  fs.cpSync(HOST_BUNDLE, target, {
+    recursive: true,
+    filter: (source) => !source.includes(`${path.sep}node_modules`),
+  });
+  return true;
+}
+
+function ensureProfileBundle() {
+  const profileDir = path.join(os.homedir(), ".dsh", "profiles", PROFILE);
+  const profilePkgFile = path.join(profileDir, "package.json");
+  let declared = false;
+  try {
+    const profilePkg = JSON.parse(fs.readFileSync(profilePkgFile, "utf8"));
+    declared = Boolean(profilePkg.dependencies?.["@beepress/dsh-bundle"]);
+  } catch {
+    // A missing profile is created by the plugin command below.
+  }
+  if (!declared) {
+    const result = spawnSync(resolveDsh(), ["plugin", "--profile", PROFILE, "add", `file:${HOST_BUNDLE}`], {
+      encoding: "utf8",
+      env: { ...process.env },
+    });
+    if (result.status !== 0) {
+      console.warn(`[beepress-desktop] profile install failed: ${(result.stderr || result.stdout || "").trim()}`);
+      return;
+    }
+  }
+  try {
+    syncHostBundle();
+  } catch (error) {
+    console.warn(`[beepress-desktop] bundle sync failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 function stopHarness() {
   if (child && !child.killed) child.kill("SIGTERM");
   child = undefined;
@@ -142,90 +186,8 @@ async function runKit(root, args, timeout = 120_000) {
   }
 }
 
-function resolveNpm() {
-  const candidates = [
-    process.env.BEEPRESS_NPM,
-    path.join(os.homedir(), ".npm-global", "bin", "npm"),
-    "/opt/homebrew/bin/npm",
-    "/usr/local/bin/npm",
-    "npm",
-  ].filter(Boolean);
-  for (const candidate of candidates) {
-    if (!candidate.includes(path.sep)) return candidate;
-    try {
-      fs.accessSync(candidate, fs.constants.X_OK);
-      return candidate;
-    } catch {
-      // Try the next candidate.
-    }
-  }
-  return "npm";
-}
 
-function stopPrototype() {
-  if (prototypeChild && !prototypeChild.killed) prototypeChild.kill("SIGTERM");
-  prototypeChild = undefined;
-  prototypeRoot = undefined;
-  prototypeUrl = undefined;
-}
 
-function startPrototype(root) {
-  const project = path.resolve(root);
-  if (prototypeChild && prototypeRoot === project && prototypeUrl && !prototypeChild.killed) {
-    return Promise.resolve({ url: prototypeUrl, reused: true });
-  }
-  stopPrototype();
-  let pkg;
-  try {
-    pkg = JSON.parse(fs.readFileSync(path.join(project, "package.json"), "utf8"));
-  } catch {
-    throw new Error("项目没有 package.json，无法启动原型。");
-  }
-  if (!pkg.scripts?.dev) throw new Error("package.json 没有 scripts.dev；先接入原型 dev server。");
-  prototypeRoot = project;
-  prototypeChild = spawn(resolveNpm(), ["run", "dev"], {
-    cwd: project,
-    env: { ...kitEnv(project), BROWSER: "none" },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  return new Promise((resolve, reject) => {
-    let output = "";
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      stopPrototype();
-      reject(new Error(`原型没有在 25 秒内启动：\n${output}`));
-    }, 25_000);
-    const onData = (chunk) => {
-      output += chunk.toString();
-      const match = output.match(/https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?\/?/);
-      if (!match || settled) return;
-      settled = true;
-      clearTimeout(timer);
-      prototypeUrl = match[0];
-      resolve({ url: prototypeUrl, reused: false });
-    };
-    prototypeChild.stdout.on("data", onData);
-    prototypeChild.stderr.on("data", onData);
-    prototypeChild.once("error", (error) => {
-      clearTimeout(timer);
-      if (!settled) {
-        settled = true;
-        reject(error);
-      }
-    });
-    prototypeChild.once("exit", (code) => {
-      if (!settled && code) {
-        clearTimeout(timer);
-        settled = true;
-        reject(new Error(`原型 dev server 退出（${code}）：\n${output}`));
-      }
-      prototypeChild = undefined;
-      prototypeUrl = undefined;
-    });
-  });
-}
 
 function featureStamp() {
   const d = new Date();
@@ -349,6 +311,7 @@ async function loadHarness(projectRoot) {
   if (!(await isProject(root))) {
     throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 beepress.config.*。");
   }
+  ensureProfileBundle();
   const url = await startHarness(root);
   rememberProject(root);
   await window.loadURL(url);
@@ -642,7 +605,6 @@ async function openProjectFromMenu() {
 
 async function showProjectPicker(command) {
   stopHarness();
-  stopPrototype();
   await window.loadFile(ONBOARDING);
   if (command) sendMenuCommand(command);
 }
@@ -835,5 +797,4 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => app.quit());
 app.on("before-quit", () => {
   stopHarness();
-  stopPrototype();
 });

@@ -103,7 +103,10 @@ async function testPrototypeDetection() {
     assert.match(empty.reason, /package\.json/);
 
     await fs.mkdir(path.join(dir, "web"), { recursive: true });
-    await fs.writeFile(path.join(dir, "web", "package.json"), JSON.stringify({ scripts: { dev: "vite" } }));
+    await fs.writeFile(
+      path.join(dir, "web", "package.json"),
+      JSON.stringify({ scripts: { dev: "vite" }, dependencies: { vite: "^6.0.0" } }),
+    );
     await fs.writeFile(path.join(dir, "web", "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
     const found = await detectPrototype(dir);
     assert.equal(found.found, true);
@@ -127,6 +130,25 @@ async function testPrototypeDetection() {
       packageManager: "pnpm",
     });
 
+    await fs.writeFile(
+      path.join(dir, "web", "server.mjs"),
+      [
+        'import { createServer } from "node:http";',
+        "const port = 5399;",
+        'createServer((_, res) => res.end("fixture ok")).listen(port, () => console.log(`ready http://localhost:${port}/`));',
+      ].join("\n"),
+    );
+    await fs.writeFile(path.join(dir, "web", "package.json"), JSON.stringify({ scripts: { dev: "node server.mjs" } }));
+    assert.equal((await detectPrototype(dir)).installed, true, "zero-dependency apps need no install");
+    const running = await createBeePressService().startPrototype(dir);
+    assert.equal(running.url, "http://localhost:5399/");
+    assert.equal(await (await fetch(running.url)).text(), "fixture ok");
+    assert.equal(createBeePressService().stopPrototype(dir).stopped, true);
+
+    await fs.writeFile(
+      path.join(dir, "web", "package.json"),
+      JSON.stringify({ scripts: { dev: "vite" }, dependencies: { vite: "^6.0.0" } }),
+    );
     const status = await readStatus(dir);
     assert.equal(status.prototype.dir, "web");
     assert.equal(status.prototype.devScript, "vite");
