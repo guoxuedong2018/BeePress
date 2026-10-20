@@ -120,11 +120,13 @@ export async function detectPrototype(inputRoot) {
 
   if (!pick) {
     const manifestDirs = inspected.filter((entry) => entry.hasPackageJson);
+    const manifestDir = manifestDirs.find((entry) => entry.dir === root) || manifestDirs[0] || null;
     return {
       root,
       found: false,
       dir: null,
       absoluteDir: null,
+      manifestDir: manifestDir ? manifestDir.dir : null,
       devScript: null,
       packageManager: await detectPackageManager(root, root),
       installed: false,
@@ -150,6 +152,7 @@ export async function detectPrototype(inputRoot) {
     found: true,
     dir: path.relative(root, pick.dir) || ".",
     absoluteDir: pick.dir,
+    manifestDir: pick.dir,
     devScript: pick.devScript,
     packageManager,
     installed,
@@ -182,4 +185,68 @@ export function installCommand(packageManager) {
     default:
       return { command: process.platform === "win32" ? "npm.cmd" : "npm", args: ["install"] };
   }
+}
+
+
+const STACK_LABELS = {
+  "react-tailwind": "React + Tailwind",
+  react: "React",
+  vue2: "Vue 2.7",
+  existing: "沿用项目现状",
+};
+
+function majorOf(range) {
+  const match = String(range || "").match(/(\d+)/);
+  return match ? Number(match[1]) : null;
+}
+
+/**
+ * Infers the production stack from the real app directory so the first-run
+ * guide can offer one click instead of a blank select box.
+ */
+export async function detectStack(inputRoot) {
+  const root = path.resolve(inputRoot);
+  const detection = await detectPrototype(root);
+  const dir = detection.absoluteDir || detection.manifestDir;
+  if (!dir) return { appDir: null, stack: null, label: null, evidence: [], reason: detection.reason };
+
+  const manifest = (await readJson(path.join(dir, "package.json"))) || {};
+  const dependencies = { ...manifest.dependencies, ...manifest.devDependencies };
+  const has = (name) => Boolean(dependencies[name]);
+  const rel = path.relative(root, dir) || ".";
+  const evidence = [`${rel}/package.json`];
+
+  const react = has("react");
+  const vueRange = dependencies.vue || dependencies["vue-template-compiler"];
+  const vueMajor = majorOf(vueRange);
+  const vue2 = Boolean(vueRange) && (vueMajor === null || vueMajor < 3);
+
+  let tailwind = has("tailwindcss");
+  for (const name of ["tailwind.config.js", "tailwind.config.cjs", "tailwind.config.mjs", "tailwind.config.ts"]) {
+    if (await fs.access(path.join(dir, name)).then(() => true, () => false)) {
+      tailwind = true;
+      evidence.push(`${rel}/${name}`);
+    }
+  }
+
+  let typescript = has("typescript");
+  if (await fs.access(path.join(dir, "tsconfig.json")).then(() => true, () => false)) {
+    typescript = true;
+    evidence.push(`${rel}/tsconfig.json`);
+  }
+
+  const bundler = has("next") ? "next" : has("nuxt") ? "nuxt" : has("vite") ? "vite" : null;
+  if (bundler) evidence.push(`${rel}/package.json#${bundler}`);
+
+  const stack = vue2 ? "vue2" : react ? (tailwind ? "react-tailwind" : "react") : "existing";
+  return {
+    appDir: rel,
+    stack,
+    label: STACK_LABELS[stack],
+    framework: vue2 ? "vue2" : react ? "react" : has("vue") ? "vue3" : null,
+    tailwind,
+    typescript,
+    bundler,
+    evidence,
+  };
 }

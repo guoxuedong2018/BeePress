@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { addReview, readContext, readOpenReviews, readPublishPlan, readStatus, resolveReview } from "./host/src/project.mjs";
 import { createBeePressService } from "./host/src/service.mjs";
-import { detectPrototype } from "./host/src/prototype.mjs";
+import { detectPrototype, detectStack } from "./host/src/prototype.mjs";
 import { apply as applyDshPlugin } from "./host/src/dsh.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -141,14 +141,24 @@ async function testPrototypeDetection() {
     await fs.writeFile(path.join(dir, "web", "package.json"), JSON.stringify({ scripts: { dev: "node server.mjs" } }));
     assert.equal((await detectPrototype(dir)).installed, true, "zero-dependency apps need no install");
     const running = await createBeePressService().startPrototype(dir);
-    assert.equal(running.url, "http://localhost:5399/");
+    assert.equal(running.target, "http://localhost:5399/");
+    assert.match(running.url, /^http:\/\/127\.0\.0\.1:\d+\/$/);
     assert.equal(await (await fetch(running.url)).text(), "fixture ok");
     assert.equal(createBeePressService().stopPrototype(dir).stopped, true);
 
     await fs.writeFile(
       path.join(dir, "web", "package.json"),
-      JSON.stringify({ scripts: { dev: "vite" }, dependencies: { vite: "^6.0.0" } }),
+      JSON.stringify({
+        scripts: { dev: "vite" },
+        dependencies: { vite: "^6.0.0", react: "^19.0.0", tailwindcss: "^3.4.0" },
+      }),
     );
+    const stack = await detectStack(dir);
+    assert.equal(stack.stack, "react-tailwind");
+    assert.equal(stack.appDir, "web");
+    assert.equal(stack.bundler, "vite");
+    assert.equal(stack.label, "React + Tailwind");
+
     const status = await readStatus(dir);
     assert.equal(status.prototype.dir, "web");
     assert.equal(status.prototype.devScript, "vite");

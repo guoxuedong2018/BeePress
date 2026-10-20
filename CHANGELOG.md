@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.7.5 — 2026-10-20
+
+- **Bee Press now hosts itself** — `beepress init` ran in this repository:
+  `AGENTS.md`, `CLAUDE.md`, `.agent/skills`, `docs/kb`, `docs/WORKFLOW.md`, and
+  the route/FRS registry in `src/config/frs-map.js`. The kit's own product work
+  is specified with the same FRS template it ships (`ONBOARDING`, `COCKPIT`,
+  `REVIEW`) and `npm run check` now validates those specs.
+- **First-run guide instead of a dead end** — when the prototype cannot run,
+  the cockpit offers three plain-language steps (confirm stack → write the first
+  FRS → start the prototype) with one primary action each, evidence for the
+  detected stack, inline errors, and a skip that is remembered per workspace.
+- **Stack detection** — `detectStack()` reads the real app directory and reports
+  framework, Tailwind, TypeScript, bundler and evidence; the baseline stage can
+  adopt it in one click.
+- **Prototype feedback** — startup and load now use skeletons with stage text, a
+  12-second slow-response banner, and a failure state with collapsible log,
+  retry, install and switch-workspace exits.
+- **Same-host preview proxy** — dev servers printed `localhost` while the
+  cockpit is served from `127.0.0.1`; browsers refuse to frame a different
+  loopback alias. Prototypes are now proxied on the page's host (HTTP + HMR
+  WebSocket), which also fixes embedding when Vite binds only `::1`.
+- **Quieter layout** — the cockpit top bar drops the redundant “操作台” action,
+  the inspector keeps only “下一步” and open comments, and stage rows read as
+  “stage · result”. Adds an in-place help panel (glossary, shortcuts, reopen the
+  guide), visible focus rings and `⌘/Ctrl + Enter` to start or restart.
+
 ## 0.7.4 — 2026-10-20
 
 - **Prototype runs from the real app directory** — product repos usually keep

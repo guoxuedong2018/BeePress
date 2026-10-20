@@ -1,9 +1,11 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
+import http from "node:http";
+import net from "node:net";
 import path from "node:path";
 import { addReview, readContext, readOpenReviews, readPublishPlan, readStatus, resolveReview } from "./project.mjs";
 import { resolveKitRoot, runKit } from "./kit.mjs";
-import { detectPrototype, devCommand, installCommand } from "./prototype.mjs";
+import { detectPrototype, detectStack, devCommand, installCommand } from "./prototype.mjs";
 
 const prototypeProcesses = new Map();
 
@@ -88,6 +90,60 @@ async function createFeature(root, title) {
   return { key, relativePath: path.relative(project, featureDir), checkCommand: `npx beepress check-frs ${key}` };
 }
 
+/**
+ * Dev servers print `localhost` but often bind only `::1`. Browsers refuse to
+ * frame a loopback alias that differs from the page host, so every prototype is
+ * served through a same-host proxy that also forwards the HMR WebSocket.
+ */
+function startPreviewProxy(target) {
+  const upstream = new URL(target);
+  const host = upstream.hostname.replace(/^\[|\]$/g, "");
+  const port = Number(upstream.port || (upstream.protocol === "https:" ? 443 : 80));
+
+  const server = http.createServer((req, res) => {
+    const proxyReq = http.request(
+      { host, port, path: req.url, method: req.method, headers: { ...req.headers, host: upstream.host } },
+      (proxyRes) => {
+        res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
+        proxyRes.pipe(res);
+      },
+    );
+    proxyReq.on("error", () => {
+      if (!res.headersSent) res.writeHead(502, { "content-type": "text/plain; charset=utf-8" });
+      res.end("原型服务暂时不可用");
+    });
+    req.pipe(proxyReq);
+  });
+
+  server.on("upgrade", (req, socket, head) => {
+    const upstreamSocket = net.connect(port, host, () => {
+      const headers = { ...req.headers, host: upstream.host };
+      let raw = `${req.method} ${req.url} HTTP/1.1\r\n`;
+      for (const [key, value] of Object.entries(headers)) raw += `${key}: ${Array.isArray(value) ? value.join(", ") : value}\r\n`;
+      upstreamSocket.write(`${raw}\r\n`);
+      if (head?.length) upstreamSocket.write(head);
+      upstreamSocket.pipe(socket);
+      socket.pipe(upstreamSocket);
+    });
+    upstreamSocket.on("error", () => socket.destroy());
+    socket.on("error", () => upstreamSocket.destroy());
+  });
+
+  return new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, () => {
+      const address = server.address();
+      const port_ = typeof address === "object" && address ? address.port : null;
+      if (!port_) {
+        server.close();
+        reject(new Error("无法为原型分配代理端口。"));
+        return;
+      }
+      resolve({ server, url: `http://127.0.0.1:${port_}/` });
+    });
+  });
+}
+
 const ANSI = /\u001b\[[0-9;?]*[A-Za-z]/g;
 
 function stripAnsi(text) {
@@ -137,12 +193,16 @@ function stopPrototype(root) {
   const running = prototypeProcesses.get(key);
   if (!running) return { ok: true, stopped: false };
   running.child.kill();
+  running.proxy?.close();
   prototypeProcesses.delete(key);
   return { ok: true, stopped: true };
 }
 
 function stopAllPrototypes() {
-  for (const running of prototypeProcesses.values()) running.child.kill();
+  for (const running of prototypeProcesses.values()) {
+    running.child.kill();
+    running.proxy?.close();
+  }
   prototypeProcesses.clear();
 }
 
@@ -170,8 +230,16 @@ async function startPrototype(root) {
       if (!match || settled) return;
       settled = true;
       clearTimeout(timer);
-      prototypeProcesses.set(cwd, { child, url: match[0], dir: detected.dir });
-      resolve({ ok: true, url: match[0], reused: false, dir: detected.dir, devScript: detected.devScript });
+      startPreviewProxy(match[0]).then(
+        ({ server, url }) => {
+          prototypeProcesses.set(cwd, { child, url, target: match[0], proxy: server, dir: detected.dir });
+          resolve({ ok: true, url, target: match[0], reused: false, dir: detected.dir, devScript: detected.devScript });
+        },
+        () => {
+          prototypeProcesses.set(cwd, { child, url: match[0], target: match[0], dir: detected.dir });
+          resolve({ ok: true, url: match[0], target: match[0], reused: false, dir: detected.dir, devScript: detected.devScript });
+        },
+      );
     };
     child.stdout.on("data", onData);
     child.stderr.on("data", onData);
@@ -183,6 +251,8 @@ async function startPrototype(root) {
       }
     });
     child.once("exit", (code) => {
+      const running = prototypeProcesses.get(cwd);
+      running?.proxy?.close();
       prototypeProcesses.delete(cwd);
       if (!settled && code) {
         clearTimeout(timer);
@@ -234,6 +304,7 @@ export function createBeePressService() {
         stack: settings.stack ?? null,
         uiPreset: settings.uiPreset ?? null,
         sourceUrl: settings.sourceUrl ?? null,
+        detected: await detectStack(root),
       };
     },
 

@@ -14,3 +14,6 @@ coverage/
 **/docs/kb/_published.json
 
 integrations/desktop/release/
+
+# Bee Press per-workspace settings
+.beepress/
