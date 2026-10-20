@@ -1,5 +1,140 @@
+import { spawn } from "node:child_process";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { addReview, readContext, readOpenReviews, readPublishPlan, readStatus, resolveReview } from "./project.mjs";
-import { runKit } from "./kit.mjs";
+import { resolveKitRoot, runKit } from "./kit.mjs";
+
+const prototypeProcesses = new Map();
+
+function featureStamp() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+
+function featureSlug(title) {
+  const ascii = String(title || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return ascii || "FEATURE";
+}
+
+async function copyDirectory(from, to) {
+  await fs.mkdir(to, { recursive: true });
+  for (const entry of await fs.readdir(from, { withFileTypes: true })) {
+    const src = path.join(from, entry.name);
+    const dst = path.join(to, entry.name);
+    if (entry.isDirectory()) await copyDirectory(src, dst);
+    else if (entry.isFile()) await fs.copyFile(src, dst);
+  }
+}
+
+async function readSettings(root) {
+  try {
+    return JSON.parse(await fs.readFile(path.join(root, ".beepress", "desktop.json"), "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+async function writeSettings(root, patch) {
+  const current = await readSettings(root);
+  const next = { ...current, ...patch };
+  await fs.mkdir(path.join(root, ".beepress"), { recursive: true });
+  await fs.writeFile(path.join(root, ".beepress", "desktop.json"), `${JSON.stringify(next, null, 2)}\n`);
+  return next;
+}
+
+async function createFeature(root, title) {
+  const project = path.resolve(root);
+  const safeTitle = String(title || "").trim();
+  if (!safeTitle) throw new Error("先填功能名称。");
+  const key = `${featureStamp()}_${featureSlug(safeTitle)}`;
+  const featureDir = path.join(project, "docs", "features", key);
+  try {
+    await fs.access(featureDir);
+    throw new Error(`需求件套已存在：${path.relative(project, featureDir)}`);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  const kitRoot = await resolveKitRoot(project);
+  const templates = (await fs.access(path.join(project, "docs", "templates")).then(() => true, () => false))
+    ? path.join(project, "docs", "templates")
+    : path.join(kitRoot, "docs", "templates");
+  await copyDirectory(templates, featureDir);
+  const replace = async (name) => {
+    const file = path.join(featureDir, name);
+    const text = await fs.readFile(file, "utf8");
+    await fs.writeFile(
+      file,
+      text
+        .replaceAll("<功能名称>", safeTitle)
+        .replaceAll("<ID>_MODULE_NAME", key)
+        .replaceAll("MMDDHHMM_MODULE_NAME", key)
+        .replaceAll("YYYY-MM-DD", new Date().toISOString().slice(0, 10)),
+    );
+  };
+  for (const name of ["README.md", "FLOW.md", "STATE.md", "ACCEPTANCE.md"]) await replace(name);
+  const frsFile = path.join(featureDir, "FRS.json");
+  const frs = JSON.parse(await fs.readFile(frsFile, "utf8"));
+  frs.key = key;
+  frs.title = safeTitle;
+  frs.createdAt = new Date().toISOString().slice(0, 10);
+  frs.updatedAt = frs.createdAt;
+  await fs.writeFile(frsFile, `${JSON.stringify(frs, null, 2)}\n`);
+  return { key, relativePath: path.relative(project, featureDir), checkCommand: `npx beepress check-frs ${key}` };
+}
+
+async function startPrototype(root) {
+  const cwd = path.resolve(root);
+  const existing = prototypeProcesses.get(cwd);
+  if (existing?.url) return { ok: true, url: existing.url, reused: true };
+  const pkg = JSON.parse(await fs.readFile(path.join(cwd, "package.json"), "utf8").catch(() => "{}"));
+  if (!pkg.scripts?.dev) throw new Error("package.json 没有 dev 脚本。");
+  const child = spawn(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "dev"], {
+    cwd,
+    env: { ...process.env, BROWSER: "none" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  return new Promise((resolve, reject) => {
+    let output = "";
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      child.kill();
+      reject(new Error(`dev server 没有在 25 秒内输出 URL：\n${output}`));
+    }, 25_000);
+    const onData = (chunk) => {
+      output += chunk.toString();
+      const match = output.match(/https?:\/\/(?:localhost|127\.0\.0\.1|\[[^\]]+\]):\d+\/?/i);
+      if (!match || settled) return;
+      settled = true;
+      clearTimeout(timer);
+      prototypeProcesses.set(cwd, { child, url: match[0] });
+      resolve({ ok: true, url: match[0], reused: false });
+    };
+    child.stdout.on("data", onData);
+    child.stderr.on("data", onData);
+    child.once("error", (error) => {
+      clearTimeout(timer);
+      if (!settled) {
+        settled = true;
+        reject(error);
+      }
+    });
+    child.once("exit", (code) => {
+      prototypeProcesses.delete(cwd);
+      if (!settled && code) {
+        clearTimeout(timer);
+        settled = true;
+        reject(new Error(`dev server 退出（${code}）：\n${output}`));
+      }
+    });
+  });
+}
 
 function pageRef(page) {
   const rel = String(page || "").replace(/^\/+/, "");
@@ -35,6 +170,19 @@ function summarizeStatus(data) {
 export function createBeePressService() {
   return {
     name: "beepress",
+
+    async baseline(root) {
+      const settings = await readSettings(root);
+      return {
+        stack: settings.stack ?? null,
+        uiPreset: settings.uiPreset ?? null,
+        sourceUrl: settings.sourceUrl ?? null,
+      };
+    },
+
+    saveBaseline(root, { stack, uiPreset, sourceUrl = null }) {
+      return writeSettings(root, { stack, uiPreset, sourceUrl });
+    },
 
     status(root) {
       return readStatus(root);
@@ -81,6 +229,24 @@ export function createBeePressService() {
 
     publishPlan(root) {
       return readPublishPlan(root);
+    },
+
+    createFeature(root, title) {
+      return createFeature(root, title);
+    },
+
+    async checkFrs(root) {
+      const result = await runKit(root, ["check-frs"]);
+      return { ok: true, root: result.root, output: result.stdout.trim() };
+    },
+
+    startPrototype(root) {
+      return startPrototype(root);
+    },
+
+    async publishDryRun(root) {
+      const result = await runKit(root, ["kb-publish", "--dry-run"], { timeout: 5 * 60_000 });
+      return { ok: true, root: result.root, output: result.stdout.trim() };
     },
 
     async captureMedia(root, { kind = "shot", only = [] } = {}) {

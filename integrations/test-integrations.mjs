@@ -167,9 +167,23 @@ async function testDshPlugin(root) {
       "beepress_status",
     ],
   );
-  assert.deepEqual(routes.map((route) => route.path).sort(), ["/beepress/api/content", "/beepress/api/review/resolve", "/beepress/api/state"]);
+  assert.deepEqual(routes.map((route) => route.path).sort(), [
+    "/beepress/api/baseline",
+    "/beepress/api/content",
+    "/beepress/api/content/capture",
+    "/beepress/api/prototype/start",
+    "/beepress/api/publish/dry-run",
+    "/beepress/api/requirements/check",
+    "/beepress/api/requirements/create",
+    "/beepress/api/review/resolve",
+    "/beepress/api/state",
+  ]);
   assert.equal(provided[0][0], "beepress");
   assert.equal(typeof provided[0][1].contentStatus, "function");
+  assert.equal(typeof provided[0][1].baseline, "function");
+  assert.equal(typeof provided[0][1].saveBaseline, "function");
+  assert.equal(typeof provided[0][1].createFeature, "function");
+  assert.equal(typeof provided[0][1].startPrototype, "function");
 
   const statusTool = tools.find((tool) => tool.name === "beepress_status");
   const value = await statusTool.execute({}, { agent: {}, signal: new AbortController().signal });

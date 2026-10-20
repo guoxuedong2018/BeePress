@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="./onboarding.css" />
   </head>
   <body>
-    <div class="app" id="app" data-view="home">
+    <div class="app" id="app">
       <header class="titlebar" data-drag>
         <div class="titlebar-brand">
           <span class="mark" aria-hidden="true">
@@ -19,13 +19,11 @@
           </span>
           <span class="wordmark">Bee Press</span>
         </div>
-        <div class="titlebar-title" id="window-title">项目</div>
-        <div class="titlebar-actions">
-          <button type="button" class="toolbar-btn" id="command-trigger" title="命令面板 ⌘K">⌘ K</button>
-        </div>
+        <div class="titlebar-title">项目</div>
+        <div class="titlebar-actions"><span class="local-mark">本地优先</span></div>
       </header>
 
-      <div class="app-body" id="app-frame">
+      <div class="app-body">
         <aside class="sidebar">
           <div class="side-block">
             <div class="side-label">工作区</div>
@@ -33,360 +31,84 @@
             <button type="button" class="side-action" id="import-shortcut"><span>导入已有项目</span><kbd>⌘O</kbd></button>
             <button type="button" class="side-action" id="scan-shortcut"><span>让 Agent 搜索</span><kbd>⌘⇧F</kbd></button>
           </div>
-
           <div class="side-block side-recent">
             <div class="side-label">最近项目 <span class="side-count" id="recent-count"></span></div>
             <div id="recent-list" class="recent-list">
               <p class="empty">还没有最近项目。</p>
             </div>
           </div>
-
-          <div class="side-block side-stages">
-            <div class="side-label">生产线</div>
-            <button type="button" class="stage-nav active" data-stage="requirements">
-              <span class="stage-index">01</span>
-              <span class="stage-name">需求规格</span>
-              <span class="stage-status" id="status-requirements">—</span>
-            </button>
-            <button type="button" class="stage-nav" data-stage="prototype">
-              <span class="stage-index">02</span>
-              <span class="stage-name">原型</span>
-              <span class="stage-status" id="status-prototype">—</span>
-            </button>
-            <button type="button" class="stage-nav" data-stage="review">
-              <span class="stage-index">03</span>
-              <span class="stage-name">原型评审</span>
-              <span class="stage-status" id="status-review">—</span>
-            </button>
-            <button type="button" class="stage-nav" data-stage="content">
-              <span class="stage-index">04</span>
-              <span class="stage-name">内容工作台</span>
-              <span class="stage-status" id="status-content">—</span>
-            </button>
-            <button type="button" class="stage-nav" data-stage="publish">
-              <span class="stage-index">05</span>
-              <span class="stage-name">发布</span>
-              <span class="stage-status" id="status-publish">—</span>
-            </button>
-          </div>
-
           <div class="side-footer">
-            <button type="button" class="primary wide" id="enter-project">打开 Agent 工作区</button>
-            <button type="button" class="side-action" id="reconfigure"><span>生产基线</span></button>
-            <button type="button" class="side-action" id="switch-project"><span>全部项目</span></button>
+            <p>Bee Press 只读取本地项目。打开项目后会直接进入 DSH 工作区。</p>
           </div>
         </aside>
-        <div class="pane-handle vertical" data-handle="sidebar" id="handle-sidebar"></div>
 
         <main class="workspace">
-          <section class="view home-view" id="home-view">
-            <header class="workspace-head">
-              <div class="head-copy">
-                <p class="eyebrow">工作区</p>
-                <h1>把你的“vibecoding 玩具”<br />变成生产级产品应用。</h1>
-                <p class="lede">从已有项目开始，或者新建一个带 FRS、UI 基线、评审与内容配方的生产项目。Agent 只是入口，生产线在这里。</p>
-              </div>
-              <nav class="intake-tabs" aria-label="开始方式">
-                <button type="button" class="intake-tab active" data-intake="drop">导入项目</button>
-                <button type="button" class="intake-tab" data-intake="agent">让 Agent 找</button>
-                <button type="button" class="intake-tab" data-intake="new">新建</button>
-              </nav>
-            </header>
-
-            <div class="launcher-grid">
-              <section class="launcher-main">
-                <div class="intake-pane" data-pane="drop">
-                  <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="拖拽或选择项目">
-                    <span class="drop-mark" aria-hidden="true">↳</span>
-                    <strong>把项目拖到这里</strong>
-                    <span>文件夹或 <code>package.json</code></span>
-                    <small>Bee Press 只读取，不移动、不改写你的代码。</small>
-                  </div>
-                  <div class="pane-actions">
-                    <button type="button" class="primary" id="import-existing">选择项目目录</button>
-                    <span class="drop-hint" id="drop-hint">也可以直接拖入文件夹</span>
-                  </div>
-                </div>
-
-                <div class="intake-pane" data-pane="agent" hidden>
-                  <label class="field-label" for="agent-command">给 Agent 的指令</label>
-                  <textarea id="agent-command" rows="5">帮我找出本机最近在开发的、像产品原型或生产应用的项目。</textarea>
-                  <p class="microcopy">Run 会先打开目录选择器，只有你授权的目录才会被扫描。</p>
-                  <button type="button" class="primary" id="run-agent">Run · 授权搜索</button>
-                  <div id="scan-results" class="scan-results"></div>
-                </div>
-
-                <div class="intake-pane" data-pane="new" hidden>
-                  <label class="field-label" for="project-name">项目名</label>
-                  <input id="project-name" autocomplete="off" placeholder="例如：customer-portal" />
-                  <div class="folder-row">
-                    <span id="parent-path" class="path" title="选择项目所在目录">还没有选择目录</span>
-                    <button type="button" class="ghost small" id="choose-parent">选择目录</button>
-                  </div>
-                  <p class="microcopy">会生成 FRS 模板、知识库、Agent Skills 和 React + Tailwind starter。</p>
-                  <button type="button" class="primary" id="create-project">创建项目</button>
-                </div>
-              </section>
-
-              <aside class="launcher-aside">
-                <h2>一条生产线</h2>
-                <ol class="flow-list">
-                  <li><span>01</span><strong>需求</strong><small>FRS、验收和边界</small></li>
-                  <li><span>02</span><strong>原型</strong><small>React + Tailwind 跑起来</small></li>
-                  <li><span>03</span><strong>评审</strong><small>在真实页面圈选批注</small></li>
-                  <li><span>04</span><strong>内容</strong><small>事实、引用、截图与录屏</small></li>
-                  <li><span>05</span><strong>发布</strong><small>计划、dry-run、目标适配</small></li>
-                </ol>
-                <p class="footnote">Bee Press 只读取本地项目；不会上传代码、凭据或评审内容。所有 Agent 搜索都需要你显式授权目录。</p>
-              </aside>
+          <header class="workspace-head">
+            <div class="head-copy">
+              <p class="eyebrow">Bee Press · 原型到生产</p>
+              <h1>把你的“vibecoding 玩具”<br />变成生产级产品应用。</h1>
+              <p class="lede">选择一个项目进入工作区：需求、原型、评审、内容与发布都会作为 Bee Press 标签出现在 DSH 右侧栏。</p>
             </div>
-          </section>
+            <nav class="intake-tabs" aria-label="开始方式">
+              <button type="button" class="intake-tab active" data-intake="drop">导入项目</button>
+              <button type="button" class="intake-tab" data-intake="agent">让 Agent 找</button>
+              <button type="button" class="intake-tab" data-intake="new">新建</button>
+            </nav>
+          </header>
 
-          <section class="view setup-view" id="setup-view" hidden>
-            <header class="workspace-head">
-              <div class="head-copy">
-                <button type="button" class="back" id="setup-back">← 项目列表</button>
-                <p class="eyebrow">生产基线</p>
-                <h1>对齐技术栈与界面规范。</h1>
-                <p class="lede">Bee Press 的每个工具都依赖同一套页面结构、token 和路由。先确认基线，再开始生产。</p>
-              </div>
-            </header>
-
-            <div class="setup-layout">
-              <aside class="setup-aside">
-                <div class="baseline-card">
-                  <div class="baseline-label">当前项目</div>
-                  <div class="setup-project" id="setup-project"></div>
-                  <div class="detected" id="detected-stack"></div>
+          <div class="launcher-grid">
+            <section class="launcher-main">
+              <div class="intake-pane" data-pane="drop">
+                <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="拖拽或选择项目">
+                  <span class="drop-mark" aria-hidden="true">↳</span>
+                  <strong>把项目拖到这里</strong>
+                  <span>文件夹或 <code>package.json</code></span>
+                  <small>Bee Press 只读取，不移动、不改写你的代码。</small>
                 </div>
-                <div class="setup-steps">
-                  <div class="setup-step active"><span>1</span><div><strong>选择技术栈</strong><small>决定生产实现和 starter</small></div></div>
-                  <div class="setup-step"><span>2</span><div><strong>对齐 UI 规范</strong><small>token、组件和评审基线</small></div></div>
-                  <div class="setup-step"><span>3</span><div><strong>进入工作台</strong><small>按生产线推进五个环节</small></div></div>
-                </div>
-              </aside>
-
-              <section class="setup-main">
-                <section class="setup-block">
-                  <div class="block-head">
-                    <h2>技术栈</h2>
-                    <span class="hint">选择项目的生产实现</span>
-                  </div>
-                  <div class="option-list" id="stack-options">
-                    <button type="button" class="option" data-stack="react-tailwind">
-                      <span class="radio" aria-hidden="true"></span>
-                      <span><strong>React + Tailwind</strong><small>Vite · 推荐 · 预置 starter</small></span>
-                    </button>
-                    <button type="button" class="option" data-stack="react">
-                      <span class="radio" aria-hidden="true"></span>
-                      <span><strong>React</strong><small>Vite · 自带样式系统</small></span>
-                    </button>
-                    <button type="button" class="option" data-stack="vue2">
-                      <span class="radio" aria-hidden="true"></span>
-                      <span><strong>Vue 2.7</strong><small>Vite · 兼容适配层</small></span>
-                    </button>
-                    <button type="button" class="option" data-stack="existing">
-                      <span class="radio" aria-hidden="true"></span>
-                      <span><strong>保持项目现状</strong><small>读取 package.json 与代码结构</small></span>
-                    </button>
-                  </div>
-                </section>
-
-                <section class="setup-block">
-                  <div class="block-head">
-                    <h2>UI 样式规范</h2>
-                    <span class="hint">决定 token、组件和评审基线</span>
-                  </div>
-                  <div class="option-list" id="ui-options">
-                    <button type="button" class="option" data-ui="bee-press">
-                      <span class="radio" aria-hidden="true"></span>
-                      <span><strong>Bee Press UI Spec</strong><small>中性、克制、可访问的默认基线</small></span>
-                    </button>
-                    <button type="button" class="option" data-ui="existing">
-                      <span class="radio" aria-hidden="true"></span>
-                      <span><strong>沿用现有产品</strong><small>读取项目里的 token 和组件</small></span>
-                    </button>
-                    <button type="button" class="option" data-ui="url">
-                      <span class="radio" aria-hidden="true"></span>
-                      <span><strong>从网页提取</strong><small>给一个线上页面，分析结构和样式</small></span>
-                    </button>
-                  </div>
-                  <div class="url-row">
-                    <input id="style-url" placeholder="https://your-product.example.com" />
-                    <button type="button" class="ghost" id="analyze-url">分析网页</button>
-                  </div>
-                  <pre id="url-analysis" class="analysis" hidden></pre>
-                </section>
-
-                <div class="project-actions">
-                  <button type="button" class="primary" id="save-setup">确认基线，进入工作台</button>
-                  <button type="button" class="ghost" id="setup-cancel">取消</button>
-                </div>
-              </section>
-            </div>
-          </section>
-
-          <section class="view project-view" id="project-view" hidden>
-            <header class="workspace-head project-head">
-              <div class="head-copy">
-                <button type="button" class="back" id="back-to-launcher">← 项目列表</button>
-                <h1 id="project-title">项目</h1>
-                <p class="path-line" id="project-path"></p>
-                <div class="project-meta">
-                  <span id="project-baseline"></span>
-                  <span id="project-note"></span>
+                <div class="pane-actions">
+                  <button type="button" class="primary" id="import-existing">选择项目目录</button>
+                  <span class="drop-hint" id="drop-hint">也可以直接拖入文件夹</span>
                 </div>
               </div>
-            </header>
 
-            <div class="workbench">
-              <section class="hub-main">
-                <article class="stage-panel active" data-stage-panel="requirements">
-                  <div class="panel-head"><span class="panel-kicker">01 · 需求</span><h2>把需求变成可执行的 FRS</h2><p>先写清楚边界、验收和功能点规则，后面的原型、评审与内容都以它为事实源。</p></div>
-                  <div class="panel-form">
-                    <label class="field-label" for="feature-title">功能名称</label>
-                    <input id="feature-title" placeholder="例如：用户登录改版" />
-                    <div class="button-row">
-                      <button type="button" class="primary" data-action="create-feature">新建 FRS 件套</button>
-                      <button type="button" class="ghost" data-action="check-frs">检查 FRS</button>
-                    </div>
-                  </div>
-                </article>
+              <div class="intake-pane" data-pane="agent" hidden>
+                <label class="field-label" for="agent-command">给 Agent 的指令</label>
+                <textarea id="agent-command" rows="5">帮我找出本机最近在开发的、像产品原型或生产应用的项目。</textarea>
+                <p class="microcopy">Run 会先打开目录选择器，只有你授权的目录才会被扫描。</p>
+                <button type="button" class="primary" id="run-agent">Run · 授权搜索</button>
+                <div id="scan-results" class="scan-results"></div>
+              </div>
 
-                <article class="stage-panel" data-stage-panel="prototype">
-                  <div class="panel-head"><span class="panel-kicker">02 · 原型</span><h2>让页面先跑起来</h2><p>安装依赖、启动 dev server，再用评审层在真实页面上留下带源码坐标的意见。</p></div>
-                  <div class="button-row">
-                    <button type="button" class="primary" data-action="install-deps">安装依赖</button>
-                    <button type="button" class="ghost" data-action="start-prototype">启动原型</button>
-                  </div>
-                </article>
+              <div class="intake-pane" data-pane="new" hidden>
+                <label class="field-label" for="project-name">项目名</label>
+                <input id="project-name" autocomplete="off" placeholder="例如：customer-portal" />
+                <div class="folder-row">
+                  <span id="parent-path" class="path" title="选择项目所在目录">还没有选择目录</span>
+                  <button type="button" class="ghost small" id="choose-parent">选择目录</button>
+                </div>
+                <p class="microcopy">会生成 FRS 模板、知识库、Agent Skills 和 React + Tailwind starter。</p>
+                <button type="button" class="primary" id="create-project">创建并打开</button>
+              </div>
+            </section>
 
-                <article class="stage-panel" data-stage-panel="review">
-                  <div class="panel-head"><span class="panel-kicker">03 · 评审</span><h2>在真实页面上评审</h2><p>打开带 Bee Press Review 覆盖层的原型，圈选元素写批注；Agent 可以按坐标定位修改。</p></div>
-                  <div class="button-row">
-                    <button type="button" class="primary" data-action="open-review">打开评审页</button>
-                    <button type="button" class="ghost" data-action="review-status">查看待处理批注</button>
-                  </div>
-                </article>
-
-                <article class="stage-panel" data-stage-panel="content">
-                  <div class="panel-head"><span class="panel-kicker">04 · 内容</span><h2>让内容跟得上产品</h2><p>内容锁检查事实和引用；截图与录屏由可复现配方生成，改版后能自动发现过期素材。</p></div>
-                  <div class="button-row">
-                    <button type="button" class="primary" data-action="content-status">检查内容锁</button>
-                    <button type="button" class="ghost" data-action="capture-media">重拍过期截图</button>
-                    <button type="button" class="ghost" data-action="record-clips">重建录屏</button>
-                  </div>
-                </article>
-
-                <article class="stage-panel" data-stage-panel="publish">
-                  <div class="panel-head"><span class="panel-kicker">05 · 发布</span><h2>把内容送到目标端</h2><p>目的适配器决定发到哪里；dry-run 先看计划，再决定是否外发。</p></div>
-                  <label class="field-label" for="publish-gateway">发布目标适配器</label>
-                  <div class="url-row">
-                    <input id="publish-gateway" placeholder="./tools/publish-gateway.mjs" />
-                    <button type="button" class="ghost" data-action="save-gateway">保存目标</button>
-                    <button type="button" class="primary" data-action="publish-plan">dry-run</button>
-                  </div>
-                </article>
-              </section>
-
-            </div>
-          </section>
+            <aside class="launcher-aside">
+              <h2>进入后就是工作区</h2>
+              <ol class="flow-list">
+                <li><span>01</span><strong>选择项目</strong><small>导入、扫描或新建</small></li>
+                <li><span>02</span><strong>直接进 DSH</strong><small>不再经过第二套工作台</small></li>
+                <li><span>03</span><strong>右侧栏</strong><small>Bee Press 领域标签 + DSH 文件/浏览器/终端</small></li>
+              </ol>
+              <p class="footnote">Bee Press 不再是另一个 Agent 客户端，而是 DSH 里的生产工作流。</p>
+            </aside>
+          </div>
         </main>
-
-        <aside class="rightbar" id="rightbar">
-          <div class="tab-strip" id="tab-strip">
-            <div class="tab-chips" id="tab-chips" role="tablist" aria-label="右侧栏标签页"></div>
-            <button type="button" class="tab-action" id="tab-add" title="新建标签页">+</button>
-            <button type="button" class="tab-action" id="tab-collapse" title="收起右侧栏">»</button>
-          </div>
-
-          <div class="tab-body" id="tab-body">
-            <section class="tab-panel" data-tab-panel="output" id="output-panel" hidden>
-              <div class="panel-toolbar">
-                <div class="inspector-tabs" role="tablist" aria-label="运行检查器">
-                  <button type="button" class="inspector-tab active" data-inspector-tab="output">输出</button>
-                  <button type="button" class="inspector-tab" data-inspector-tab="history">历史 <span id="history-count"></span></button>
-                </div>
-                <span class="output-state" id="output-state">就绪</span>
-                <button type="button" class="icon-btn" id="output-clear" title="清除输出">清除</button>
-              </div>
-              <div class="inspector-panel" id="output-view">
-                <pre id="stage-output" class="stage-output" hidden></pre>
-                <div class="inspector-empty" id="output-empty">选择一个动作后，命令输出会出现在这里。</div>
-              </div>
-              <div class="inspector-panel" id="history-panel" hidden>
-                <div class="history-list" id="history-list"></div>
-              </div>
-            </section>
-
-            <section class="tab-panel" data-tab-panel="browser" id="browser-panel" hidden>
-              <header class="browser-toolbar">
-                <button type="button" class="icon-btn" id="browser-back" title="后退">←</button>
-                <button type="button" class="icon-btn" id="browser-forward" title="前进">→</button>
-                <button type="button" class="icon-btn" id="browser-reload" title="刷新">↻</button>
-                <input id="browser-url" placeholder="http://localhost:5173/" autocomplete="off" />
-                <button type="button" class="icon-btn" id="browser-go" title="前往">↵</button>
-                <button type="button" class="icon-btn" id="browser-external" title="在系统浏览器打开">↗</button>
-              </header>
-              <div class="browser-canvas">
-                <webview id="preview-webview" class="preview-webview" partition="beepress-preview"></webview>
-                <div class="browser-empty" id="browser-empty">
-                  <strong>浏览器</strong>
-                  <span>启动原型或输入本地地址，在应用内查看页面。</span>
-                </div>
-              </div>
-            </section>
-
-            <section class="tab-panel" data-tab-panel="files" id="files-panel" hidden>
-              <header class="browser-toolbar">
-                <span class="file-root" id="files-root"></span>
-                <button type="button" class="icon-btn" id="files-refresh" title="重新读取">↻</button>
-              </header>
-              <div class="file-tree" id="file-tree"></div>
-            </section>
-
-            <section class="tab-panel" data-tab-panel="file" id="file-panel" hidden>
-              <header class="browser-toolbar">
-                <span class="file-root" id="file-path"></span>
-              </header>
-              <pre class="file-content" id="file-content"></pre>
-            </section>
-
-            <section class="tab-panel" data-tab-panel="terminal" id="terminal-panel" hidden>
-              <div class="terminal-host" id="terminal-host"></div>
-              <div class="terminal-status" id="terminal-status">终端会在项目目录启动</div>
-            </section>
-
-            <section class="tab-panel" data-tab-panel="guide" id="guide-panel" hidden>
-              <div class="guide-body">
-                <p class="eyebrow">右侧栏</p>
-                <h2>添加标签页</h2>
-                <p class="guide-lede">浏览器、文件、终端和运行输出都在同一个停靠面里。关闭标签不会销毁后台进程。</p>
-                <div class="guide-list" id="guide-list"></div>
-              </div>
-            </section>
-          </div>
-        </aside>
-        <div class="pane-handle vertical" data-handle="rightbar" id="handle-rightbar"></div>
       </div>
 
       <footer class="statusbar">
-        <span id="status-project">未打开项目</span>
+        <span>未打开项目</span>
         <span class="status-spacer"></span>
-        <button type="button" class="status-toggle active" id="status-inspector">右侧栏</button>
-        <button type="button" class="status-toggle active" id="status-browser">浏览器</button>
-        <span id="status-mode">本地优先</span>
-        <span class="status-sep">·</span>
-        <span>⌘K 命令</span>
+        <span>选择项目后进入 DSH</span>
       </footer>
-    </div>
-
-    <div class="palette-backdrop" id="command-palette" hidden>
-      <div class="palette" role="dialog" aria-label="命令面板">
-        <input id="command-input" autocomplete="off" placeholder="搜索命令…" />
-        <div class="palette-list" id="command-list"></div>
-        <div class="palette-foot"><span>↑↓ 选择</span><span>↵ 执行</span><span>esc 关闭</span></div>
-      </div>
     </div>
 
     <div id="overlay" class="overlay" hidden>
@@ -394,9 +116,6 @@
       <h2 id="overlay-title">正在打开项目</h2>
       <p id="overlay-detail">启动 DeepSeek Harness…</p>
     </div>
-    <link rel="stylesheet" href="./node_modules/@xterm/xterm/css/xterm.css" />
-    <script src="./node_modules/@xterm/xterm/lib/xterm.js"></script>
-    <script src="./node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
     <script src="./onboarding.js"></script>
   </body>
 </html>

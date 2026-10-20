@@ -201,14 +201,15 @@ export function apply(ctx, config = {}) {
               try {
                 const url = new URL(req.url || "/", "http://127.0.0.1");
                 const root = url.searchParams.get("root") || undefined;
-                const [status, reviews, publish] = await Promise.all([
+                const [status, reviews, publish, baseline] = await Promise.all([
                   beepress.status(root),
                   beepress.reviews(root),
                   beepress.publishPlan(root),
+                  beepress.baseline(root),
                 ]);
                 res.statusCode = 200;
                 res.setHeader("content-type", "application/json; charset=utf-8");
-                res.end(JSON.stringify({ status, reviews, publish }, null, 2));
+                res.end(JSON.stringify({ status, reviews, publish, baseline }, null, 2));
               } catch (error) {
                 res.statusCode = 500;
                 res.setHeader("content-type", "application/json; charset=utf-8");
@@ -245,6 +246,171 @@ export function apply(ctx, config = {}) {
             },
           }),
         "beepress: http content",
+      );
+      webCtx.effect(
+        () =>
+          webCtx.webServer.register({
+            kind: "exact",
+            path: "/beepress/api/baseline",
+            async handler(req, res) {
+              res.setHeader("cache-control", "no-store");
+              try {
+                const url = new URL(req.url || "/", "http://127.0.0.1");
+                if (req.method === "GET") {
+                  const root = url.searchParams.get("root") || undefined;
+                  res.statusCode = 200;
+                  res.setHeader("content-type", "application/json; charset=utf-8");
+                  res.end(JSON.stringify(await beepress.baseline(root), null, 2));
+                  return;
+                }
+                if (req.method !== "POST") {
+                  res.statusCode = 405;
+                  res.end("Method Not Allowed");
+                  return;
+                }
+                const body = await readBody(req);
+                const saved = await beepress.saveBaseline(body.root, body);
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify(saved, null, 2));
+              } catch (error) {
+                res.statusCode = 400;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+              }
+            },
+          }),
+        "beepress: http baseline",
+      );
+      webCtx.effect(
+        () =>
+          webCtx.webServer.register({
+            kind: "exact",
+            path: "/beepress/api/requirements/create",
+            async handler(req, res) {
+              if (req.method !== "POST") {
+                res.statusCode = 405;
+                res.end("Method Not Allowed");
+                return;
+              }
+              try {
+                const body = await readBody(req);
+                const result = await beepress.createFeature(body.root, body.title);
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify(result, null, 2));
+              } catch (error) {
+                res.statusCode = 400;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+              }
+            },
+          }),
+        "beepress: http create feature",
+      );
+      webCtx.effect(
+        () =>
+          webCtx.webServer.register({
+            kind: "exact",
+            path: "/beepress/api/requirements/check",
+            async handler(req, res) {
+              if (req.method !== "POST") {
+                res.statusCode = 405;
+                res.end("Method Not Allowed");
+                return;
+              }
+              try {
+                const body = await readBody(req);
+                const result = await beepress.checkFrs(body.root);
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify(result, null, 2));
+              } catch (error) {
+                res.statusCode = 400;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+              }
+            },
+          }),
+        "beepress: http check frs",
+      );
+      webCtx.effect(
+        () =>
+          webCtx.webServer.register({
+            kind: "exact",
+            path: "/beepress/api/prototype/start",
+            async handler(req, res) {
+              if (req.method !== "POST") {
+                res.statusCode = 405;
+                res.end("Method Not Allowed");
+                return;
+              }
+              try {
+                const body = await readBody(req);
+                const result = await beepress.startPrototype(body.root);
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify(result, null, 2));
+              } catch (error) {
+                res.statusCode = 400;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+              }
+            },
+          }),
+        "beepress: http start prototype",
+      );
+      webCtx.effect(
+        () =>
+          webCtx.webServer.register({
+            kind: "exact",
+            path: "/beepress/api/content/capture",
+            async handler(req, res) {
+              if (req.method !== "POST") {
+                res.statusCode = 405;
+                res.end("Method Not Allowed");
+                return;
+              }
+              try {
+                const body = await readBody(req);
+                const result = await beepress.captureMedia(body.root, { kind: body.kind, only: body.only });
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify(result, null, 2));
+              } catch (error) {
+                res.statusCode = 400;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+              }
+            },
+          }),
+        "beepress: http capture media",
+      );
+      webCtx.effect(
+        () =>
+          webCtx.webServer.register({
+            kind: "exact",
+            path: "/beepress/api/publish/dry-run",
+            async handler(req, res) {
+              if (req.method !== "POST") {
+                res.statusCode = 405;
+                res.end("Method Not Allowed");
+                return;
+              }
+              try {
+                const body = await readBody(req);
+                const result = await beepress.publishDryRun(body.root);
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify(result, null, 2));
+              } catch (error) {
+                res.statusCode = 400;
+                res.setHeader("content-type", "application/json; charset=utf-8");
+                res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+              }
+            },
+          }),
+        "beepress: http publish dry run",
       );
       webCtx.effect(
         () =>

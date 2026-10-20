@@ -28,13 +28,19 @@ does not depend on files outside the package.
 | `beepress_publish_plan` | Compare local pages with `docs/kb/_published.json` and show the destination |
 | `beepress_capture_media` | Rebuild screenshots or clips with the reproducible recipe runner |
 
-The dsh plugin also ships a **Bee Press** right-sidebar tab. It reads the
-current Session workspace, shows content pages/review counts/specs, the content
-lock and publish plan, lists open reviews, supports refresh, and resolves a
-comment in place. The HTTP paths are `/beepress/api/state`,
-`/beepress/api/content` and `/beepress/api/review/resolve`.
+The dsh plugin registers six **Bee Press** page types in DSH's own right
+sidebar: production baseline, requirements, prototype, review, content and
+publish. Each has a body and title slot plus a guide entry, and the tab strip is
+DSH's own. Prototype/review open DSH's browser tab; files and terminal stay
+DSH's built-in tabs.
 
-![Bee Press panel in DeepSeek Harness](../../docs/assets/dsh-bee-press-panel.png)
+The HTTP paths are `/beepress/api/state`, `/beepress/api/content`,
+`/beepress/api/baseline`, `/beepress/api/requirements/create`,
+`/beepress/api/requirements/check`, `/beepress/api/prototype/start`,
+`/beepress/api/content/capture`, `/beepress/api/publish/dry-run` and
+`/beepress/api/review/resolve`.
+
+![Bee Press tabs in DeepSeek Harness](../../docs/assets/dsh-bee-press-panel.png)
 
 The MCP entrypoint remains read-only: Cursor/Claude/Codex get the read tools,
 not review writes, content confirmation, media capture, or publishing.
@@ -50,7 +56,7 @@ dsh plugin --profile web add "file:$PWD/integrations/host"
 Restart the Web UI or let the profile HMR pick up the patch, then:
 
 1. Open a session in the target workspace.
-2. Open the right sidebar and choose **Bee Press** from the guide.
+2. Open the right sidebar and choose **生产基线 / 需求 / 原型 / 评审 / 内容 / 发布** from the guide.
 3. Or ask the agent: `Use beepress_status and summarize the content workspace.`
 
 For a one-off overlay without installing:

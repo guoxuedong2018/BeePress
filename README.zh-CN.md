@@ -265,7 +265,7 @@ npm run build:demo  # 生产构建
 [`integrations/`](./integrations) 把 Bee Press 接到 Agent runtime 上：
 
 - [`integrations/host`](./integrations/host) — `@beepress/dsh-bundle`，包含 DeepSeek Harness 插件、右侧栏 Bee Press 面板、评论写工具，以及 `beepress-mcp` stdio 入口，可接 Cursor、Claude、Codex 或其他 MCP 客户端。
-- [`integrations/desktop`](./integrations/desktop) — 品牌化薄 Electron 壳，启动上游 dsh profile 并加载 Web UI，不 fork 内核。首屏是 Bee Press 启动器：导入已有项目、新建脚手架项目，或打开最近工作区。工作台采用可拖拽的工作区与 DSH 风格右侧栏标签系统（运行输出、浏览器、文件、终端），每个生产阶段有独立运行历史，并提供原生应用菜单与 `⌘K` 命令面板。标签类型可通过 `window.beepressTabs.register(...)` 注册，并可提供 `render(panel)` 自定义正文。
+- [`integrations/desktop`](./integrations/desktop) — 品牌化薄 Electron 壳，启动上游 dsh profile 并加载 Web UI，不 fork 内核。首屏是 Bee Press 启动器：导入已有项目、新建脚手架项目，或打开最近工作区。桌面端只保留一个薄项目选择器，选中后直接进入 DSH 工作区。Bee Press 通过 DSH 自己的右侧栏注册六个领域标签（生产基线、需求、原型、评审、内容、发布），文件、浏览器和终端直接复用 DSH 自带标签，不再维护平行工作台。
 - 所有入口共用同一个无依赖的工作区读取器，项目文件仍是契约。
 
 ```bash
