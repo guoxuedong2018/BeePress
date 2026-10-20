@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require("electron")
 const { execFile, spawn } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
+const crypto = require("node:crypto");
 const path = require("node:path");
 const { promisify } = require("node:util");
 
@@ -20,6 +21,8 @@ let child;
 let window;
 let prototypeChild;
 let prototypeRoot;
+let pty;
+const terminalSessions = new Map();
 let prototypeUrl;
 
 app.setName("Bee Press");
@@ -570,6 +573,25 @@ async function inspectProject(root) {
   };
 }
 
+function getPty() {
+  pty ??= require("node-pty");
+  return pty;
+}
+
+function stopTerminals() {
+  for (const session of terminalSessions.values()) {
+    try { session.kill(); } catch { /* already exited */ }
+  }
+  terminalSessions.clear();
+}
+
+function resolveInsideRoot(root, relative = "") {
+  const base = path.resolve(root);
+  const target = path.resolve(base, relative || ".");
+  if (target !== base && !target.startsWith(`${base}${path.sep}`)) throw new Error("路径超出项目目录。");
+  return target;
+}
+
 function createWindow() {
   window = new BrowserWindow({
     width: 1180,
@@ -660,8 +682,12 @@ function buildMenu() {
         { label: "命令面板", accelerator: "CmdOrCtrl+K", click: () => sendMenuCommand("command-palette") },
         { type: "separator" },
         { label: "显示/隐藏侧栏", accelerator: "CmdOrCtrl+B", click: () => sendMenuCommand("toggle-sidebar") },
-        { label: "显示/隐藏检查器", accelerator: "CmdOrCtrl+J", click: () => sendMenuCommand("toggle-inspector") },
-        { label: "显示/隐藏浏览器", accelerator: "CmdOrCtrl+Shift+B", click: () => sendMenuCommand("toggle-browser") },
+        { label: "显示/隐藏右侧栏", accelerator: "CmdOrCtrl+J", click: () => sendMenuCommand("toggle-inspector") },
+        { type: "separator" },
+        { label: "运行输出", accelerator: "CmdOrCtrl+Shift+O", click: () => sendMenuCommand("tab-output") },
+        { label: "浏览器", accelerator: "CmdOrCtrl+Shift+B", click: () => sendMenuCommand("tab-browser") },
+        { label: "文件", accelerator: "CmdOrCtrl+P", click: () => sendMenuCommand("tab-files") },
+        { label: "终端", accelerator: "CmdOrCtrl+Shift+T", click: () => sendMenuCommand("tab-terminal") },
         { type: "separator" },
         { role: "reload" },
         ...(app.isPackaged ? [] : [{ role: "toggleDevTools" }]),
@@ -852,6 +878,71 @@ ipcMain.handle("beepress:save-publish-gateway", async (_event, { root, gateway }
   writeProjectSettings(root, { publishGateway: String(gateway || "").trim() || null });
   return inspectProject(root);
 });
+ipcMain.handle("beepress:list-directory", async (_event, { root, path: relative }) => {
+  const target = resolveInsideRoot(root, relative);
+  const entries = await fs.promises.readdir(target, { withFileTypes: true });
+  return entries
+    .map((entry) => ({
+      name: entry.name,
+      path: path.posix.join(String(relative || "").replaceAll("\\", "/"), entry.name),
+      type: entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other",
+    }))
+    .sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, "zh-CN", { numeric: true, sensitivity: "base" }) : a.type === "directory" ? -1 : 1));
+});
+
+ipcMain.handle("beepress:read-file", async (_event, { root, path: relative }) => {
+  const target = resolveInsideRoot(root, relative);
+  const stat = await fs.promises.stat(target);
+  if (!stat.isFile()) throw new Error("不是文件。");
+  if (stat.size > 512 * 1024) return { ok: false, message: "文件超过 512 KB，暂不预览。" };
+  const buffer = await fs.promises.readFile(target);
+  if (buffer.includes(0)) return { ok: false, message: "二进制文件，暂不预览。" };
+  return { ok: true, content: buffer.toString("utf8") };
+});
+
+ipcMain.handle("beepress:terminal-create", async (event, { cwd, cols, rows }) => {
+  const root = path.resolve(cwd);
+  const shell = process.env.SHELL || (process.platform === "win32" ? "powershell.exe" : "/bin/zsh");
+  const ptyApi = getPty();
+  const id = crypto.randomUUID();
+  const session = ptyApi.spawn(shell, [], {
+    name: "xterm-256color",
+    cols: Math.max(20, Number(cols) || 80),
+    rows: Math.max(8, Number(rows) || 24),
+    cwd: root,
+    env: { ...process.env, TERM: "xterm-256color", COLORTERM: "truecolor" },
+  });
+  terminalSessions.set(id, session);
+  const send = (channel, payload) => {
+    if (!event.sender.isDestroyed()) event.sender.send(channel, payload);
+  };
+  session.onData((data) => send("beepress:terminal-data", { id, data }));
+  session.onExit(({ exitCode, signal }) => {
+    terminalSessions.delete(id);
+    send("beepress:terminal-exit", { id, exitCode, signal });
+  });
+  return { id, shell };
+});
+
+ipcMain.handle("beepress:terminal-write", (_event, { id, data }) => {
+  terminalSessions.get(id)?.write(String(data ?? ""));
+  return true;
+});
+
+ipcMain.handle("beepress:terminal-resize", (_event, { id, cols, rows }) => {
+  terminalSessions.get(id)?.resize(Math.max(20, Number(cols) || 80), Math.max(8, Number(rows) || 24));
+  return true;
+});
+
+ipcMain.handle("beepress:terminal-dispose", (_event, id) => {
+  const session = terminalSessions.get(id);
+  if (session) {
+    terminalSessions.delete(id);
+    try { session.kill(); } catch { /* already exited */ }
+  }
+  return true;
+});
+
 ipcMain.handle("beepress:open-path", async (_event, target) => {
   const error = await shell.openPath(target);
   if (error) throw new Error(error);
@@ -893,6 +984,7 @@ app.whenReady().then(() => {
 });
 app.on("window-all-closed", () => app.quit());
 app.on("before-quit", () => {
+  stopTerminals();
   stopHarness();
   stopPrototype();
 });

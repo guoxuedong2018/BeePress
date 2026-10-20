@@ -401,8 +401,10 @@ reference. Every value comes from the same tokens as the toolkit UI.
   that boots an upstream dsh profile and loads the Web UI; no kernel fork. Its
   first screen is a Bee Press launcher for importing an existing project,
   creating a scaffolded one, or reopening a recent workspace. The workbench uses
-  a resizable workspace / inspector / browser layout, per-stage run history, a
-  native application menu and `⌘K` command palette.
+  a resizable workspace and a DSH-style right sidebar tab system (run output,
+  browser, files and terminal), per-stage run history, a native application
+  menu and `⌘K` command palette. Tab types are registerable through
+  `window.beepressTabs.register(...)`, including an optional `render(panel)` body.
 - All faces share the same dependency-free workspace reader, so the project
   files stay the contract.
 

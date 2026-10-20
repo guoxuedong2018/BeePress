@@ -293,44 +293,79 @@
           </section>
         </main>
 
-        <aside class="rightbar" id="rightbar" data-browser-open="true">
-          <section class="inspector" id="inspector-pane">
-            <header class="inspector-head">
-              <div class="inspector-tabs" role="tablist" aria-label="检查器">
-                <button type="button" class="inspector-tab active" data-inspector-tab="output">输出</button>
-                <button type="button" class="inspector-tab" data-inspector-tab="history">历史 <span id="history-count"></span></button>
-              </div>
-              <span class="output-state" id="output-state">就绪</span>
-              <button type="button" class="icon-btn" id="output-clear" title="清除输出">清除</button>
-            </header>
-            <div class="inspector-panel" id="output-panel">
-              <pre id="stage-output" class="stage-output" hidden></pre>
-              <div class="inspector-empty" id="output-empty">选择一个动作后，命令输出会出现在这里。</div>
-            </div>
-            <div class="inspector-panel" id="history-panel" hidden>
-              <div class="history-list" id="history-list"></div>
-            </div>
-          </section>
+        <aside class="rightbar" id="rightbar">
+          <div class="tab-strip" id="tab-strip">
+            <div class="tab-chips" id="tab-chips" role="tablist" aria-label="右侧栏标签页"></div>
+            <button type="button" class="tab-action" id="tab-add" title="新建标签页">+</button>
+            <button type="button" class="tab-action" id="tab-collapse" title="收起右侧栏">»</button>
+          </div>
 
-          <div class="pane-handle horizontal" data-handle="split" id="handle-split"></div>
-
-          <section class="browser-pane" id="browser-pane">
-            <header class="browser-toolbar">
-              <button type="button" class="icon-btn" id="browser-back" title="后退">←</button>
-              <button type="button" class="icon-btn" id="browser-forward" title="前进">→</button>
-              <button type="button" class="icon-btn" id="browser-reload" title="刷新">↻</button>
-              <input id="browser-url" placeholder="http://localhost:5173/" autocomplete="off" />
-              <button type="button" class="icon-btn" id="browser-go" title="前往">↵</button>
-              <button type="button" class="icon-btn" id="browser-external" title="在系统浏览器打开">↗</button>
-            </header>
-            <div class="browser-canvas">
-              <webview id="preview-webview" class="preview-webview" partition="beepress-preview"></webview>
-              <div class="browser-empty" id="browser-empty">
-                <strong>浏览器</strong>
-                <span>启动原型或输入本地地址，在应用内查看页面。</span>
+          <div class="tab-body" id="tab-body">
+            <section class="tab-panel" data-tab-panel="output" id="output-panel" hidden>
+              <div class="panel-toolbar">
+                <div class="inspector-tabs" role="tablist" aria-label="运行检查器">
+                  <button type="button" class="inspector-tab active" data-inspector-tab="output">输出</button>
+                  <button type="button" class="inspector-tab" data-inspector-tab="history">历史 <span id="history-count"></span></button>
+                </div>
+                <span class="output-state" id="output-state">就绪</span>
+                <button type="button" class="icon-btn" id="output-clear" title="清除输出">清除</button>
               </div>
-            </div>
-          </section>
+              <div class="inspector-panel" id="output-view">
+                <pre id="stage-output" class="stage-output" hidden></pre>
+                <div class="inspector-empty" id="output-empty">选择一个动作后，命令输出会出现在这里。</div>
+              </div>
+              <div class="inspector-panel" id="history-panel" hidden>
+                <div class="history-list" id="history-list"></div>
+              </div>
+            </section>
+
+            <section class="tab-panel" data-tab-panel="browser" id="browser-panel" hidden>
+              <header class="browser-toolbar">
+                <button type="button" class="icon-btn" id="browser-back" title="后退">←</button>
+                <button type="button" class="icon-btn" id="browser-forward" title="前进">→</button>
+                <button type="button" class="icon-btn" id="browser-reload" title="刷新">↻</button>
+                <input id="browser-url" placeholder="http://localhost:5173/" autocomplete="off" />
+                <button type="button" class="icon-btn" id="browser-go" title="前往">↵</button>
+                <button type="button" class="icon-btn" id="browser-external" title="在系统浏览器打开">↗</button>
+              </header>
+              <div class="browser-canvas">
+                <webview id="preview-webview" class="preview-webview" partition="beepress-preview"></webview>
+                <div class="browser-empty" id="browser-empty">
+                  <strong>浏览器</strong>
+                  <span>启动原型或输入本地地址，在应用内查看页面。</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="tab-panel" data-tab-panel="files" id="files-panel" hidden>
+              <header class="browser-toolbar">
+                <span class="file-root" id="files-root"></span>
+                <button type="button" class="icon-btn" id="files-refresh" title="重新读取">↻</button>
+              </header>
+              <div class="file-tree" id="file-tree"></div>
+            </section>
+
+            <section class="tab-panel" data-tab-panel="file" id="file-panel" hidden>
+              <header class="browser-toolbar">
+                <span class="file-root" id="file-path"></span>
+              </header>
+              <pre class="file-content" id="file-content"></pre>
+            </section>
+
+            <section class="tab-panel" data-tab-panel="terminal" id="terminal-panel" hidden>
+              <div class="terminal-host" id="terminal-host"></div>
+              <div class="terminal-status" id="terminal-status">终端会在项目目录启动</div>
+            </section>
+
+            <section class="tab-panel" data-tab-panel="guide" id="guide-panel" hidden>
+              <div class="guide-body">
+                <p class="eyebrow">右侧栏</p>
+                <h2>添加标签页</h2>
+                <p class="guide-lede">浏览器、文件、终端和运行输出都在同一个停靠面里。关闭标签不会销毁后台进程。</p>
+                <div class="guide-list" id="guide-list"></div>
+              </div>
+            </section>
+          </div>
         </aside>
         <div class="pane-handle vertical" data-handle="rightbar" id="handle-rightbar"></div>
       </div>
@@ -338,7 +373,7 @@
       <footer class="statusbar">
         <span id="status-project">未打开项目</span>
         <span class="status-spacer"></span>
-        <button type="button" class="status-toggle active" id="status-inspector">检查器</button>
+        <button type="button" class="status-toggle active" id="status-inspector">右侧栏</button>
         <button type="button" class="status-toggle active" id="status-browser">浏览器</button>
         <span id="status-mode">本地优先</span>
         <span class="status-sep">·</span>
@@ -359,6 +394,9 @@
       <h2 id="overlay-title">正在打开项目</h2>
       <p id="overlay-detail">启动 DeepSeek Harness…</p>
     </div>
+    <link rel="stylesheet" href="./node_modules/@xterm/xterm/css/xterm.css" />
+    <script src="./node_modules/@xterm/xterm/lib/xterm.js"></script>
+    <script src="./node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
     <script src="./onboarding.js"></script>
   </body>
 </html>

@@ -23,6 +23,22 @@ contextBridge.exposeInMainWorld("beepress", {
   savePublishGateway: (payload) => ipcRenderer.invoke("beepress:save-publish-gateway", payload),
   openPath: (target) => ipcRenderer.invoke("beepress:open-path", target),
   openExternal: (target) => ipcRenderer.invoke("beepress:open-external", target),
+  listDirectory: (payload) => ipcRenderer.invoke("beepress:list-directory", payload),
+  readFile: (payload) => ipcRenderer.invoke("beepress:read-file", payload),
+  createTerminal: (payload) => ipcRenderer.invoke("beepress:terminal-create", payload),
+  writeTerminal: (id, data) => ipcRenderer.invoke("beepress:terminal-write", { id, data }),
+  resizeTerminal: (id, cols, rows) => ipcRenderer.invoke("beepress:terminal-resize", { id, cols, rows }),
+  disposeTerminal: (id) => ipcRenderer.invoke("beepress:terminal-dispose", id),
+  onTerminalData: (callback) => {
+    const handler = (_event, payload) => callback(payload);
+    ipcRenderer.on("beepress:terminal-data", handler);
+    return () => ipcRenderer.removeListener("beepress:terminal-data", handler);
+  },
+  onTerminalExit: (callback) => {
+    const handler = (_event, payload) => callback(payload);
+    ipcRenderer.on("beepress:terminal-exit", handler);
+    return () => ipcRenderer.removeListener("beepress:terminal-exit", handler);
+  },
   onMenu: (callback) => {
     const handler = (_event, command) => callback(command);
     ipcRenderer.on("beepress:menu", handler);

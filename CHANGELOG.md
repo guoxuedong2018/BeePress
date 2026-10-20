@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.3 — 2026-10-20
+
+- **DSH-style right sidebar** — replaced the fixed inspector/browser split with
+  a tab strip, close buttons, a `+` guide and keep-mounted tab bodies.
+- **Registerable tab types** — `window.beepressTabs.register()` accepts
+  `kind`, `title`, `icon`, `description`, `keepMounted` and `closable`; the
+  built-ins are run output, browser, files and terminal.
+- **Files tab** — lazy project directory tree with directory-first ordering,
+  expand/collapse, text preview up to 512 KB and binary/large-file notices.
+- **Terminal tab** — xterm.js plus node-pty in the project directory; shell
+  output, input, resize and exit status are wired through IPC.
+- **Tab persistence** — open tabs, active tab, browser URL and last previewed
+  file are stored per project in localStorage; terminal and browser bodies stay
+  mounted while switching tabs.
+- **Native menu** — `⌘⇧O` output, `⌘⇧B` browser, `⌘P` files, `⌘⇧T` terminal.
+
 ## 0.7.2 — 2026-10-20
 
 - **Resizable three-pane workbench** — workspace, inspector and browser share a

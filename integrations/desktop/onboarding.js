@@ -17,15 +17,14 @@ let selectedStack = "react-tailwind";
 let selectedUi = "bee-press";
 let lastAnalysis = null;
 let currentStage = "requirements";
+let activeTab = null;
 
 const LAYOUT_KEY = "beepress.layout.v1";
 const layout = {
   sidebar: 264,
   rightbar: 360,
-  inspectorRatio: 0.58,
   sidebarOpen: true,
   rightbarOpen: true,
-  browserOpen: true,
 };
 try {
   Object.assign(layout, JSON.parse(localStorage.getItem(LAYOUT_KEY) || "{}"));
@@ -63,19 +62,12 @@ function applyLayout() {
   frame.style.setProperty("--rightbar-width", `${cols.rightbar}px`);
   app.dataset.sidebarCollapsed = cols.sidebar === 0 ? "true" : "false";
   app.dataset.rightbarCollapsed = cols.rightbar === 0 ? "true" : "false";
-  $("rightbar").dataset.browserOpen = String(layout.browserOpen);
-  const rightbarEl = $("rightbar");
-  const height = rightbarEl.getBoundingClientRect().height || window.innerHeight - 66;
-  const inspectorHeight = Math.round(height * Math.min(0.8, Math.max(0.25, layout.inspectorRatio)));
-  frame.style.setProperty("--inspector-height", `${inspectorHeight}px`);
   $("handle-sidebar").style.left = `${cols.sidebar}px`;
   $("handle-sidebar").style.display = cols.sidebar ? "" : "none";
   $("handle-rightbar").style.left = `${viewport - cols.rightbar}px`;
   $("handle-rightbar").style.display = cols.rightbar ? "" : "none";
-  $("handle-split").style.top = `${inspectorHeight}px`;
-  $("handle-split").style.display = cols.rightbar && layout.browserOpen ? "" : "none";
   $("status-inspector").classList.toggle("active", cols.rightbar > 0);
-  $("status-browser").classList.toggle("active", cols.rightbar > 0 && layout.browserOpen);
+  $("status-browser").classList.toggle("active", cols.rightbar > 0 && activeTab === "browser");
 }
 
 function bindColumnHandle(element, side) {
@@ -121,47 +113,213 @@ function bindColumnHandle(element, side) {
   element.addEventListener("lostpointercapture", end);
 }
 
-function bindSplitHandle(element) {
-  let origin = 0;
-  let baseRatio = 0;
-  let latest = 0;
-  let frame = null;
-  let capture = null;
-  const end = () => {
-    if (capture === null) return;
-    if (frame !== null) {
-      cancelAnimationFrame(frame);
-      frame = null;
-    }
-    if (element.hasPointerCapture(capture)) element.releasePointerCapture(capture);
-    capture = null;
-    $("app-frame").removeAttribute("data-dragging");
-    applyLayout();
-    saveLayout();
-  };
-  element.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0 || capture !== null) return;
-    event.preventDefault();
-    element.setPointerCapture(event.pointerId);
-    capture = event.pointerId;
-    origin = latest = event.clientY;
-    baseRatio = layout.inspectorRatio;
-    $("app-frame").setAttribute("data-dragging", "");
-  });
-  element.addEventListener("pointermove", (event) => {
-    if (capture !== event.pointerId) return;
-    latest = event.clientY;
-    frame ??= requestAnimationFrame(() => {
-      frame = null;
-      const height = $("rightbar").getBoundingClientRect().height || 1;
-      layout.inspectorRatio = Math.min(0.8, Math.max(0.25, baseRatio + (latest - origin) / height));
-      applyLayout();
-    });
-  });
-  element.addEventListener("pointerup", end);
-  element.addEventListener("pointercancel", end);
-  element.addEventListener("lostpointercapture", end);
+
+const TAB_STORE_PREFIX = "beepress.tabs.v1:";
+const tabTypes = new Map();
+let openTabs = [];
+let filePath = null;
+let browserUrl = null;
+
+function registerTabType(definition) {
+  if (!definition?.kind || tabTypes.has(definition.kind)) throw new Error(`重复的标签类型：${definition?.kind || "unknown"}`);
+  tabTypes.set(definition.kind, definition);
+  return () => tabTypes.delete(definition.kind);
 }
+
+[
+  { kind: "output", title: "运行", icon: "▣", description: "动作输出与每个阶段的历史", keepMounted: true, closable: true },
+  { kind: "browser", title: "浏览器", icon: "◎", description: "在应用内打开本地原型或线上页面", keepMounted: true, closable: true },
+  { kind: "files", title: "文件", icon: "▤", description: "浏览项目目录并预览文本文件", keepMounted: true, closable: true },
+  { kind: "file", title: "文件预览", icon: "▤", description: "", guide: false, keepMounted: true, closable: true },
+  { kind: "terminal", title: "终端", icon: ">_", description: "在项目目录启动交互式 shell", keepMounted: true, closable: true },
+  { kind: "guide", title: "新标签页", icon: "+", description: "", guide: false, keepMounted: true, closable: true },
+].forEach(registerTabType);
+
+function tabStoreKey(root = currentProject?.root) {
+  return root ? `${TAB_STORE_PREFIX}${root}` : null;
+}
+
+function saveTabs() {
+  const key = tabStoreKey();
+  if (!key) return;
+  try {
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        tabs: openTabs.filter((tab) => tab.kind !== "guide").map((tab) => tab.kind),
+        active: activeTab === "guide" ? null : activeTab,
+        filePath,
+        browserUrl,
+      }),
+    );
+  } catch {
+    // Tab persistence is best effort.
+  }
+}
+
+function tabType(kind) {
+  return tabTypes.get(kind);
+}
+
+function ensureTabPanel(kind) {
+  let panel = document.querySelector(`[data-tab-panel="${CSS.escape(kind)}"]`);
+  if (panel) return panel;
+  const type = tabType(kind);
+  if (!type?.render) return null;
+  panel = document.createElement("section");
+  panel.className = "tab-panel";
+  panel.dataset.tabPanel = kind;
+  panel.hidden = true;
+  $("tab-body").append(panel);
+  panel._cleanup = type.render(panel);
+  return panel;
+}
+
+function updateTabTitle(kind, title) {
+  const tab = openTabs.find((entry) => entry.kind === kind);
+  if (!tab) return;
+  tab.title = String(title || tabType(kind)?.title || kind).slice(0, 60);
+  renderTabStrip();
+  saveTabs();
+}
+
+function renderTabStrip() {
+  $("tab-chips").innerHTML = openTabs
+    .map(
+      (tab) => `
+        <div class="tab-chip${tab.kind === activeTab ? " active" : ""}" data-tab="${escapeHtml(tab.kind)}" role="tab" tabindex="0" aria-selected="${tab.kind === activeTab}">
+          <span class="tab-icon" aria-hidden="true">${escapeHtml(tab.icon || tabType(tab.kind)?.icon || "•")}</span>
+          <span class="tab-title">${escapeHtml(tab.title)}</span>
+          <button type="button" class="tab-close" data-close="${escapeHtml(tab.kind)}" title="关闭标签页">×</button>
+        </div>`,
+    )
+    .join("");
+  const strip = $("tab-chips");
+  const chip = strip.querySelector(".tab-chip.active");
+  if (chip) {
+    if (chip.offsetLeft < strip.scrollLeft) strip.scrollLeft = chip.offsetLeft;
+    else if (chip.offsetLeft + chip.offsetWidth > strip.scrollLeft + strip.clientWidth) {
+      strip.scrollLeft = chip.offsetLeft + chip.offsetWidth - strip.clientWidth;
+    }
+  }
+}
+
+function activateTab(kind) {
+  const type = tabType(kind);
+  if (!type || !openTabs.some((tab) => tab.kind === kind)) return;
+  if (!ensureTabPanel(kind)) return;
+  activeTab = kind;
+  for (const panel of document.querySelectorAll("[data-tab-panel]")) panel.hidden = panel.dataset.tabPanel !== kind;
+  layout.rightbarOpen = true;
+  applyLayout();
+  renderTabStrip();
+  if (kind === "browser") requestAnimationFrame(updateBrowserNav);
+  if (kind === "files") ensureFiles();
+  if (kind === "file") renderFilePanel();
+  if (kind === "terminal") {
+    ensureTerminal();
+    requestAnimationFrame(() => terminalFit());
+  }
+  if (kind === "guide") renderGuide();
+  saveTabs();
+}
+
+function openTab(kind, options = {}) {
+  const type = tabType(kind);
+  if (!type) return null;
+  if (options.replaceGuide) openTabs = openTabs.filter((entry) => entry.kind !== "guide");
+  let tab = openTabs.find((entry) => entry.kind === kind);
+  if (!tab) {
+    tab = { kind, title: options.title || type.title, icon: type.icon };
+    openTabs.push(tab);
+  }
+  if (kind === "file" && options.title) tab.title = options.title;
+  if (options.activate === false) {
+    renderTabStrip();
+    saveTabs();
+  } else {
+    activateTab(kind);
+  }
+  return tab;
+}
+
+function openGuide() {
+  if (!openTabs.some((tab) => tab.kind === "guide")) {
+    openTabs.push({ kind: "guide", title: "新标签页", icon: "+" });
+  }
+  activeTab = "guide";
+  for (const panel of document.querySelectorAll("[data-tab-panel]")) panel.hidden = panel.dataset.tabPanel !== "guide";
+  layout.rightbarOpen = true;
+  applyLayout();
+  renderGuide();
+  renderTabStrip();
+}
+
+function renderGuide() {
+  const entries = [...tabTypes.values()].filter((type) => type.guide !== false && type.kind !== "file");
+  $("guide-list").innerHTML = entries
+    .map(
+      (type) => `
+        <button type="button" class="guide-entry" data-guide-kind="${escapeHtml(type.kind)}">
+          <span class="guide-icon" aria-hidden="true">${escapeHtml(type.icon || "•")}</span>
+          <span><strong>${escapeHtml(type.title)}</strong><small>${escapeHtml(type.description || "")}</small></span>
+          <kbd>${openTabs.some((tab) => tab.kind === type.kind) ? "已打开" : ""}</kbd>
+        </button>`,
+    )
+    .join("");
+}
+
+function closeTab(kind) {
+  const index = openTabs.findIndex((tab) => tab.kind === kind);
+  if (index < 0) return;
+  if (kind === "terminal") disposeTerminal();
+  const panel = document.querySelector(`[data-tab-panel="${CSS.escape(kind)}"]`);
+  panel?._cleanup?.();
+  if (panel && tabType(kind)?.render) panel.remove();
+  openTabs.splice(index, 1);
+  if (activeTab === kind) {
+    const next = openTabs[index] || openTabs[index - 1];
+    if (next) activateTab(next.kind);
+    else openGuide();
+  } else {
+    renderTabStrip();
+    saveTabs();
+  }
+}
+
+function restoreTabs(root) {
+  disposeTerminal();
+  openTabs = [];
+  activeTab = null;
+  filePath = null;
+  browserUrl = null;
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(tabStoreKey(root)) || "null");
+  } catch {
+    saved = null;
+  }
+  const kinds = Array.isArray(saved?.tabs) ? saved.tabs.filter((kind) => tabTypes.has(kind) && kind !== "guide") : null;
+  const initial = kinds?.length ? kinds : ["output", "browser"];
+  openTabs = initial.map((kind) => ({ kind, title: tabType(kind).title, icon: tabType(kind).icon }));
+  filePath = saved?.filePath || null;
+  browserUrl = saved?.browserUrl || null;
+  renderTabStrip();
+  const desired = openTabs.some((tab) => tab.kind === saved?.active) ? saved.active : openTabs[0]?.kind;
+  if (desired) activateTab(desired);
+  if (filePath) requestAnimationFrame(() => openFile(filePath, { activate: false }));
+  if (browserUrl) requestAnimationFrame(() => showBrowser(browserUrl, { activate: false }));
+}
+
+window.beepressTabs = {
+  register: registerTabType,
+  open: openTab,
+  close: closeTab,
+  guide: openGuide,
+  get active() { return activeTab; },
+  list: () => openTabs.map((tab) => ({ ...tab })),
+};
+
 
 function setBusy(busy, title = "正在打开项目", detail = "启动 DeepSeek Harness…") {
   overlay.hidden = !busy;
@@ -189,7 +347,7 @@ function showView(name, step) {
   requestAnimationFrame(applyLayout);
 }
 
-function selectStage(name) {
+function selectStage(name, { silent = false } = {}) {
   currentStage = name;
   for (const node of document.querySelectorAll("[data-stage]")) {
     if (node.tagName === "BUTTON") node.classList.toggle("active", node.dataset.stage === name);
@@ -199,7 +357,7 @@ function selectStage(name) {
   }
   if (currentProject) {
     renderHistory();
-    restoreStageOutput();
+    restoreStageOutput({ activate: !silent });
   }
 }
 
@@ -228,19 +386,23 @@ function renderHistory() {
     .join("");
 }
 
-function restoreStageOutput() {
+function restoreStageOutput({ activate = true } = {}) {
   const latest = stageEntries()[0];
-  if (latest) showOutput(latest.text, latest.ok ? "完成" : "失败");
+  if (latest) showOutput(latest.text, latest.ok ? "完成" : "失败", { activate });
   else resetOutput();
 }
 
 function selectInspectorTab(name) {
   for (const node of document.querySelectorAll("[data-inspector-tab]")) node.classList.toggle("active", node.dataset.inspectorTab === name);
-  $("output-panel").hidden = name !== "output";
+  $("output-view").hidden = name !== "output";
   $("history-panel").hidden = name !== "history";
 }
 
 function showHome() {
+  saveTabs();
+  disposeTerminal();
+  openTabs = [];
+  activeTab = null;
   currentProject = null;
   currentStage = "requirements";
   lastAnalysis = null;
@@ -250,7 +412,8 @@ function showHome() {
   window.beepress?.recent?.().then(renderRecent).catch(() => {});
 }
 
-function showOutput(text, state = "完成") {
+function showOutput(text, state = "完成", { activate = true } = {}) {
+  if (currentProject && activate) openTab("output");
   const output = $("stage-output");
   output.hidden = false;
   output.textContent = String(text ?? "").trim() || "完成。";
@@ -406,10 +569,11 @@ function renderHub(project) {
   $("status-publish").textContent = project.publish?.configured
     ? `${project.publish.publishedPages ?? 0} 已发`
     : "未配置";
-  selectStage("requirements");
+  selectStage("requirements", { silent: true });
   $("project-note").textContent = project.templates
     ? "核心工具直接在这里使用；Agent 工作区只是其中一种入口，不是 Bee Press 本身。"
     : "项目还缺少 Bee Press 脚手架；进入 Agent 工作区后可以运行 npx beepress init 补齐。";
+  restoreTabs(project.root);
 }
 
 async function inspect(root, { skipSetup = false } = {}) {
@@ -633,20 +797,27 @@ function toggleSidebar() {
 }
 
 function toggleInspector() {
-  layout.rightbarOpen = !layout.rightbarOpen;
+  if (!layout.rightbarOpen) {
+    layout.rightbarOpen = true;
+    if (!activeTab) openTab("output");
+  } else {
+    layout.rightbarOpen = false;
+  }
   applyLayout();
   saveLayout();
 }
 
 function toggleBrowser() {
-  if (!layout.rightbarOpen || !layout.browserOpen) {
+  if (!layout.rightbarOpen || activeTab !== "browser") {
     layout.rightbarOpen = true;
-    layout.browserOpen = true;
+    openTab("browser");
+    applyLayout();
+    saveLayout();
   } else {
-    layout.browserOpen = false;
+    layout.rightbarOpen = false;
+    applyLayout();
+    saveLayout();
   }
-  applyLayout();
-  saveLayout();
 }
 
 $("status-inspector").addEventListener("click", toggleInspector);
@@ -673,16 +844,17 @@ function updateBrowserNav() {
   }
 }
 
-function showBrowser(url) {
+function showBrowser(url, { activate = true } = {}) {
   const target = normalizeBrowserUrl(url);
   if (!target) return;
-  layout.rightbarOpen = true;
-  layout.browserOpen = true;
   const cols = computeColumns($("app-frame").clientWidth || window.innerWidth, layout.sidebarOpen ? layout.sidebar : 0, layout.rightbar);
-  if (cols.rightbar === 0) {
+  if (cols.rightbar === 0 && activate) {
     window.beepress?.openExternal?.(target).catch(() => {});
     return;
   }
+  layout.rightbarOpen = true;
+  browserUrl = target;
+  openTab("browser", { activate });
   applyLayout();
   $("browser-empty").hidden = true;
   $("browser-url").value = target;
@@ -725,11 +897,18 @@ $("browser-external").addEventListener("click", async () => {
 
 previewWebview.addEventListener("did-navigate", (event) => {
   $("browser-url").value = event.url;
+  browserUrl = event.url;
+  saveTabs();
   updateBrowserNav();
 });
 previewWebview.addEventListener("did-navigate-in-page", (event) => {
   $("browser-url").value = event.url;
+  browserUrl = event.url;
+  saveTabs();
   updateBrowserNav();
+});
+previewWebview.addEventListener("page-title-updated", (event) => {
+  if (event.title) updateTabTitle("browser", event.title);
 });
 previewWebview.addEventListener("dom-ready", () => {
   $("browser-empty").hidden = true;
@@ -741,10 +920,213 @@ previewWebview.addEventListener("did-fail-load", (event) => {
   $("browser-empty").innerHTML = `<strong>页面没有加载</strong><span>${escapeHtml(event.errorDescription || "未知错误")}</span>`;
 });
 
+$("tab-chips").addEventListener("click", (event) => {
+  const close = event.target.closest("[data-close]");
+  if (close) {
+    event.stopPropagation();
+    closeTab(close.dataset.close);
+    return;
+  }
+  const chip = event.target.closest("[data-tab]");
+  if (chip) activateTab(chip.dataset.tab);
+});
+$("tab-chips").addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const chip = event.target.closest("[data-tab]");
+  if (!chip) return;
+  event.preventDefault();
+  activateTab(chip.dataset.tab);
+});
+$("tab-add").addEventListener("click", openGuide);
+$("tab-collapse").addEventListener("click", () => {
+  layout.rightbarOpen = false;
+  applyLayout();
+  saveLayout();
+});
+$("guide-list").addEventListener("click", (event) => {
+  const entry = event.target.closest("[data-guide-kind]");
+  if (!entry) return;
+  openTab(entry.dataset.guideKind, { replaceGuide: true });
+});
+
+let fileTreeRoot = null;
+let fileTreeLoaded = new Set();
+let fileContent = "";
+let fileMessage = "";
+
+async function loadDirectory(relative, container, depth) {
+  container.innerHTML = '<p class="file-empty">读取中…</p>';
+  try {
+    const entries = await window.beepress.listDirectory({ root: currentProject.root, path: relative });
+    container.innerHTML = "";
+    if (!entries.length) {
+      container.innerHTML = '<p class="file-empty">空目录</p>';
+      return;
+    }
+    for (const entry of entries) {
+      const indent = 5 + depth * 13;
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = `file-row ${entry.type === "directory" ? "directory" : ""}`;
+      row.style.paddingLeft = `${indent}px`;
+      row.dataset.file = entry.type === "file" ? entry.path : "";
+      row.dataset.dir = entry.type === "directory" ? entry.path : "";
+      row.disabled = entry.type === "other";
+      row.innerHTML = `<span class="file-glyph">${entry.type === "directory" ? "▸" : "·"}</span><span class="file-name">${escapeHtml(entry.name)}</span>`;
+      container.append(row);
+      if (entry.type === "directory") {
+        const children = document.createElement("div");
+        children.dataset.children = entry.path;
+        children.hidden = true;
+        children.style.marginLeft = `${indent + 8}px`;
+        container.append(children);
+      }
+    }
+  } catch (error) {
+    container.innerHTML = `<p class="file-empty">${escapeHtml(error instanceof Error ? error.message : String(error))}</p>`;
+  }
+}
+
+async function ensureFiles() {
+  if (!currentProject) return;
+  $("files-root").textContent = currentProject.root;
+  $("files-root").title = currentProject.root;
+  if (fileTreeRoot === currentProject.root) return;
+  fileTreeRoot = currentProject.root;
+  fileTreeLoaded = new Set();
+  await loadDirectory("", $("file-tree"), 0);
+}
+
+$("files-refresh").addEventListener("click", () => {
+  fileTreeRoot = null;
+  ensureFiles();
+});
+
+$("file-tree").addEventListener("click", async (event) => {
+  const row = event.target.closest(".file-row");
+  if (!row) return;
+  if (row.dataset.dir) {
+    const children = $("file-tree").querySelector(`[data-children="${CSS.escape(row.dataset.dir)}"]`);
+    if (!children) return;
+    if (!fileTreeLoaded.has(row.dataset.dir)) {
+      fileTreeLoaded.add(row.dataset.dir);
+      await loadDirectory(row.dataset.dir, children, row.style.paddingLeft ? Math.max(1, Math.round((parseInt(row.style.paddingLeft, 10) - 5) / 13) + 1) : 1);
+    }
+    children.hidden = !children.hidden;
+    row.querySelector(".file-glyph").textContent = children.hidden ? "▸" : "▾";
+    return;
+  }
+  if (row.dataset.file) openFile(row.dataset.file);
+});
+
+function renderFilePanel() {
+  $("file-path").textContent = filePath || "";
+  $("file-path").title = filePath || "";
+  $("file-content").textContent = fileContent || fileMessage || "选择一个文件预览。";
+}
+
+async function openFile(relative, { activate = true } = {}) {
+  if (!currentProject) return;
+  filePath = relative;
+  const title = String(relative).split("/").pop() || relative;
+  openTab("file", { title, activate });
+  if (!activate) renderTabStrip();
+  fileContent = "";
+  fileMessage = "读取中…";
+  renderFilePanel();
+  try {
+    const result = await window.beepress.readFile({ root: currentProject.root, path: relative });
+    if (result.ok) {
+      fileContent = result.content;
+      fileMessage = "";
+    } else {
+      fileContent = "";
+      fileMessage = result.message || "无法预览。";
+    }
+  } catch (error) {
+    fileContent = "";
+    fileMessage = error instanceof Error ? error.message : String(error);
+  }
+  renderFilePanel();
+  updateTabTitle("file", title);
+  saveTabs();
+}
+
+let terminal = null;
+let terminalUnsubs = [];
+let terminalResizeObserver = null;
+
+function terminalFit() {
+  if (!terminal || !$("terminal-panel").hidden) {
+    try { terminal?.fit.fit(); } catch { /* hidden or detached */ }
+  }
+}
+
+async function ensureTerminal() {
+  if (terminal || !currentProject) return;
+  if (!window.Terminal || !window.FitAddon?.FitAddon) {
+    $("terminal-status").textContent = "xterm.js 未加载。";
+    return;
+  }
+  const host = $("terminal-host");
+  const term = new window.Terminal({
+    fontFamily: '"SFMono-Regular", "SF Mono", Menlo, monospace',
+    fontSize: 11,
+    lineHeight: 1.3,
+    cursorBlink: true,
+    allowProposedApi: true,
+    theme: {
+      background: "#1b1e1b",
+      foreground: "#edf1ed",
+      cursor: "#7fb39b",
+      selectionBackground: "#3b5c4e",
+    },
+  });
+  const fit = new window.FitAddon.FitAddon();
+  term.loadAddon(fit);
+  term.open(host);
+  const dims = fit.proposeDimensions() || { cols: 80, rows: 24 };
+  try {
+    const created = await window.beepress.createTerminal({ cwd: currentProject.root, cols: dims.cols, rows: dims.rows });
+    terminal = { id: created.id, term, fit };
+    $("terminal-status").textContent = `${created.shell} · ${currentProject.root}`;
+    term.onData((data) => window.beepress.writeTerminal(created.id, data));
+    term.onResize(({ cols, rows }) => window.beepress.resizeTerminal(created.id, cols, rows));
+    terminalUnsubs.push(window.beepress.onTerminalData(({ id, data }) => {
+      if (terminal?.id === id) term.write(data);
+    }));
+    terminalUnsubs.push(window.beepress.onTerminalExit(({ id, exitCode }) => {
+      if (terminal?.id === id) $("terminal-status").textContent = `进程已退出（${exitCode}）`;
+    }));
+    terminalResizeObserver = new ResizeObserver(() => terminalFit());
+    terminalResizeObserver.observe(host);
+    requestAnimationFrame(() => {
+      terminalFit();
+      term.focus();
+    });
+  } catch (error) {
+    $("terminal-status").textContent = error instanceof Error ? error.message : String(error);
+    term.dispose();
+  }
+}
+
+function disposeTerminal() {
+  for (const unsubscribe of terminalUnsubs) unsubscribe();
+  terminalUnsubs = [];
+  terminalResizeObserver?.disconnect();
+  terminalResizeObserver = null;
+  if (!terminal) return;
+  const { id, term } = terminal;
+  terminal = null;
+  try { term.dispose(); } catch { /* already disposed */ }
+  $("terminal-host").innerHTML = "";
+  $("terminal-status").textContent = "终端会在项目目录启动";
+  window.beepress?.disposeTerminal?.(id).catch(() => {});
+}
+
+
 bindColumnHandle($("handle-sidebar"), "sidebar");
 bindColumnHandle($("handle-rightbar"), "rightbar");
-bindSplitHandle($("handle-split"));
-
 const frameObserver = new ResizeObserver(() => requestAnimationFrame(applyLayout));
 frameObserver.observe($("app-frame"));
 
@@ -757,6 +1139,10 @@ window.beepress?.onMenu?.((command) => {
   else if (command === "toggle-sidebar") toggleSidebar();
   else if (command === "toggle-inspector") toggleInspector();
   else if (command === "toggle-browser") toggleBrowser();
+  else if (command === "tab-output" && currentProject) openTab("output");
+  else if (command === "tab-browser" && currentProject) openTab("browser");
+  else if (command === "tab-files" && currentProject) openTab("files");
+  else if (command === "tab-terminal" && currentProject) openTab("terminal");
 });
 
 for (const nav of document.querySelectorAll("[data-stage]")) {
@@ -924,8 +1310,11 @@ const paletteCommands = [
   { label: "重新配置生产基线", hint: "设置", when: () => Boolean(currentProject), run: () => showSetup(currentProject) },
   { label: "打开 Agent 工作区", hint: "Enter", when: () => Boolean(currentProject), run: () => start(currentProject.root) },
   { label: "显示/隐藏侧栏", hint: "⌘B", run: toggleSidebar },
-  { label: "显示/隐藏检查器", hint: "⌘J", when: () => Boolean(currentProject), run: toggleInspector },
-  { label: "显示/隐藏浏览器", hint: "⌘⇧B", when: () => Boolean(currentProject), run: toggleBrowser },
+  { label: "显示/隐藏右侧栏", hint: "⌘J", when: () => Boolean(currentProject), run: toggleInspector },
+  { label: "显示运行输出", hint: "⌘⇧O", when: () => Boolean(currentProject), run: () => openTab("output") },
+  { label: "显示浏览器", hint: "⌘⇧B", when: () => Boolean(currentProject), run: () => openTab("browser") },
+  { label: "显示文件", hint: "⌘P", when: () => Boolean(currentProject), run: () => openTab("files") },
+  { label: "显示终端", hint: "⌘⇧T", when: () => Boolean(currentProject), run: () => openTab("terminal") },
   { label: "回到项目列表", hint: "Esc", when: () => Boolean(currentProject), run: showHome },
 ];
 let paletteIndex = 0;
