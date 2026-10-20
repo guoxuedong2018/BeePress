@@ -93,32 +93,55 @@
             <h2>需求规格</h2>
             <p class="stage-value" id="stage-requirements-value">—</p>
             <p class="stage-hint">FRS、边界、验收标准</p>
+            <div class="stage-controls">
+              <input id="feature-title" placeholder="功能名称" />
+              <button type="button" class="mini" data-action="create-feature">新建 FRS</button>
+            </div>
           </article>
           <article class="stage" id="stage-prototype">
             <div class="stage-index">02</div>
             <h2>原型</h2>
             <p class="stage-value" id="stage-prototype-value">—</p>
             <p class="stage-hint">页面、交互、状态</p>
+            <div class="stage-controls">
+              <button type="button" class="mini" data-action="install-deps">安装依赖</button>
+              <button type="button" class="mini ghost-mini" data-action="start-prototype">启动原型</button>
+            </div>
           </article>
           <article class="stage" id="stage-review">
             <div class="stage-index">03</div>
             <h2>评审</h2>
             <p class="stage-value" id="stage-review-value">—</p>
             <p class="stage-hint">带源码坐标的批注</p>
+            <div class="stage-controls">
+              <button type="button" class="mini" data-action="open-review">打开评审</button>
+              <button type="button" class="mini ghost-mini" data-action="review-status">查看批注</button>
+            </div>
           </article>
           <article class="stage" id="stage-content">
             <div class="stage-index">04</div>
             <h2>内容</h2>
             <p class="stage-value" id="stage-content-value">—</p>
             <p class="stage-hint">手册、发布说明、截图</p>
+            <div class="stage-controls">
+              <button type="button" class="mini" data-action="content-status">内容锁</button>
+              <button type="button" class="mini ghost-mini" data-action="capture-media">重拍截图</button>
+            </div>
           </article>
           <article class="stage" id="stage-publish">
             <div class="stage-index">05</div>
             <h2>发布</h2>
             <p class="stage-value" id="stage-publish-value">—</p>
             <p class="stage-hint">目标适配器与外发确认</p>
+            <div class="stage-controls">
+              <input id="publish-gateway" placeholder="./tools/publish-gateway.mjs" />
+              <button type="button" class="mini" data-action="save-gateway">保存目标</button>
+              <button type="button" class="mini ghost-mini" data-action="publish-plan">dry-run</button>
+            </div>
           </article>
         </section>
+
+        <pre id="stage-output" class="stage-output" hidden></pre>
 
         <div class="project-actions">
           <button type="button" class="primary" id="enter-project">进入项目工作区</button>

@@ -19,6 +19,7 @@ current project without overwriting existing files.
 | `docs/kb/clips.config.mjs` | clip/GIF recipe registry |
 | `src/config/frs-map.js` | route ↔ feature-region registry |
 | `src/utils/contrast.js` | WCAG contrast helper used by `check-ui` and the design-system page |
+| `starter/` | Vite + React + Tailwind starter copied by the desktop “new project” flow |
 | `.agent/skills/` | requirement review, PRD authoring, content drafting, review, UI, quality and optional Vue 2 skills |
 | `AGENTS.md` / `CLAUDE.md` | project guide and Claude Code entrypoint |
 | `.gitignore` | ignores generated reviews, PRD, media caches and credentials |

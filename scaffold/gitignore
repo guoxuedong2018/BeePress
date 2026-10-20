@@ -8,6 +8,7 @@ docs/kb/_blobs/
 docs/kb/_media.json
 docs/kb/_index.json
 docs/kb/_published.json
+.beepress/
 
 # Never commit local credentials or real customer data
 .env

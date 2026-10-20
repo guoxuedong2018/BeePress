@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
 const { execFile, spawn } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
@@ -16,6 +16,9 @@ const ONBOARDING = path.join(__dirname, "onboarding.html");
 
 let child;
 let window;
+let prototypeChild;
+let prototypeRoot;
+let prototypeUrl;
 
 app.setName("Bee Press");
 try {
@@ -88,13 +91,217 @@ function stopHarness() {
   child = undefined;
 }
 
+function projectSettingsFile(root) {
+  return path.join(root, ".beepress", "desktop.json");
+}
+
+function readProjectSettings(root) {
+  try {
+    return JSON.parse(fs.readFileSync(projectSettingsFile(root), "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function writeProjectSettings(root, patch) {
+  const current = readProjectSettings(root);
+  const next = { ...current, ...patch };
+  fs.mkdirSync(path.dirname(projectSettingsFile(root)), { recursive: true });
+  fs.writeFileSync(projectSettingsFile(root), `${JSON.stringify(next, null, 2)}\n`);
+  return next;
+}
+
+function kitEnv(root) {
+  const settings = readProjectSettings(root);
+  return {
+    ...process.env,
+    ELECTRON_RUN_AS_NODE: "1",
+    BEEPRESS_ROOT: root,
+    BEEPRESS_KIT_ROOT: KIT_ROOT,
+    ...(settings.publishGateway ? { BEEPRESS_PUBLISH_GATEWAY: settings.publishGateway } : {}),
+  };
+}
+
+async function runKit(root, args, timeout = 120_000) {
+  const bin = path.join(KIT_ROOT, "bin", "beepress.mjs");
+  try {
+    const result = await execFileAsync(process.execPath, [bin, ...args], {
+      cwd: root,
+      env: kitEnv(root),
+      maxBuffer: 30 * 1024 * 1024,
+      timeout,
+    });
+    return { ok: true, output: `${result.stdout}${result.stderr}`.trim() };
+  } catch (error) {
+    return {
+      ok: false,
+      output: [error.stdout, error.stderr].filter(Boolean).join("\n").trim() || error.message,
+    };
+  }
+}
+
+function resolveNpm() {
+  const candidates = [
+    process.env.BEEPRESS_NPM,
+    path.join(os.homedir(), ".npm-global", "bin", "npm"),
+    "/opt/homebrew/bin/npm",
+    "/usr/local/bin/npm",
+    "npm",
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    if (!candidate.includes(path.sep)) return candidate;
+    try {
+      fs.accessSync(candidate, fs.constants.X_OK);
+      return candidate;
+    } catch {
+      // Try the next candidate.
+    }
+  }
+  return "npm";
+}
+
+function stopPrototype() {
+  if (prototypeChild && !prototypeChild.killed) prototypeChild.kill("SIGTERM");
+  prototypeChild = undefined;
+  prototypeRoot = undefined;
+  prototypeUrl = undefined;
+}
+
+function startPrototype(root) {
+  const project = path.resolve(root);
+  if (prototypeChild && prototypeRoot === project && prototypeUrl && !prototypeChild.killed) {
+    return Promise.resolve({ url: prototypeUrl, reused: true });
+  }
+  stopPrototype();
+  let pkg;
+  try {
+    pkg = JSON.parse(fs.readFileSync(path.join(project, "package.json"), "utf8"));
+  } catch {
+    throw new Error("项目没有 package.json，无法启动原型。");
+  }
+  if (!pkg.scripts?.dev) throw new Error("package.json 没有 scripts.dev；先接入原型 dev server。");
+  prototypeRoot = project;
+  prototypeChild = spawn(resolveNpm(), ["run", "dev"], {
+    cwd: project,
+    env: { ...kitEnv(project), BROWSER: "none" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  return new Promise((resolve, reject) => {
+    let output = "";
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      stopPrototype();
+      reject(new Error(`原型没有在 25 秒内启动：\n${output}`));
+    }, 25_000);
+    const onData = (chunk) => {
+      output += chunk.toString();
+      const match = output.match(/https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?\/?/);
+      if (!match || settled) return;
+      settled = true;
+      clearTimeout(timer);
+      prototypeUrl = match[0];
+      resolve({ url: prototypeUrl, reused: false });
+    };
+    prototypeChild.stdout.on("data", onData);
+    prototypeChild.stderr.on("data", onData);
+    prototypeChild.once("error", (error) => {
+      clearTimeout(timer);
+      if (!settled) {
+        settled = true;
+        reject(error);
+      }
+    });
+    prototypeChild.once("exit", (code) => {
+      if (!settled && code) {
+        clearTimeout(timer);
+        settled = true;
+        reject(new Error(`原型 dev server 退出（${code}）：\n${output}`));
+      }
+      prototypeChild = undefined;
+      prototypeUrl = undefined;
+    });
+  });
+}
+
+function featureStamp() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+
+function featureSlug(title) {
+  const ascii = String(title || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return ascii || "FEATURE";
+}
+
+async function copyDirectory(from, to) {
+  await fs.promises.mkdir(to, { recursive: true });
+  for (const entry of await fs.promises.readdir(from, { withFileTypes: true })) {
+    const src = path.join(from, entry.name);
+    const dst = path.join(to, entry.name);
+    if (entry.isDirectory()) await copyDirectory(src, dst);
+    else if (entry.isFile()) await fs.promises.copyFile(src, dst);
+  }
+}
+
+async function createFeature(root, title) {
+  const project = path.resolve(root);
+  const safeTitle = String(title || "").trim();
+  if (!safeTitle) throw new Error("先填功能名称。");
+  const key = `${featureStamp()}_${featureSlug(safeTitle)}`;
+  const featureDir = path.join(project, "docs", "features", key);
+  try {
+    await fs.promises.access(featureDir);
+    throw new Error(`需求件套已存在：${path.relative(project, featureDir)}`);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  const templates = fs.existsSync(path.join(project, "docs", "templates"))
+    ? path.join(project, "docs", "templates")
+    : path.join(KIT_ROOT, "docs", "templates");
+  if (!fs.existsSync(templates)) throw new Error("找不到 FRS 模板；先运行 npx beepress init。");
+  await copyDirectory(templates, featureDir);
+  const replace = async (name) => {
+    const file = path.join(featureDir, name);
+    const text = await fs.promises.readFile(file, "utf8");
+    await fs.promises.writeFile(
+      file,
+      text
+        .replaceAll("<功能名称>", safeTitle)
+        .replaceAll("<ID>_MODULE_NAME", key)
+        .replaceAll("MMDDHHMM_MODULE_NAME", key)
+        .replaceAll("YYYY-MM-DD", new Date().toISOString().slice(0, 10)),
+    );
+  };
+  for (const name of ["README.md", "FLOW.md", "STATE.md", "ACCEPTANCE.md"]) await replace(name);
+  const frsFile = path.join(featureDir, "FRS.json");
+  const frs = JSON.parse(await fs.promises.readFile(frsFile, "utf8"));
+  frs.key = key;
+  frs.title = safeTitle;
+  frs.createdAt = new Date().toISOString().slice(0, 10);
+  frs.updatedAt = frs.createdAt;
+  await fs.promises.writeFile(frsFile, `${JSON.stringify(frs, null, 2)}\n`);
+  return {
+    key,
+    path: featureDir,
+    relativePath: path.relative(project, featureDir),
+    checkCommand: `npx beepress check-frs ${key}`,
+  };
+}
+
 function startHarness(projectRoot) {
   stopHarness();
   const dsh = resolveDsh();
   console.log(`[beepress-desktop] profile=${PROFILE} dsh=${dsh} project=${projectRoot}`);
   child = spawn(dsh, ["--profile", PROFILE, "--no-open", "--port", "0"], {
     cwd: projectRoot,
-    env: { ...process.env, BEEPRESS_KIT_ROOT: KIT_ROOT },
+    env: { ...kitEnv(projectRoot) },
     stdio: ["ignore", "pipe", "pipe"],
   });
 
@@ -217,8 +424,16 @@ async function inspectProject(root) {
       // Ignore malformed local review files in the launcher.
     }
   }
-  const gateway = process.env.BEEPRESS_PUBLISH_GATEWAY || process.env.BUILDER_KIT_PUBLISH_GATEWAY || null;
+  const settings = readProjectSettings(project);
+  const gateway = settings.publishGateway || process.env.BEEPRESS_PUBLISH_GATEWAY || process.env.BUILDER_KIT_PUBLISH_GATEWAY || null;
   const docsCli = process.env.BEEPRESS_DOCS_CLI || process.env.BUILDER_KIT_DOCS_CLI || null;
+  let publishedPages = 0;
+  try {
+    const published = JSON.parse(await fs.promises.readFile(path.join(project, "docs", "kb", "_published.json"), "utf8"));
+    publishedPages = Object.keys(published.pages || {}).length;
+  } catch {
+    // Publishing has not run yet.
+  }
   return {
     root: project,
     name: path.basename(project),
@@ -229,6 +444,7 @@ async function inspectProject(root) {
     publish: {
       configured: Boolean(gateway || docsCli),
       destination: gateway || (docsCli ? "docs-cli" : null),
+      publishedPages,
     },
     templates: fs.existsSync(path.join(project, "docs", "templates")),
     workflow: fs.existsSync(path.join(project, "docs", "WORKFLOW.md")),
@@ -305,11 +521,79 @@ ipcMain.handle("beepress:create-project", async (_event, { parent, name }) => {
   }).catch(() => {
     // The outline is optional; project creation should still succeed.
   });
-  await fs.promises.writeFile(
-    path.join(root, "package.json"),
-    `${JSON.stringify({ name: safeName.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase() || "bee-press-project", private: true, type: "module" }, null, 2)}\n`,
-  );
+  const starter = path.join(KIT_ROOT, "scaffold", "starter");
+  if (fs.existsSync(starter)) await copyDirectory(starter, root);
+  let pkg = {};
+  try {
+    pkg = JSON.parse(await fs.promises.readFile(path.join(starter, "package.json"), "utf8"));
+  } catch {
+    pkg = { private: true, type: "module" };
+  }
+  pkg.name = safeName.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase() || "bee-press-project";
+  pkg.dependencies = { ...(pkg.dependencies || {}), beepress: `file:${KIT_ROOT}` };
+  await fs.promises.writeFile(path.join(root, "package.json"), `${JSON.stringify(pkg, null, 2)}\n`);
   return root;
+});
+ipcMain.handle("beepress:create-feature", (_event, { root, title }) => createFeature(root, title));
+ipcMain.handle("beepress:install-deps", async (_event, root) => {
+  try {
+    const result = await execFileAsync(resolveNpm(), ["install"], {
+      cwd: root,
+      env: { ...process.env, BROWSER: "none" },
+      maxBuffer: 30 * 1024 * 1024,
+      timeout: 10 * 60_000,
+    });
+    return { ok: true, output: `${result.stdout}${result.stderr}`.trim() };
+  } catch (error) {
+    return { ok: false, output: [error.stdout, error.stderr].filter(Boolean).join("\n").trim() || error.message };
+  }
+});
+ipcMain.handle("beepress:start-prototype", async (_event, root) => {
+  try {
+    const started = await startPrototype(root);
+    await shell.openExternal(started.url);
+    return { ok: true, ...started };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+ipcMain.handle("beepress:open-review", async (_event, root) => {
+  try {
+    const started = await startPrototype(root);
+    await shell.openExternal(started.url);
+    return { ok: true, url: started.url };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+ipcMain.handle("beepress:review-status", async (_event, root) => runKit(root, ["review", "open"]));
+ipcMain.handle("beepress:content-status", async (_event, root) => {
+  const result = await runKit(root, ["kb", "status", "--json"]);
+  if (!result.ok) return result;
+  try {
+    return { ok: true, data: JSON.parse(result.output) };
+  } catch {
+    return { ok: true, data: null, output: result.output };
+  }
+});
+ipcMain.handle("beepress:capture-media", async (_event, root) => {
+  try {
+    const started = await startPrototype(root);
+    const result = await runKit(root, ["capture-kb-shots", "--stale", "--base-url", started.url], 15 * 60_000);
+    return { ...result, prototypeUrl: started.url };
+  } catch (error) {
+    return { ok: false, output: error instanceof Error ? error.message : String(error) };
+  }
+});
+ipcMain.handle("beepress:publish-plan", async (_event, root) => runKit(root, ["kb-publish", "--dry-run"], 5 * 60_000));
+ipcMain.handle("beepress:save-publish-gateway", async (_event, { root, gateway }) => {
+  writeProjectSettings(root, { publishGateway: String(gateway || "").trim() || null });
+  return inspectProject(root);
+});
+ipcMain.handle("beepress:open-path", async (_event, target) => {
+  const error = await shell.openPath(target);
+  if (error) throw new Error(error);
+  return true;
 });
 ipcMain.handle("beepress:start", async (_event, root) => {
   try {
@@ -334,4 +618,7 @@ app.whenReady().then(() => {
   createWindow();
 });
 app.on("window-all-closed", () => app.quit());
-app.on("before-quit", stopHarness);
+app.on("before-quit", () => {
+  stopHarness();
+  stopPrototype();
+});

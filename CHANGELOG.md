@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.6 — 2026-10-20
+
+- **Stage actions** — the project workbench can create a feature folder from the
+  FRS templates, install dependencies, launch the prototype dev server, open
+  the review overlay, inspect pending comments, read the content lock and
+  rebuild stale screenshots.
+- **Publish target** — save a per-project `BEEPRESS_PUBLISH_GATEWAY` and run a
+  `kb-publish --dry-run` from the workbench.
+- **React starter** — new projects now include a Vite + React + Tailwind
+  starter with `npm run dev`, instead of only docs.
+- **Distribution** — added Electron Builder, macOS entitlements, unsigned
+  DMG/ZIP output and documented signing/notarization inputs.
+
 ## 0.6.5 — 2026-10-20
 
 - **Project workbench** — after choosing a project, the launcher shows a

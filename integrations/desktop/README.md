@@ -88,3 +88,26 @@ For a branded distribution, publish a small profile package that depends on
 profile name. This keeps the desktop shell and the Bee Press domain bundle
 separate from the upstream runtime, so upstream upgrades remain a version bump
 rather than a merge.
+
+
+## macOS package
+
+`electron-builder` configuration lives in `package.json`; `npm run dist:mac`
+produces unsigned DMG/ZIP artifacts in `release/`. The build includes the
+Bee Press CLI/scaffold under `Resources/beepress`, so project creation and
+`kb-*` actions work after packaging.
+
+For a signed/notarized build, provide the usual Apple credentials on the
+build machine:
+
+```bash
+export CSC_LINK=/path/to/developer-id.p12
+export CSC_KEY_PASSWORD=...
+export APPLE_ID=...
+export APPLE_APP_SPECIFIC_PASSWORD=...
+export APPLE_TEAM_ID=...
+npm run dist:mac
+```
+
+Signing and notarization are intentionally not faked: without those
+credentials the binary is a local/unsigned build.

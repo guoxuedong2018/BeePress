@@ -1,13 +1,14 @@
 {
   "name": "@beepress/desktop",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Thin Bee Press desktop shell around an upstream DeepSeek Harness profile.",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
     "install-profile": "node install-profile.mjs",
-    "dist:mac": "electron-builder --mac"
+    "dist:mac": "electron-builder --mac",
+    "dist:mas": "electron-builder --mas"
   },
   "devDependencies": {
     "electron": "^38.0.0",
@@ -35,7 +36,11 @@
       "target": [
         "dmg",
         "zip"
-      ]
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "extraResources": [
       {

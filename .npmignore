@@ -5,3 +5,7 @@ examples/*/docs/reviews/*.json
 examples/*/docs/reviews/*.lock
 *.log
 .DS_Store
+
+# Desktop release artifacts
+integrations/desktop/release/**
+integrations/desktop/node_modules/**

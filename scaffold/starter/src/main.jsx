@@ -1,0 +1,38 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App.jsx";
+import "./styles.css";
+
+const root = createRoot(document.getElementById("root"));
+
+if (import.meta.env.DEV) {
+  import("beepress/react").then(({ BeePressRoot }) => {
+    root.render(
+      <StrictMode>
+        <BeePressRoot router={hashRouter()}>
+          <App />
+        </BeePressRoot>
+      </StrictMode>,
+    );
+  });
+} else {
+  root.render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+}
+
+function hashRouter() {
+  return {
+    current: () => window.location.hash.slice(1) || "/",
+    subscribe: (listener) => {
+      window.addEventListener("hashchange", listener);
+      return () => window.removeEventListener("hashchange", listener);
+    },
+    href: (path) => `#${path}`,
+    push: (path) => {
+      window.location.hash = path;
+    },
+  };
+}
