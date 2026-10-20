@@ -2,13 +2,20 @@ const $ = (id) => document.getElementById(id);
 const overlay = $("overlay");
 const overlayTitle = $("overlay-title");
 const overlayDetail = $("overlay-detail");
+const views = {
+  home: $("home-view"),
+  setup: $("setup-view"),
+  project: $("project-view"),
+};
 const nameInput = $("project-name");
 const parentPath = $("parent-path");
-const launcherView = $("launcher-view");
-const projectView = $("project-view");
+const styleUrl = $("style-url");
 
 let parent = null;
 let currentProject = null;
+let selectedStack = "react-tailwind";
+let selectedUi = "bee-press";
+let lastAnalysis = null;
 
 function setBusy(busy, title = "正在打开项目", detail = "启动 DeepSeek Harness…") {
   overlay.hidden = !busy;
@@ -20,55 +27,22 @@ function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 }
 
-async function start(root) {
-  setBusy(true);
-  try {
-    await window.beepress.start(root);
-  } catch (error) {
-    setBusy(false);
-    // The main process already showed a native dialog; keep the launcher usable.
-    console.error(error);
+function setStep(step) {
+  for (const node of document.querySelectorAll("[data-step]")) {
+    node.classList.toggle("active", Number(node.dataset.step) === step);
   }
 }
 
-function showLauncher() {
+function showView(name, step) {
+  for (const [key, node] of Object.entries(views)) node.hidden = key !== name;
+  setStep(step);
+}
+
+function showHome() {
   currentProject = null;
-  projectView.hidden = true;
-  launcherView.hidden = false;
-  $("stage-output").hidden = true;
-  window.beepress.recent().then(renderRecent).catch(() => {});
-}
-
-function renderProject(project) {
-  currentProject = project;
-  launcherView.hidden = true;
-  projectView.hidden = false;
-  $("project-name").textContent = project.name || "项目";
-  $("project-path").textContent = project.root;
-  $("stage-output").hidden = true;
-  $("publish-gateway").value = project.publish?.destination || "";
-  $("stage-requirements-value").textContent = `${project.features?.length ?? 0} 份 FRS`;
-  $("stage-prototype-value").textContent = project.devScript ? `dev: ${project.devScript}` : "未配置 dev 脚本";
-  $("stage-review-value").textContent = `${project.openReviews ?? 0} 条待处理`;
-  $("stage-content-value").textContent = `${project.kbPages ?? 0} 页知识库`;
-  $("stage-publish-value").textContent = project.publish?.configured
-    ? `${project.publish.destination || "已配置"} · ${project.publish.publishedPages ?? 0} 已发布`
-    : "未配置目标";
-  $("project-note").textContent = project.templates
-    ? "项目已具备 FRS 模板、工作流和 Agent Skills。进入工作区后可从右侧 Bee Press 面板开始。"
-    : "项目还缺少 Bee Press 脚手架；进入工作区后可以在终端运行 npx beepress init 补齐。";
-}
-
-async function inspect(root) {
-  setBusy(true, "正在读取项目", "检查需求、知识库、评审和原型配置…");
-  try {
-    const project = await window.beepress.inspect(root);
-    setBusy(false);
-    renderProject(project);
-  } catch (error) {
-    setBusy(false);
-    alert(error instanceof Error ? error.message : String(error));
-  }
+  lastAnalysis = null;
+  showView("home", 1);
+  window.beepress?.recent?.().then(renderRecent).catch(() => {});
 }
 
 function showOutput(text) {
@@ -89,6 +63,150 @@ function formatContent(result) {
   ].join("\n");
 }
 
+function mapDetectedStack(project) {
+  if (!project.stack) return "existing";
+  if (project.stack.id === "vue") return "vue2";
+  if (project.stack.frameworks?.includes("Tailwind")) return "react-tailwind";
+  if (project.stack.id === "react") return "react";
+  return "existing";
+}
+
+function showSetup(project) {
+  currentProject = project;
+  lastAnalysis = project.setup?.analysis ?? null;
+  selectedStack = project.setup?.stack || mapDetectedStack(project);
+  selectedUi = project.setup?.uiPreset || "bee-press";
+  showView("setup", 2);
+  $("setup-project").textContent = `${project.name} · ${project.root}`;
+  $("detected-stack").textContent = project.stack?.label ? `检测到：${project.stack.label}` : "";
+  $("style-url").value = project.setup?.sourceUrl || "";
+  for (const button of document.querySelectorAll("[data-stack]")) {
+    button.classList.toggle("selected", button.dataset.stack === selectedStack);
+  }
+  for (const button of document.querySelectorAll("[data-ui]")) {
+    button.classList.toggle("selected", button.dataset.ui === selectedUi);
+  }
+  if (lastAnalysis) renderAnalysis(lastAnalysis);
+  else $("url-analysis").hidden = true;
+}
+
+function renderAnalysis(analysis) {
+  lastAnalysis = analysis;
+  const box = $("url-analysis");
+  box.hidden = false;
+  box.textContent = [
+    `页面：${analysis.title}  ${analysis.url}`,
+    `技术栈：${analysis.frameworks?.join(" + ") || "未识别"}`,
+    analysis.ui?.colors?.length ? `颜色：${analysis.ui.colors.join("  ")}` : "",
+    analysis.ui?.fonts?.length ? `字体：${analysis.ui.fonts.join("  ")}` : "",
+    analysis.evidence?.length ? `证据：${analysis.evidence.join(" | ")}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+function renderHub(project) {
+  currentProject = project;
+  showView("project", 3);
+  $("project-name").textContent = project.name || "项目";
+  $("project-path").textContent = project.root;
+  $("project-baseline").textContent = [
+    project.setup?.stack ? `技术栈：${project.setup.stack}` : project.stack?.label ? `技术栈：${project.stack.label}` : "",
+    project.setup?.uiPreset ? `UI：${project.setup.uiPreset}` : "",
+    project.setup?.sourceUrl ? `对齐网页：${project.setup.sourceUrl}` : "",
+  ].filter(Boolean).join(" · ");
+  $("stage-output").hidden = true;
+  $("publish-gateway").value = project.publish?.destination || "";
+  $("stage-requirements-value").textContent = `${project.features?.length ?? 0} 份 FRS`;
+  $("stage-prototype-value").textContent = project.devScript ? `dev: ${project.devScript}` : "未配置 dev 脚本";
+  $("stage-review-value").textContent = `${project.openReviews ?? 0} 条待处理`;
+  $("stage-content-value").textContent = `${project.kbPages ?? 0} 页知识库`;
+  $("stage-publish-value").textContent = project.publish?.configured
+    ? `${project.publish.destination || "已配置"} · ${project.publish.publishedPages ?? 0} 已发布`
+    : "未配置目标";
+  $("project-note").textContent = project.templates
+    ? "核心工具直接在这里使用；Agent 工作区只是其中一种入口，不是 Bee Press 本身。"
+    : "项目还缺少 Bee Press 脚手架；进入 Agent 工作区后可以运行 npx beepress init 补齐。";
+}
+
+async function inspect(root, { skipSetup = false } = {}) {
+  setBusy(true, "正在读取项目", "检查技术栈、需求、知识库、评审和原型配置…");
+  try {
+    const project = await window.beepress.inspect(root);
+    setBusy(false);
+    if (!skipSetup && !project.setup?.stack) showSetup(project);
+    else renderHub(project);
+  } catch (error) {
+    setBusy(false);
+    alert(error instanceof Error ? error.message : String(error));
+  }
+}
+
+function renderRecent(config) {
+  const list = $("recent-list");
+  const recent = Array.isArray(config.recent) ? config.recent : [];
+  if (!recent.length) {
+    list.innerHTML = '<p class="empty">还没有最近项目。</p>';
+    return;
+  }
+  list.innerHTML = recent
+    .map(
+      (item) => `
+        <button type="button" class="recent-item" data-root="${escapeHtml(item.root)}">
+          <span class="recent-name">${escapeHtml(item.name || item.root)}</span>
+          <span class="recent-path">${escapeHtml(item.root)}</span>
+        </button>`,
+    )
+    .join("");
+  for (const button of list.querySelectorAll("[data-root]")) {
+    button.addEventListener("click", () => inspect(button.dataset.root));
+  }
+}
+
+async function start(root) {
+  setBusy(true);
+  try {
+    await window.beepress.start(root);
+  } catch (error) {
+    setBusy(false);
+    console.error(error);
+  }
+}
+
+async function runAgentScan() {
+  const command = $("agent-command").value.trim();
+  if (!command) {
+    alert("先写一句要 Agent 找什么。");
+    return;
+  }
+  const root = await window.beepress.chooseScanRoot();
+  if (!root) return;
+  setBusy(true, "Agent 正在搜索本地项目", "只读取你授权的目录，不移动、不上传代码…");
+  try {
+    const result = await window.beepress.scanProjects(root);
+    setBusy(false);
+    const box = $("scan-results");
+    if (!result.projects?.length) {
+      box.innerHTML = '<p class="empty">这个目录下没有找到 package.json 项目。</p>';
+      return;
+    }
+    box.innerHTML = result.projects
+      .slice(0, 12)
+      .map(
+        (project) => `
+          <button type="button" class="scan-item" data-root="${escapeHtml(project.root)}">
+            <span class="scan-name">${escapeHtml(project.name)} · ${escapeHtml(project.stack?.label || "未识别")}</span>
+            <span class="scan-path">${escapeHtml(project.root)}</span>
+          </button>`,
+      )
+      .join("");
+    for (const button of box.querySelectorAll("[data-root]")) {
+      button.addEventListener("click", () => inspect(button.dataset.root));
+    }
+  } catch (error) {
+    setBusy(false);
+    $("scan-results").innerHTML = `<p class="empty">${escapeHtml(error instanceof Error ? error.message : String(error))}</p>`;
+  }
+}
+
 async function action(name) {
   if (!currentProject) return;
   const root = currentProject.root;
@@ -105,16 +223,16 @@ async function action(name) {
       $("stage-requirements-value").textContent = `${currentProject.features.length} 份 FRS`;
       return;
     }
+    if (name === "check-frs") {
+      const result = await window.beepress.checkFrs(root);
+      showOutput(result.output || (result.ok ? "FRS 校验通过。" : "FRS 校验失败。"));
+      return;
+    }
     if (name === "install-deps") {
       setBusy(true, "正在安装依赖", "在项目目录执行 npm install…");
       const result = await window.beepress.installDependencies(root);
       setBusy(false);
       showOutput(result.output || (result.ok ? "依赖安装完成。" : "依赖安装失败。"));
-      return;
-    }
-    if (name === "check-frs") {
-      const result = await window.beepress.checkFrs(root);
-      showOutput(result.output || (result.ok ? "FRS 校验通过。" : "FRS 校验失败。"));
       return;
     }
     if (name === "start-prototype") {
@@ -156,8 +274,8 @@ async function action(name) {
       const project = await window.beepress.savePublishGateway({ root, gateway });
       currentProject = project;
       $("stage-publish-value").textContent = project.publish?.configured
-    ? `${project.publish.destination || "已配置"} · ${project.publish.publishedPages ?? 0} 已发布`
-    : "未配置目标";
+        ? `${project.publish.destination || "已配置"} · ${project.publish.publishedPages ?? 0} 已发布`
+        : "未配置目标";
       showOutput(gateway ? `已保存发布目标：${gateway}` : "已清除发布目标。");
       return;
     }
@@ -175,35 +293,38 @@ async function action(name) {
   }
 }
 
-function renderRecent(config) {
-  const list = $("recent-list");
-  const recent = Array.isArray(config.recent) ? config.recent : [];
-  if (!recent.length) {
-    list.innerHTML = '<p class="empty">还没有最近项目。</p>';
-    return;
-  }
-  list.innerHTML = recent
-    .map(
-      (item) => `
-        <button type="button" class="recent-item" data-root="${escapeHtml(item.root)}">
-          <span class="recent-name">${escapeHtml(item.name || item.root)}</span>
-          <span class="recent-path">${escapeHtml(item.root)}</span>
-        </button>`,
-    )
-    .join("");
-  for (const button of list.querySelectorAll("[data-root]")) {
-    button.addEventListener("click", () => inspect(button.dataset.root));
-  }
-}
-
-$("import-existing").addEventListener("click", async () => {
+$("dropzone").addEventListener("click", async () => {
   try {
     const root = await window.beepress.chooseExisting();
     if (root) await inspect(root);
   } catch (error) {
-    overlay.hidden = true;
     alert(error instanceof Error ? error.message : String(error));
   }
+});
+$("dropzone").addEventListener("dragover", (event) => {
+  event.preventDefault();
+  $("dropzone").classList.add("dragging");
+});
+$("dropzone").addEventListener("dragleave", () => $("dropzone").classList.remove("dragging"));
+$("dropzone").addEventListener("drop", async (event) => {
+  event.preventDefault();
+  $("dropzone").classList.remove("dragging");
+  const file = event.dataTransfer.files?.[0];
+  if (!file) return;
+  try {
+    const filePath = window.beepress.pathForFile(file);
+    if (!filePath) throw new Error("无法读取拖入的路径，请改用目录选择。");
+    $("drop-hint").textContent = filePath;
+    await inspect(filePath);
+  } catch (error) {
+    alert(error instanceof Error ? error.message : String(error));
+  }
+});
+
+$("run-agent").addEventListener("click", runAgentScan);
+$("import-existing").addEventListener("click", (event) => {
+  event.stopPropagation();
+  $("dropzone").click();
 });
 
 $("choose-parent").addEventListener("click", async () => {
@@ -224,7 +345,7 @@ $("create-project").addEventListener("click", async () => {
     nameInput.focus();
     return;
   }
-  setBusy(true, "正在创建项目", "复制 FRS 模板、知识库和 Agent Skills…");
+  setBusy(true, "正在创建项目", "复制 FRS 模板、知识库、Agent Skills 和 React starter…");
   try {
     const root = await window.beepress.createProject({ parent, name: nameInput.value.trim() });
     setBusy(false);
@@ -235,10 +356,82 @@ $("create-project").addEventListener("click", async () => {
   }
 });
 
-projectView.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-action]");
-  if (button) action(button.dataset.action);
+for (const button of document.querySelectorAll("[data-stack]")) {
+  button.addEventListener("click", () => {
+    selectedStack = button.dataset.stack;
+    for (const node of document.querySelectorAll("[data-stack]")) node.classList.toggle("selected", node === button);
+  });
+}
+for (const button of document.querySelectorAll("[data-ui]")) {
+  button.addEventListener("click", () => {
+    selectedUi = button.dataset.ui;
+    for (const node of document.querySelectorAll("[data-ui]")) node.classList.toggle("selected", node === button);
+    if (selectedUi === "url") styleUrl.focus();
+  });
+}
+
+$("analyze-url").addEventListener("click", async () => {
+  const url = styleUrl.value.trim();
+  if (!url) {
+    alert("先填写要分析的网页地址。");
+    return;
+  }
+  setBusy(true, "正在分析网页", "读取页面结构、框架痕迹和样式 token…");
+  try {
+    const analysis = await window.beepress.analyzeUrl(url);
+    setBusy(false);
+    renderAnalysis(analysis);
+    selectedUi = "url";
+    for (const node of document.querySelectorAll("[data-ui]")) node.classList.toggle("selected", node.dataset.ui === "url");
+    if (analysis.stack?.id === "vue") {
+      selectedStack = "vue2";
+    } else if (analysis.stack?.id === "react") {
+      selectedStack = analysis.ui?.hasTailwind ? "react-tailwind" : "react";
+    }
+    for (const node of document.querySelectorAll("[data-stack]")) node.classList.toggle("selected", node.dataset.stack === selectedStack);
+  } catch (error) {
+    setBusy(false);
+    $("url-analysis").hidden = false;
+    $("url-analysis").textContent = error instanceof Error ? error.message : String(error);
+  }
 });
+
+$("save-setup").addEventListener("click", async () => {
+  if (!currentProject) return;
+  if (selectedUi === "url" && !lastAnalysis) {
+    alert("先分析一个网页，或选择其他 UI 基线。");
+    return;
+  }
+  setBusy(true, "正在保存生产基线", "写入 .beepress/desktop.json…");
+  try {
+    const project = await window.beepress.saveSetup({
+      root: currentProject.root,
+      stack: selectedStack,
+      uiPreset: selectedUi,
+      sourceUrl: styleUrl.value.trim() || null,
+      analysis: lastAnalysis,
+    });
+    setBusy(false);
+    renderHub(project);
+  } catch (error) {
+    setBusy(false);
+    alert(error instanceof Error ? error.message : String(error));
+  }
+});
+
+$("setup-back").addEventListener("click", showHome);
+$("setup-cancel").addEventListener("click", showHome);
+$("back-to-launcher").addEventListener("click", showHome);
+$("switch-project").addEventListener("click", showHome);
+$("reconfigure").addEventListener("click", () => currentProject && showSetup(currentProject));
+
+projectViewClick();
+function projectViewClick() {
+  views.project.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-action]");
+    if (button) action(button.dataset.action);
+  });
+}
 
 $("feature-title").addEventListener("keydown", (event) => {
   if (event.key === "Enter") action("create-feature");
@@ -248,7 +441,4 @@ $("enter-project").addEventListener("click", () => {
   if (currentProject) start(currentProject.root);
 });
 
-$("switch-project").addEventListener("click", showLauncher);
-$("back-to-launcher").addEventListener("click", showLauncher);
-
-window.beepress.recent().then(renderRecent).catch(() => {});
+showHome();

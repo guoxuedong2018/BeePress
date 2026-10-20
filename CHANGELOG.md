@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0 — 2026-10-20
+
+- **Consumer entry** — the desktop app opens with the “vibecoding toy → production
+  application” positioning, a drag/drop project importer, an Agent-authorized
+  project scan and a new-project path.
+- **Production baseline** — users confirm the preset stack and UI spec, inspect
+  the detected stack, or analyze a live URL for frameworks, colors and fonts.
+- **Explicit tool hub** — requirements, prototype, review, content and publish
+  are first-class cards; the DSH workspace is an optional entry, not the product.
+- **Starter** — new projects include the React + Tailwind Vite starter.
+
 ## 0.6.8 — 2026-10-20
 
 - **Clip recording action** — the content stage can rebuild MP4/GIF clips with

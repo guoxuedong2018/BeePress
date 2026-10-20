@@ -1,9 +1,14 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 contextBridge.exposeInMainWorld("beepress", {
   recent: () => ipcRenderer.invoke("beepress:recent"),
   chooseExisting: () => ipcRenderer.invoke("beepress:choose-existing"),
   inspect: (root) => ipcRenderer.invoke("beepress:inspect", root),
+  pathForFile: (file) => webUtils.getPathForFile(file),
+  chooseScanRoot: () => ipcRenderer.invoke("beepress:choose-scan-root"),
+  scanProjects: (root) => ipcRenderer.invoke("beepress:scan-projects", root),
+  analyzeUrl: (url) => ipcRenderer.invoke("beepress:analyze-url", url),
+  saveSetup: (payload) => ipcRenderer.invoke("beepress:save-setup", payload),
   createFeature: (payload) => ipcRenderer.invoke("beepress:create-feature", payload),
   checkFrs: (root) => ipcRenderer.invoke("beepress:check-frs", root),
   installDependencies: (root) => ipcRenderer.invoke("beepress:install-deps", root),

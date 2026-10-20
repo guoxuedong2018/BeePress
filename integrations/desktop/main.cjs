@@ -391,8 +391,116 @@ async function walkFiles(dir, predicate) {
   return out;
 }
 
+function detectStack(pkg = {}) {
+  const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+  const has = (name) => Boolean(deps[name]);
+  const frameworks = [];
+  if (has("next")) frameworks.push("Next.js");
+  if (has("react")) frameworks.push("React");
+  if (has("vue")) frameworks.push("Vue");
+  if (has("svelte")) frameworks.push("Svelte");
+  if (has("tailwindcss")) frameworks.push("Tailwind");
+  if (has("vite")) frameworks.push("Vite");
+  return {
+    id: has("next") ? "next" : has("vue") ? "vue" : has("react") ? "react" : "unknown",
+    label: frameworks.length ? frameworks.join(" + ") : "未识别",
+    frameworks,
+  };
+}
+
+async function scanProjects(root, depth = 0, out = []) {
+  if (out.length >= 30 || depth > 4) return out;
+  let entries;
+  try {
+    entries = await fs.promises.readdir(root, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  if (entries.some((entry) => entry.name === "package.json")) {
+    try {
+      const pkg = JSON.parse(await fs.promises.readFile(path.join(root, "package.json"), "utf8"));
+      const stat = await fs.promises.stat(root);
+      if (!/node_modules|\.git/.test(root)) {
+        out.push({
+          root,
+          name: pkg.name || path.basename(root),
+          stack: detectStack(pkg),
+          devScript: pkg.scripts?.dev ?? null,
+          updatedAt: stat.mtime.toISOString(),
+        });
+      }
+    } catch {
+      // Ignore malformed package.json.
+    }
+  }
+  for (const entry of entries) {
+    if (out.length >= 30) break;
+    if (!entry.isDirectory() || entry.name.startsWith(".") || ["node_modules", "dist", "build", "coverage"].includes(entry.name)) continue;
+    await scanProjects(path.join(root, entry.name), depth + 1, out);
+  }
+  return out;
+}
+
+async function analyzeWebUrl(input) {
+  let url;
+  try {
+    url = new URL(String(input || "").trim());
+  } catch {
+    throw new Error("请输入完整的 http(s) 网页地址。");
+  }
+  if (!["http:", "https:"].includes(url.protocol)) throw new Error("只支持 http/https 网页。");
+  const response = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(12_000) });
+  if (!response.ok) throw new Error(`网页返回 ${response.status}。`);
+  const html = await response.text();
+  const evidence = [];
+  const frameworks = [];
+  const add = (name, pattern) => { if (pattern.test(html)) { frameworks.push(name); evidence.push(`${name}: ${pattern}`); } };
+  add("Next.js", /__NEXT_DATA__|_next\//i);
+  add("React", /data-reactroot|react-dom|reactjs/i);
+  add("Vue", /data-v-|vue\.js|vue@/i);
+  add("Svelte", /svelte-|__svelte/i);
+  add("Tailwind", /tailwind|--tw-/i);
+  add("Vite", /\/@vite\/|vite\/client/i);
+  const title = html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim() || url.hostname;
+  const styleLinks = [...html.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["']/gi)]
+    .map((match) => new URL(match[1], url).href)
+    .slice(0, 3);
+  const colors = new Set();
+  const fonts = new Set();
+  const consumeCss = (css) => {
+    for (const match of css.matchAll(/#[0-9a-f]{6}\b/gi)) colors.add(match[0].toLowerCase());
+    for (const match of css.matchAll(/font-family\s*:\s*([^;}]+)/gi)) fonts.add(match[1].trim().slice(0, 100));
+    for (const match of css.matchAll(/--[a-z0-9-]+\s*:\s*([^;}]+)/gi)) {
+      const value = match[1].trim();
+      if (/^#[0-9a-f]{3,8}$/i.test(value)) colors.add(value.toLowerCase());
+    }
+  };
+  consumeCss(html);
+  for (const link of styleLinks) {
+    try {
+      const css = await fetch(link, { signal: AbortSignal.timeout(8_000) }).then((res) => res.text());
+      consumeCss(css);
+    } catch {
+      // A single stylesheet failure should not fail the analysis.
+    }
+  }
+  return {
+    url: url.href,
+    title,
+    frameworks: [...new Set(frameworks)],
+    stack: { id: frameworks.includes("Vue") ? "vue" : frameworks.includes("React") ? "react" : "unknown", label: [...new Set(frameworks)].join(" + ") || "未识别" },
+    ui: { colors: [...colors].slice(0, 24), fonts: [...fonts].slice(0, 8), hasTailwind: /tailwind|--tw-/i.test(html) },
+    evidence: evidence.slice(0, 8),
+  };
+}
+
 async function inspectProject(root) {
-  const project = path.resolve(root);
+  let project = path.resolve(root);
+  try {
+    if ((await fs.promises.stat(project)).isFile()) project = path.dirname(project);
+  } catch {
+    // Missing paths are reported by the project-marker check below.
+  }
   if (!(await isProject(project))) {
     throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 beepress.config.*。");
   }
@@ -438,6 +546,13 @@ async function inspectProject(root) {
     root: project,
     name: path.basename(project),
     devScript: pkg.scripts?.dev ?? null,
+    stack: detectStack(pkg),
+    setup: {
+      stack: settings.stack ?? null,
+      uiPreset: settings.uiPreset ?? null,
+      sourceUrl: settings.sourceUrl ?? null,
+      analysis: settings.analysis ?? null,
+    },
     features: features.sort(),
     kbPages: kbFiles.length,
     openReviews,
@@ -533,6 +648,27 @@ ipcMain.handle("beepress:create-project", async (_event, { parent, name }) => {
   pkg.dependencies = { ...(pkg.dependencies || {}), beepress: `file:${KIT_ROOT}` };
   await fs.promises.writeFile(path.join(root, "package.json"), `${JSON.stringify(pkg, null, 2)}\n`);
   return root;
+});
+ipcMain.handle("beepress:choose-scan-root", async () => {
+  const result = await dialog.showOpenDialog(window, {
+    title: "授权 Agent 搜索本地项目",
+    properties: ["openDirectory"],
+  });
+  return result.canceled ? null : result.filePaths[0];
+});
+ipcMain.handle("beepress:scan-projects", async (_event, root) => {
+  const projects = (await scanProjects(root)).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return { root, projects };
+});
+ipcMain.handle("beepress:analyze-url", (_event, url) => analyzeWebUrl(url));
+ipcMain.handle("beepress:save-setup", async (_event, payload) => {
+  writeProjectSettings(payload.root, {
+    stack: payload.stack,
+    uiPreset: payload.uiPreset,
+    sourceUrl: payload.sourceUrl ?? null,
+    analysis: payload.analysis ?? null,
+  });
+  return inspectProject(payload.root);
 });
 ipcMain.handle("beepress:create-feature", (_event, { root, title }) => createFeature(root, title));
 ipcMain.handle("beepress:check-frs", (_event, root) => runKit(root, ["check-frs"], 60_000));

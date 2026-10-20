@@ -5,17 +5,19 @@ does not fork the kernel: the shell starts `dsh --profile <name>`, waits for
 the printed local URL, and loads it in a native window. Upstream plugin,
 model and update support stays intact.
 
-The first screen is a Bee Press launcher, not a chat box:
+The first screen is a Bee Press product entry, not a chat box:
 
-1. **Import an existing project** — pick a directory with `package.json`,
-   `docs/` or `beepress.config.*`.
-2. **Create a new project** — choose a parent directory and name; the shell
-   copies the FRS/knowledge-base scaffold and creates a blank knowledge-base
-   outline.
-3. **Recent projects** — open the last workspace without going through the
-   picker again.
+1. **Drop or pick a project** — a folder or `package.json`; read-only import.
+2. **Ask the Agent to find one** — the command opens a directory picker as an
+   explicit grant, then scans for project manifests and classifies the stack.
+3. **Create a new project** — FRS/knowledge-base scaffold plus a React +
+   Tailwind Vite starter.
+4. **Confirm the production baseline** — preset stack, UI spec, existing
+   project conventions, or analyze a live URL for frameworks and style tokens.
+5. **Use the tool hub** — requirements, prototype, review, content and publish
+   are first-class cards. The DSH workspace is optional.
 
-After selection the shell shows a **project workbench**: FRS count, prototype
+After project selection and baseline confirmation, the shell shows a **project workbench**: FRS count, prototype
 dev script, open reviews, content pages and publish configuration. The
 “enter project workspace” action then starts dsh in that workspace, adds it as
 a dsh workspace and opens a session. The dsh sidebar brand is replaced with
