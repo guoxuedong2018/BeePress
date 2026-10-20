@@ -111,3 +111,26 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(183, 121, 
   .content { width: calc(100% - 40px); padding-top: 24px; }
   .choices { grid-template-columns: 1fr; }
 }
+
+.project-view { padding-top: 24px; }
+.back {
+  border: 0; background: transparent; color: var(--muted); padding: 4px 0; font-size: 12px;
+}
+.back:hover { color: var(--ink); }
+.project-hero { margin-top: 12px; }
+.project-hero h1 { font-size: clamp(30px, 4vw, 46px); }
+.project-hero .lede { margin-top: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.stage-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 30px; }
+.stage {
+  min-height: 150px; display: flex; flex-direction: column; padding: 16px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--card);
+}
+.stage-index { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+.stage h2 { margin-top: 12px; font-size: 15px; }
+.stage-value { margin: 8px 0 0; font-size: 13px; font-weight: 650; }
+.stage-hint { margin: auto 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.project-actions { display: flex; align-items: center; gap: 12px; margin-top: 26px; }
+.project-actions .primary { margin-top: 0; }
+@media (max-width: 860px) {
+  .stage-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

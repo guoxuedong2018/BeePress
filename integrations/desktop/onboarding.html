@@ -23,7 +23,7 @@
         <span class="version">desktop preview</span>
       </header>
 
-      <main class="content">
+      <main class="content" id="launcher-view">
         <section class="hero">
           <p class="eyebrow">开始</p>
           <h1>先选一个项目，<br />再进入产品设计流程。</h1>
@@ -76,6 +76,56 @@
         <p class="footnote">
           Bee Press 只读取本地项目文件；不会上传代码、凭据或评审内容。
           原型和内容仍以仓库里的 Markdown、FRS 和配方为唯一真源。
+        </p>
+      </main>
+
+      <main class="content project-view" id="project-view" hidden>
+        <button type="button" class="back" id="back-to-launcher">← 返回项目选择</button>
+        <section class="hero project-hero">
+          <p class="eyebrow">项目工作台</p>
+          <h1 id="project-name">项目</h1>
+          <p class="lede" id="project-path"></p>
+        </section>
+
+        <section class="stage-grid" aria-label="产品设计流程">
+          <article class="stage" id="stage-requirements">
+            <div class="stage-index">01</div>
+            <h2>需求规格</h2>
+            <p class="stage-value" id="stage-requirements-value">—</p>
+            <p class="stage-hint">FRS、边界、验收标准</p>
+          </article>
+          <article class="stage" id="stage-prototype">
+            <div class="stage-index">02</div>
+            <h2>原型</h2>
+            <p class="stage-value" id="stage-prototype-value">—</p>
+            <p class="stage-hint">页面、交互、状态</p>
+          </article>
+          <article class="stage" id="stage-review">
+            <div class="stage-index">03</div>
+            <h2>评审</h2>
+            <p class="stage-value" id="stage-review-value">—</p>
+            <p class="stage-hint">带源码坐标的批注</p>
+          </article>
+          <article class="stage" id="stage-content">
+            <div class="stage-index">04</div>
+            <h2>内容</h2>
+            <p class="stage-value" id="stage-content-value">—</p>
+            <p class="stage-hint">手册、发布说明、截图</p>
+          </article>
+          <article class="stage" id="stage-publish">
+            <div class="stage-index">05</div>
+            <h2>发布</h2>
+            <p class="stage-value" id="stage-publish-value">—</p>
+            <p class="stage-hint">目标适配器与外发确认</p>
+          </article>
+        </section>
+
+        <div class="project-actions">
+          <button type="button" class="primary" id="enter-project">进入项目工作区</button>
+          <button type="button" class="ghost" id="switch-project">切换项目</button>
+        </div>
+        <p class="footnote" id="project-note">
+          进入后会打开 dsh 工作区。Bee Press 面板在右侧栏，不替代上游对话和模型能力。
         </p>
       </main>
 

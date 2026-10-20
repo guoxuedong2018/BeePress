@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.5 — 2026-10-20
+
+- **Project workbench** — after choosing a project, the launcher shows a
+  project-level workflow view instead of immediately opening a chat:
+  requirements, prototype, review, content and publish status, plus a single
+  “enter project workspace” action.
+- **Project inspection** — the launcher reads FRS count, knowledge-base pages,
+  open reviews, dev script and publish configuration locally before starting
+  dsh.
+- **New project flow** — creating a project now stops at the workbench so the
+  user can review the scaffold before entering the workspace.
+
 ## 0.6.4 — 2026-10-20
 
 - **Packaged desktop resources** — the packaged app resolves its `beepress`

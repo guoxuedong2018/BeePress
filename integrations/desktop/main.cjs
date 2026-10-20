@@ -168,6 +168,74 @@ async function openProjectInUi(root) {
   console.warn("[beepress-desktop] Bee Press client helper did not load; open the workspace manually.");
 }
 
+async function walkFiles(dir, predicate) {
+  const out = [];
+  let entries;
+  try {
+    entries = await fs.promises.readdir(dir, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...(await walkFiles(full, predicate)));
+    else if (predicate(full, entry.name)) out.push(full);
+  }
+  return out;
+}
+
+async function inspectProject(root) {
+  const project = path.resolve(root);
+  if (!(await isProject(project))) {
+    throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 beepress.config.*。");
+  }
+  const pkgFile = path.join(project, "package.json");
+  let pkg = {};
+  try {
+    pkg = JSON.parse(await fs.promises.readFile(pkgFile, "utf8"));
+  } catch {
+    // A docs-only project is still inspectable.
+  }
+  const featureDir = path.join(project, "docs", "features");
+  const features = [];
+  try {
+    for (const entry of await fs.promises.readdir(featureDir, { withFileTypes: true })) {
+      if (entry.isDirectory() && fs.existsSync(path.join(featureDir, entry.name, "FRS.json"))) features.push(entry.name);
+    }
+  } catch {
+    // No feature specs yet.
+  }
+  const kbFiles = await walkFiles(path.join(project, "docs", "kb"), (_full, name) => name.endsWith(".md"));
+  const reviewFiles = await walkFiles(path.join(project, "docs", "reviews"), (_full, name) => name.endsWith(".json"));
+  let openReviews = 0;
+  for (const file of reviewFiles) {
+    try {
+      const parsed = JSON.parse(await fs.promises.readFile(file, "utf8"));
+      const comments = Array.isArray(parsed) ? parsed : parsed.comments;
+      if (Array.isArray(comments)) openReviews += comments.filter((comment) => comment?.status !== "resolved").length;
+    } catch {
+      // Ignore malformed local review files in the launcher.
+    }
+  }
+  const gateway = process.env.BEEPRESS_PUBLISH_GATEWAY || process.env.BUILDER_KIT_PUBLISH_GATEWAY || null;
+  const docsCli = process.env.BEEPRESS_DOCS_CLI || process.env.BUILDER_KIT_DOCS_CLI || null;
+  return {
+    root: project,
+    name: path.basename(project),
+    devScript: pkg.scripts?.dev ?? null,
+    features: features.sort(),
+    kbPages: kbFiles.length,
+    openReviews,
+    publish: {
+      configured: Boolean(gateway || docsCli),
+      destination: gateway || (docsCli ? "docs-cli" : null),
+    },
+    templates: fs.existsSync(path.join(project, "docs", "templates")),
+    workflow: fs.existsSync(path.join(project, "docs", "WORKFLOW.md")),
+    skills: fs.existsSync(path.join(project, ".agent", "skills")),
+  };
+}
+
 function createWindow() {
   window = new BrowserWindow({
     width: 1180,
@@ -199,6 +267,7 @@ ipcMain.handle("beepress:choose-parent", async () => {
   });
   return result.canceled ? null : result.filePaths[0];
 });
+ipcMain.handle("beepress:inspect", (_event, root) => inspectProject(root));
 ipcMain.handle("beepress:choose-existing", async () => {
   const result = await dialog.showOpenDialog(window, {
     title: "导入已有开发项目",

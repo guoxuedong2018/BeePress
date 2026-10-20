@@ -15,9 +15,12 @@ The first screen is a Bee Press launcher, not a chat box:
 3. **Recent projects** — open the last workspace without going through the
    picker again.
 
-After selection the shell starts dsh in that workspace, adds it as a dsh
-workspace and opens a session. The dsh sidebar brand is replaced with Bee
-Press; the rest of the upstream chat, model and plugin UI remains available.
+After selection the shell shows a **project workbench**: FRS count, prototype
+dev script, open reviews, content pages and publish configuration. The
+“enter project workspace” action then starts dsh in that workspace, adds it as
+a dsh workspace and opens a session. The dsh sidebar brand is replaced with
+Bee Press; the rest of the upstream chat, model and plugin UI remains
+available.
 
 ## Install and test locally
 
