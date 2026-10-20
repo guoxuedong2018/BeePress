@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld("beepress", {
   scanProjects: (root) => ipcRenderer.invoke("beepress:scan-projects", root),
   analyzeUrl: (url) => ipcRenderer.invoke("beepress:analyze-url", url),
   saveSetup: (payload) => ipcRenderer.invoke("beepress:save-setup", payload),
+  recordRun: (payload) => ipcRenderer.invoke("beepress:record-run", payload),
   createFeature: (payload) => ipcRenderer.invoke("beepress:create-feature", payload),
   checkFrs: (root) => ipcRenderer.invoke("beepress:check-frs", root),
   installDependencies: (root) => ipcRenderer.invoke("beepress:install-deps", root),
@@ -21,6 +22,12 @@ contextBridge.exposeInMainWorld("beepress", {
   publishPlan: (root) => ipcRenderer.invoke("beepress:publish-plan", root),
   savePublishGateway: (payload) => ipcRenderer.invoke("beepress:save-publish-gateway", payload),
   openPath: (target) => ipcRenderer.invoke("beepress:open-path", target),
+  openExternal: (target) => ipcRenderer.invoke("beepress:open-external", target),
+  onMenu: (callback) => {
+    const handler = (_event, command) => callback(command);
+    ipcRenderer.on("beepress:menu", handler);
+    return () => ipcRenderer.removeListener("beepress:menu", handler);
+  },
   chooseParent: () => ipcRenderer.invoke("beepress:choose-parent"),
   createProject: (payload) => ipcRenderer.invoke("beepress:create-project", payload),
   start: (root) => ipcRenderer.invoke("beepress:start", root),

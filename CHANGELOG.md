@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.2 — 2026-10-20
+
+- **Resizable three-pane workbench** — workspace, inspector and browser share a
+  draggable grid modeled on the DeepSeek Harness client layout: 264–420px
+  sidebar, 400px minimum center, 300–70% right pane and a draggable inspector /
+  browser split. Widths persist per machine.
+- **Embedded browser** — prototype and review actions open in an Electron
+  `<webview>` beside the workspace, with back/forward/reload, address bar and
+  “open in system browser”; webviews are restricted to HTTP(S).
+- **Per-stage history** — requirements, prototype, review, content and publish
+  each keep their last 20 runs in `.beepress/desktop.json`; switching stages
+  restores that stage's latest output and history.
+- **Native application menu** — File, Edit, View, Window and Help menus with
+  import/new, command palette, pane toggles and standard macOS roles.
+- **Layout behavior from dsh** — adapted the DSH `ui-layout` column solver and
+  pointer-capture/rAF drag handles instead of inventing a new splitter.
+
 ## 0.7.1 — 2026-10-20
 
 - **Desktop-native shell** — replaced the marketing-style entry page with a

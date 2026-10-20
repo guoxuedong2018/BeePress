@@ -16,6 +16,152 @@ let currentProject = null;
 let selectedStack = "react-tailwind";
 let selectedUi = "bee-press";
 let lastAnalysis = null;
+let currentStage = "requirements";
+
+const LAYOUT_KEY = "beepress.layout.v1";
+const layout = {
+  sidebar: 264,
+  rightbar: 360,
+  inspectorRatio: 0.58,
+  sidebarOpen: true,
+  rightbarOpen: true,
+  browserOpen: true,
+};
+try {
+  Object.assign(layout, JSON.parse(localStorage.getItem(LAYOUT_KEY) || "{}"));
+} catch {
+  // A malformed preference falls back to the defaults above.
+}
+
+const clampWidth = (px, min, max) => Math.min(max, Math.max(min, Math.round(px)));
+
+// Column solver and pointer-capture drag behavior adapted from
+// @deepseek-ai/dsh-client-ui-layout (AppFrame / DragHandle).
+function computeColumns(viewport, sidebar, rightbar, collapsedWidth = 0) {
+  const s = sidebar === 0 ? collapsedWidth : clampWidth(sidebar, 264, 420);
+  const available = viewport - s - 400;
+  const r = rightbar === 0 || available < 300 ? 0 : Math.min(available, clampWidth(rightbar, 300, viewport * 0.7));
+  return { sidebar: s, center: Math.max(0, viewport - s - r), rightbar: r };
+}
+
+function saveLayout() {
+  try {
+    localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout));
+  } catch {
+    // Layout persistence is best effort.
+  }
+}
+
+function applyLayout() {
+  const frame = $("app-frame");
+  const app = $("app");
+  const viewport = frame.clientWidth || window.innerWidth;
+  const project = app.dataset.view === "project";
+  const sidebarPreference = layout.sidebarOpen ? layout.sidebar : 0;
+  const cols = computeColumns(viewport, sidebarPreference, layout.rightbarOpen && project ? layout.rightbar : 0);
+  frame.style.setProperty("--sidebar-width", `${cols.sidebar}px`);
+  frame.style.setProperty("--rightbar-width", `${cols.rightbar}px`);
+  app.dataset.sidebarCollapsed = cols.sidebar === 0 ? "true" : "false";
+  app.dataset.rightbarCollapsed = cols.rightbar === 0 ? "true" : "false";
+  $("rightbar").dataset.browserOpen = String(layout.browserOpen);
+  const rightbarEl = $("rightbar");
+  const height = rightbarEl.getBoundingClientRect().height || window.innerHeight - 66;
+  const inspectorHeight = Math.round(height * Math.min(0.8, Math.max(0.25, layout.inspectorRatio)));
+  frame.style.setProperty("--inspector-height", `${inspectorHeight}px`);
+  $("handle-sidebar").style.left = `${cols.sidebar}px`;
+  $("handle-sidebar").style.display = cols.sidebar ? "" : "none";
+  $("handle-rightbar").style.left = `${viewport - cols.rightbar}px`;
+  $("handle-rightbar").style.display = cols.rightbar ? "" : "none";
+  $("handle-split").style.top = `${inspectorHeight}px`;
+  $("handle-split").style.display = cols.rightbar && layout.browserOpen ? "" : "none";
+  $("status-inspector").classList.toggle("active", cols.rightbar > 0);
+  $("status-browser").classList.toggle("active", cols.rightbar > 0 && layout.browserOpen);
+}
+
+function bindColumnHandle(element, side) {
+  let origin = 0;
+  let base = 0;
+  let latest = 0;
+  let frame = null;
+  let capture = null;
+  const end = () => {
+    if (capture === null) return;
+    if (frame !== null) {
+      cancelAnimationFrame(frame);
+      frame = null;
+    }
+    if (element.hasPointerCapture(capture)) element.releasePointerCapture(capture);
+    capture = null;
+    $("app-frame").removeAttribute("data-dragging");
+    applyLayout();
+    saveLayout();
+  };
+  element.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || capture !== null) return;
+    event.preventDefault();
+    element.setPointerCapture(event.pointerId);
+    capture = event.pointerId;
+    origin = latest = event.clientX;
+    base = side === "sidebar" ? layout.sidebar : layout.rightbar;
+    $("app-frame").setAttribute("data-dragging", "");
+  });
+  element.addEventListener("pointermove", (event) => {
+    if (capture !== event.pointerId) return;
+    latest = event.clientX;
+    frame ??= requestAnimationFrame(() => {
+      frame = null;
+      const dx = latest - origin;
+      if (side === "sidebar") layout.sidebar = base + dx;
+      else layout.rightbar = base - dx;
+      applyLayout();
+    });
+  });
+  element.addEventListener("pointerup", end);
+  element.addEventListener("pointercancel", end);
+  element.addEventListener("lostpointercapture", end);
+}
+
+function bindSplitHandle(element) {
+  let origin = 0;
+  let baseRatio = 0;
+  let latest = 0;
+  let frame = null;
+  let capture = null;
+  const end = () => {
+    if (capture === null) return;
+    if (frame !== null) {
+      cancelAnimationFrame(frame);
+      frame = null;
+    }
+    if (element.hasPointerCapture(capture)) element.releasePointerCapture(capture);
+    capture = null;
+    $("app-frame").removeAttribute("data-dragging");
+    applyLayout();
+    saveLayout();
+  };
+  element.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || capture !== null) return;
+    event.preventDefault();
+    element.setPointerCapture(event.pointerId);
+    capture = event.pointerId;
+    origin = latest = event.clientY;
+    baseRatio = layout.inspectorRatio;
+    $("app-frame").setAttribute("data-dragging", "");
+  });
+  element.addEventListener("pointermove", (event) => {
+    if (capture !== event.pointerId) return;
+    latest = event.clientY;
+    frame ??= requestAnimationFrame(() => {
+      frame = null;
+      const height = $("rightbar").getBoundingClientRect().height || 1;
+      layout.inspectorRatio = Math.min(0.8, Math.max(0.25, baseRatio + (latest - origin) / height));
+      applyLayout();
+    });
+  });
+  element.addEventListener("pointerup", end);
+  element.addEventListener("pointercancel", end);
+  element.addEventListener("lostpointercapture", end);
+}
 
 function setBusy(busy, title = "正在打开项目", detail = "启动 DeepSeek Harness…") {
   overlay.hidden = !busy;
@@ -39,21 +185,67 @@ function showView(name, step) {
   $("app").dataset.view = name;
   $("window-title").textContent = name === "project" ? currentProject?.name || "工作台" : name === "setup" ? "生产基线" : "项目";
   $("status-project").textContent = name === "project" ? `${currentProject?.name || "项目"} · 本地` : name === "setup" ? `${currentProject?.name || "项目"} · 基线` : "未打开项目";
+  applyLayout();
+  requestAnimationFrame(applyLayout);
 }
 
 function selectStage(name) {
+  currentStage = name;
   for (const node of document.querySelectorAll("[data-stage]")) {
     if (node.tagName === "BUTTON") node.classList.toggle("active", node.dataset.stage === name);
   }
   for (const node of document.querySelectorAll("[data-stage-panel]")) {
     node.classList.toggle("active", node.dataset.stagePanel === name);
   }
+  if (currentProject) {
+    renderHistory();
+    restoreStageOutput();
+  }
+}
+
+function stageEntries(stage = currentStage) {
+  const entries = currentProject?.stageHistory?.[stage];
+  return Array.isArray(entries) ? entries : [];
+}
+
+function renderHistory() {
+  const entries = stageEntries();
+  $("history-count").textContent = entries.length ? String(entries.length) : "";
+  if (!entries.length) {
+    $("history-list").innerHTML = '<p class="history-empty">这个阶段还没有运行记录。</p>';
+    return;
+  }
+  $("history-list").innerHTML = entries
+    .map((entry, index) => {
+      const time = new Date(entry.at).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+      return `
+        <button type="button" class="history-item" data-history-index="${index}" data-ok="${entry.ok ? "true" : "false"}" title="${escapeHtml(entry.title || "")}">
+          <time>${time}</time>
+          <strong>${escapeHtml(entry.title || entry.action || "运行")}</strong>
+          <span>${entry.ok ? "完成" : "失败"}</span>
+        </button>`;
+    })
+    .join("");
+}
+
+function restoreStageOutput() {
+  const latest = stageEntries()[0];
+  if (latest) showOutput(latest.text, latest.ok ? "完成" : "失败");
+  else resetOutput();
+}
+
+function selectInspectorTab(name) {
+  for (const node of document.querySelectorAll("[data-inspector-tab]")) node.classList.toggle("active", node.dataset.inspectorTab === name);
+  $("output-panel").hidden = name !== "output";
+  $("history-panel").hidden = name !== "history";
 }
 
 function showHome() {
   currentProject = null;
+  currentStage = "requirements";
   lastAnalysis = null;
   for (const button of document.querySelectorAll("#recent-list [data-root]")) button.classList.remove("active");
+  selectInspectorTab("output");
   showView("home", 1);
   window.beepress?.recent?.().then(renderRecent).catch(() => {});
 }
@@ -65,6 +257,12 @@ function showOutput(text, state = "完成") {
   output.scrollTop = 0;
   $("output-empty").hidden = true;
   $("output-state").textContent = state;
+  selectInspectorTab("output");
+  if (!layout.rightbarOpen) {
+    layout.rightbarOpen = true;
+    applyLayout();
+    saveLayout();
+  }
 }
 
 function resetOutput() {
@@ -97,6 +295,50 @@ const uiLabels = {
   existing: "沿用现有产品",
   url: "对齐线上页面",
 };
+
+const actionStages = {
+  "create-feature": "requirements",
+  "check-frs": "requirements",
+  "install-deps": "prototype",
+  "start-prototype": "prototype",
+  "open-review": "review",
+  "review-status": "review",
+  "content-status": "content",
+  "capture-media": "content",
+  "record-clips": "content",
+  "save-gateway": "publish",
+  "publish-plan": "publish",
+};
+const actionLabels = {
+  "create-feature": "新建 FRS 件套",
+  "check-frs": "检查 FRS",
+  "install-deps": "安装依赖",
+  "start-prototype": "启动原型",
+  "open-review": "打开评审页",
+  "review-status": "查看待处理批注",
+  "content-status": "检查内容锁",
+  "capture-media": "重拍过期截图",
+  "record-clips": "重建录屏",
+  "save-gateway": "保存发布目标",
+  "publish-plan": "生成发布计划",
+};
+
+async function persistRun(stage, action, text, ok) {
+  if (!currentProject || !window.beepress?.recordRun) return;
+  try {
+    currentProject.stageHistory = await window.beepress.recordRun({
+      root: currentProject.root,
+      stage,
+      action,
+      title: actionLabels[action] || action,
+      text,
+      ok,
+    });
+    if (stage === currentStage) renderHistory();
+  } catch (error) {
+    console.error(error);
+  }
+}
 
 function mapDetectedStack(project) {
   if (!project.stack) return "existing";
@@ -254,12 +496,17 @@ async function runAgentScan() {
 async function action(name) {
   if (!currentProject) return;
   const root = currentProject.root;
+  const stage = actionStages[name] || currentStage;
+  const record = (text, ok = true) => {
+    showOutput(text, ok ? "完成" : "失败");
+    persistRun(stage, name, text, ok);
+  };
   showOutput("执行中…", "运行中");
   try {
     if (name === "create-feature") {
       const title = $("feature-title").value.trim();
       const result = await window.beepress.createFeature({ root, title });
-      showOutput(`已创建需求件套：\n${result.relativePath}\n\n下一步：\n${result.checkCommand}`);
+      record(`已创建需求件套：\n${result.relativePath}\n\n下一步：\n${result.checkCommand}`);
       $("feature-title").value = "";
       currentProject.features = [...(currentProject.features || []), result.key].sort();
       $("status-requirements").textContent = `${currentProject.features.length} FRS`;
@@ -267,48 +514,52 @@ async function action(name) {
     }
     if (name === "check-frs") {
       const result = await window.beepress.checkFrs(root);
-      showOutput(result.output || (result.ok ? "FRS 校验通过。" : "FRS 校验失败。"), result.ok ? "完成" : "失败");
+      record(result.output || (result.ok ? "FRS 校验通过。" : "FRS 校验失败。"), result.ok);
       return;
     }
     if (name === "install-deps") {
       setBusy(true, "正在安装依赖", "在项目目录执行 npm install…");
       const result = await window.beepress.installDependencies(root);
       setBusy(false);
-      showOutput(result.output || (result.ok ? "依赖安装完成。" : "依赖安装失败。"), result.ok ? "完成" : "失败");
+      record(result.output || (result.ok ? "依赖安装完成。" : "依赖安装失败。"), result.ok);
       return;
     }
     if (name === "start-prototype") {
       const result = await window.beepress.startPrototype(root);
-      showOutput(result.ok ? `原型已启动：${result.url}\n${result.reused ? "（复用已运行的 dev server）" : ""}` : result.error, result.ok ? "完成" : "失败");
+      record(result.ok ? `原型已启动：${result.url}\n${result.reused ? "（复用已运行的 dev server）" : ""}` : result.error, result.ok);
+      if (result.ok) showBrowser(result.url);
       return;
     }
     if (name === "open-review") {
       const result = await window.beepress.openReview(root);
-      showOutput(result.ok ? `评审页已打开：${result.url}\n在页面上按住 ⌘/Ctrl 或点击评论按钮开始圈选。` : result.error, result.ok ? "完成" : "失败");
+      record(result.ok ? `评审页已打开：${result.url}\n在页面上按住 ⌘/Ctrl 或点击评论按钮开始圈选。` : result.error, result.ok);
+      if (result.ok) showBrowser(result.url);
       return;
     }
     if (name === "review-status") {
       const result = await window.beepress.reviewStatus(root);
-      showOutput(result.output || "没有待处理批注。");
+      record(result.output || "没有待处理批注。", result.ok !== false);
       return;
     }
     if (name === "content-status") {
       const result = await window.beepress.contentStatus(root);
-      showOutput(formatContent(result));
+      record(formatContent(result), result.ok !== false);
       return;
     }
     if (name === "capture-media") {
       setBusy(true, "正在重建截图", "先启动原型，再按配方抓取过期截图…");
       const result = await window.beepress.captureMedia(root);
       setBusy(false);
-      showOutput(result.output || (result.ok ? "截图完成。" : "截图失败。"), result.ok ? "完成" : "失败");
+      record(result.output || (result.ok ? "截图完成。" : "截图失败。"), result.ok);
+      if (result.prototypeUrl) showBrowser(result.prototypeUrl);
       return;
     }
     if (name === "record-clips") {
       setBusy(true, "正在重建录屏", "先启动原型，再按 clips 配方录制 MP4/GIF…");
       const result = await window.beepress.recordClips(root);
       setBusy(false);
-      showOutput(result.output || (result.ok ? "录屏完成。" : "录屏失败。"), result.ok ? "完成" : "失败");
+      record(result.output || (result.ok ? "录屏完成。" : "录屏失败。"), result.ok);
+      if (result.prototypeUrl) showBrowser(result.prototypeUrl);
       return;
     }
     if (name === "save-gateway") {
@@ -318,20 +569,20 @@ async function action(name) {
       $("status-publish").textContent = project.publish?.configured
         ? `${project.publish.publishedPages ?? 0} 已发`
         : "未配置";
-      showOutput(gateway ? `已保存发布目标：${gateway}` : "已清除发布目标。");
+      record(gateway ? `已保存发布目标：${gateway}` : "已清除发布目标。");
       return;
     }
     if (name === "publish-plan") {
       setBusy(true, "正在生成发布计划", "运行 kb-publish --dry-run…");
       const result = await window.beepress.publishPlan(root);
       setBusy(false);
-      showOutput(result.output || (result.ok ? "发布计划完成。" : "发布计划失败。"), result.ok ? "完成" : "失败");
+      record(result.output || (result.ok ? "发布计划完成。" : "发布计划失败。"), result.ok);
       return;
     }
-    showOutput(`未知操作：${name}`);
+    record(`未知操作：${name}`, false);
   } catch (error) {
     setBusy(false);
-    showOutput(error instanceof Error ? error.message : String(error), "失败");
+    record(error instanceof Error ? error.message : String(error), false);
   }
 }
 
@@ -361,6 +612,152 @@ $("new-project-shortcut").addEventListener("click", () => {
   nameInput.focus();
 });
 $("output-clear").addEventListener("click", resetOutput);
+
+for (const tab of document.querySelectorAll("[data-inspector-tab]")) {
+  tab.addEventListener("click", () => selectInspectorTab(tab.dataset.inspectorTab));
+}
+
+$("history-list").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-history-index]");
+  if (!button) return;
+  const entry = stageEntries()[Number(button.dataset.historyIndex)];
+  if (!entry) return;
+  showOutput(entry.text, entry.ok ? "完成" : "失败");
+  selectInspectorTab("output");
+});
+
+function toggleSidebar() {
+  layout.sidebarOpen = !layout.sidebarOpen;
+  applyLayout();
+  saveLayout();
+}
+
+function toggleInspector() {
+  layout.rightbarOpen = !layout.rightbarOpen;
+  applyLayout();
+  saveLayout();
+}
+
+function toggleBrowser() {
+  if (!layout.rightbarOpen || !layout.browserOpen) {
+    layout.rightbarOpen = true;
+    layout.browserOpen = true;
+  } else {
+    layout.browserOpen = false;
+  }
+  applyLayout();
+  saveLayout();
+}
+
+$("status-inspector").addEventListener("click", toggleInspector);
+$("status-browser").addEventListener("click", toggleBrowser);
+
+const previewWebview = $("preview-webview");
+
+function normalizeBrowserUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i.test(raw)) return `http://${raw}`;
+  return `https://${raw}`;
+}
+
+function updateBrowserNav() {
+  try {
+    $("browser-back").disabled = !previewWebview.canGoBack();
+    $("browser-forward").disabled = !previewWebview.canGoForward();
+    const current = previewWebview.getURL();
+    if (current) $("browser-url").value = current;
+  } catch {
+    // The webview may not be attached yet.
+  }
+}
+
+function showBrowser(url) {
+  const target = normalizeBrowserUrl(url);
+  if (!target) return;
+  layout.rightbarOpen = true;
+  layout.browserOpen = true;
+  const cols = computeColumns($("app-frame").clientWidth || window.innerWidth, layout.sidebarOpen ? layout.sidebar : 0, layout.rightbar);
+  if (cols.rightbar === 0) {
+    window.beepress?.openExternal?.(target).catch(() => {});
+    return;
+  }
+  applyLayout();
+  $("browser-empty").hidden = true;
+  $("browser-url").value = target;
+  previewWebview.dataset.active = "true";
+  let hasPage = false;
+  try {
+    hasPage = Boolean(previewWebview.getURL());
+  } catch {
+    // The webview has not attached yet.
+  }
+  try {
+    if (hasPage) previewWebview.loadURL(target);
+    else previewWebview.src = target;
+  } catch {
+    previewWebview.src = target;
+  }
+  requestAnimationFrame(updateBrowserNav);
+}
+
+$("browser-go").addEventListener("click", () => showBrowser($("browser-url").value));
+$("browser-url").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    showBrowser($("browser-url").value);
+  }
+});
+$("browser-back").addEventListener("click", () => {
+  try { previewWebview.canGoBack() && previewWebview.goBack(); } catch { /* not attached */ }
+});
+$("browser-forward").addEventListener("click", () => {
+  try { previewWebview.canGoForward() && previewWebview.goForward(); } catch { /* not attached */ }
+});
+$("browser-reload").addEventListener("click", () => {
+  try { previewWebview.reload(); } catch { /* not attached */ }
+});
+$("browser-external").addEventListener("click", async () => {
+  const current = $("browser-url").value.trim();
+  if (current) await window.beepress.openExternal(normalizeBrowserUrl(current));
+});
+
+previewWebview.addEventListener("did-navigate", (event) => {
+  $("browser-url").value = event.url;
+  updateBrowserNav();
+});
+previewWebview.addEventListener("did-navigate-in-page", (event) => {
+  $("browser-url").value = event.url;
+  updateBrowserNav();
+});
+previewWebview.addEventListener("dom-ready", () => {
+  $("browser-empty").hidden = true;
+  updateBrowserNav();
+});
+previewWebview.addEventListener("did-fail-load", (event) => {
+  if (event.errorCode === -3) return;
+  $("browser-empty").hidden = false;
+  $("browser-empty").innerHTML = `<strong>页面没有加载</strong><span>${escapeHtml(event.errorDescription || "未知错误")}</span>`;
+});
+
+bindColumnHandle($("handle-sidebar"), "sidebar");
+bindColumnHandle($("handle-rightbar"), "rightbar");
+bindSplitHandle($("handle-split"));
+
+const frameObserver = new ResizeObserver(() => requestAnimationFrame(applyLayout));
+frameObserver.observe($("app-frame"));
+
+window.beepress?.onMenu?.((command) => {
+  if (command === "import-project") openExistingProject();
+  else if (command === "new-project") {
+    goHomeIntake("new");
+    nameInput.focus();
+  } else if (command === "command-palette") openPalette();
+  else if (command === "toggle-sidebar") toggleSidebar();
+  else if (command === "toggle-inspector") toggleInspector();
+  else if (command === "toggle-browser") toggleBrowser();
+});
 
 for (const nav of document.querySelectorAll("[data-stage]")) {
   if (nav.tagName !== "BUTTON") continue;
@@ -526,6 +923,9 @@ const paletteCommands = [
   { label: "转到发布", hint: "生产线", when: () => Boolean(currentProject), run: () => selectStage("publish") },
   { label: "重新配置生产基线", hint: "设置", when: () => Boolean(currentProject), run: () => showSetup(currentProject) },
   { label: "打开 Agent 工作区", hint: "Enter", when: () => Boolean(currentProject), run: () => start(currentProject.root) },
+  { label: "显示/隐藏侧栏", hint: "⌘B", run: toggleSidebar },
+  { label: "显示/隐藏检查器", hint: "⌘J", when: () => Boolean(currentProject), run: toggleInspector },
+  { label: "显示/隐藏浏览器", hint: "⌘⇧B", when: () => Boolean(currentProject), run: toggleBrowser },
   { label: "回到项目列表", hint: "Esc", when: () => Boolean(currentProject), run: showHome },
 ];
 let paletteIndex = 0;
@@ -614,9 +1014,17 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     goHomeIntake("new");
     nameInput.focus();
+  } else if (command && event.key.toLowerCase() === "b") {
+    event.preventDefault();
+    if (event.shiftKey) toggleBrowser();
+    else toggleSidebar();
+  } else if (command && event.key.toLowerCase() === "j") {
+    event.preventDefault();
+    toggleInspector();
   } else if (event.key === "Escape" && !palette.hidden) {
     closePalette();
   }
 });
 
 showHome();
+applyLayout();

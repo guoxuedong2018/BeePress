@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require("electron");
 const { execFile, spawn } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
@@ -6,6 +6,8 @@ const path = require("node:path");
 const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
+
+app.setName("Bee Press");
 
 const KIT_ROOT = process.env.BEEPRESS_KIT_ROOT || (app?.isPackaged
   ? path.join(process.resourcesPath, "beepress")
@@ -554,6 +556,7 @@ async function inspectProject(root) {
       analysis: settings.analysis ?? null,
     },
     features: features.sort(),
+    stageHistory: settings.stageHistory && typeof settings.stageHistory === "object" ? settings.stageHistory : {},
     kbPages: kbFiles.length,
     openReviews,
     publish: {
@@ -583,13 +586,110 @@ function createWindow() {
       nodeIntegration: false,
       preload: path.join(__dirname, "preload.cjs"),
       sandbox: true,
+      webviewTag: true,
     },
   });
   window.on("page-title-updated", (event) => {
     event.preventDefault();
     window.setTitle("Bee Press");
   });
+  window.webContents.on("will-attach-webview", (event, webPreferences, params) => {
+    delete webPreferences.preload;
+    webPreferences.nodeIntegration = false;
+    webPreferences.contextIsolation = true;
+    webPreferences.sandbox = true;
+    let target;
+    try {
+      target = new URL(params.src);
+    } catch {
+      event.preventDefault();
+      return;
+    }
+    if (!["http:", "https:"].includes(target.protocol)) event.preventDefault();
+  });
   window.loadFile(ONBOARDING);
+}
+
+function sendMenuCommand(command) {
+  if (window && !window.isDestroyed()) window.webContents.send("beepress:menu", command);
+}
+
+function buildMenu() {
+  const isMac = process.platform === "darwin";
+  const template = [
+    ...(isMac
+      ? [{
+          label: "Bee Press",
+          submenu: [
+            { role: "about" },
+            { type: "separator" },
+            { role: "services" },
+            { type: "separator" },
+            { role: "hide" },
+            { role: "hideOthers" },
+            { role: "unhide" },
+            { type: "separator" },
+            { role: "quit" },
+          ],
+        }]
+      : []),
+    {
+      label: "文件",
+      submenu: [
+        { label: "导入项目…", accelerator: "CmdOrCtrl+O", click: () => sendMenuCommand("import-project") },
+        { label: "新建项目…", accelerator: "CmdOrCtrl+N", click: () => sendMenuCommand("new-project") },
+        { type: "separator" },
+        { role: "close" },
+      ],
+    },
+    {
+      label: "编辑",
+      submenu: [
+        { role: "undo" },
+        { role: "redo" },
+        { type: "separator" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "selectAll" },
+      ],
+    },
+    {
+      label: "视图",
+      submenu: [
+        { label: "命令面板", accelerator: "CmdOrCtrl+K", click: () => sendMenuCommand("command-palette") },
+        { type: "separator" },
+        { label: "显示/隐藏侧栏", accelerator: "CmdOrCtrl+B", click: () => sendMenuCommand("toggle-sidebar") },
+        { label: "显示/隐藏检查器", accelerator: "CmdOrCtrl+J", click: () => sendMenuCommand("toggle-inspector") },
+        { label: "显示/隐藏浏览器", accelerator: "CmdOrCtrl+Shift+B", click: () => sendMenuCommand("toggle-browser") },
+        { type: "separator" },
+        { role: "reload" },
+        ...(app.isPackaged ? [] : [{ role: "toggleDevTools" }]),
+        { type: "separator" },
+        { role: "resetZoom" },
+        { role: "zoomIn" },
+        { role: "zoomOut" },
+        { type: "separator" },
+        { role: "togglefullscreen" },
+      ],
+    },
+    {
+      label: "窗口",
+      submenu: [
+        { role: "minimize" },
+        { role: "zoom" },
+        ...(isMac ? [{ type: "separator" }, { role: "front" }] : []),
+      ],
+    },
+    {
+      role: "help",
+      submenu: [
+        { label: "Bee Press 仓库", click: () => shell.openExternal("https://github.com/guoxuedong2018/BeePress") },
+        { label: "报告问题", click: () => shell.openExternal("https://github.com/guoxuedong2018/BeePress/issues") },
+      ],
+    },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 ipcMain.handle("beepress:recent", () => readConfig());
@@ -672,6 +772,22 @@ ipcMain.handle("beepress:save-setup", async (_event, payload) => {
   });
   return inspectProject(payload.root);
 });
+ipcMain.handle("beepress:record-run", (_event, payload) => {
+  const settings = readProjectSettings(payload.root);
+  const stageHistory = settings.stageHistory && typeof settings.stageHistory === "object" ? settings.stageHistory : {};
+  const entries = Array.isArray(stageHistory[payload.stage]) ? stageHistory[payload.stage] : [];
+  entries.unshift({
+    id: Date.now(),
+    at: new Date().toISOString(),
+    action: String(payload.action || ""),
+    title: String(payload.title || payload.action || "运行"),
+    text: String(payload.text || "").slice(0, 20_000),
+    ok: Boolean(payload.ok),
+  });
+  stageHistory[payload.stage] = entries.slice(0, 20);
+  writeProjectSettings(payload.root, { stageHistory });
+  return stageHistory;
+});
 ipcMain.handle("beepress:create-feature", (_event, { root, title }) => createFeature(root, title));
 ipcMain.handle("beepress:check-frs", (_event, root) => runKit(root, ["check-frs"], 60_000));
 ipcMain.handle("beepress:install-deps", async (_event, root) => {
@@ -690,7 +806,6 @@ ipcMain.handle("beepress:install-deps", async (_event, root) => {
 ipcMain.handle("beepress:start-prototype", async (_event, root) => {
   try {
     const started = await startPrototype(root);
-    await shell.openExternal(started.url);
     return { ok: true, ...started };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
@@ -699,7 +814,6 @@ ipcMain.handle("beepress:start-prototype", async (_event, root) => {
 ipcMain.handle("beepress:open-review", async (_event, root) => {
   try {
     const started = await startPrototype(root);
-    await shell.openExternal(started.url);
     return { ok: true, url: started.url };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
@@ -743,6 +857,17 @@ ipcMain.handle("beepress:open-path", async (_event, target) => {
   if (error) throw new Error(error);
   return true;
 });
+ipcMain.handle("beepress:open-external", async (_event, target) => {
+  let url;
+  try {
+    url = new URL(target);
+  } catch {
+    throw new Error("不是有效的链接。");
+  }
+  if (!["http:", "https:", "mailto:"].includes(url.protocol)) throw new Error("只允许打开 http、https 或 mailto 链接。");
+  await shell.openExternal(url.href);
+  return true;
+});
 ipcMain.handle("beepress:start", async (_event, root) => {
   try {
     await loadHarness(root);
@@ -763,6 +888,7 @@ app.whenReady().then(() => {
   if (process.platform === "darwin" && app.dock) {
     app.dock.setIcon(path.join(__dirname, "assets", "icon.png"));
   }
+  buildMenu();
   createWindow();
 });
 app.on("window-all-closed", () => app.quit());

@@ -25,7 +25,7 @@
         </div>
       </header>
 
-      <div class="app-body">
+      <div class="app-body" id="app-frame">
         <aside class="sidebar">
           <div class="side-block">
             <div class="side-label">工作区</div>
@@ -76,6 +76,7 @@
             <button type="button" class="side-action" id="switch-project"><span>全部项目</span></button>
           </div>
         </aside>
+        <div class="pane-handle vertical" data-handle="sidebar" id="handle-sidebar"></div>
 
         <main class="workspace">
           <section class="view home-view" id="home-view">
@@ -288,23 +289,57 @@
                 </article>
               </section>
 
-              <aside class="inspector">
-                <header class="inspector-head">
-                  <span>运行输出</span>
-                  <span class="output-state" id="output-state">就绪</span>
-                  <button type="button" class="icon-btn" id="output-clear" title="清除输出">清除</button>
-                </header>
-                <pre id="stage-output" class="stage-output" hidden></pre>
-                <div class="inspector-empty" id="output-empty">选择一个动作后，命令输出会出现在这里。</div>
-              </aside>
             </div>
           </section>
         </main>
+
+        <aside class="rightbar" id="rightbar" data-browser-open="true">
+          <section class="inspector" id="inspector-pane">
+            <header class="inspector-head">
+              <div class="inspector-tabs" role="tablist" aria-label="检查器">
+                <button type="button" class="inspector-tab active" data-inspector-tab="output">输出</button>
+                <button type="button" class="inspector-tab" data-inspector-tab="history">历史 <span id="history-count"></span></button>
+              </div>
+              <span class="output-state" id="output-state">就绪</span>
+              <button type="button" class="icon-btn" id="output-clear" title="清除输出">清除</button>
+            </header>
+            <div class="inspector-panel" id="output-panel">
+              <pre id="stage-output" class="stage-output" hidden></pre>
+              <div class="inspector-empty" id="output-empty">选择一个动作后，命令输出会出现在这里。</div>
+            </div>
+            <div class="inspector-panel" id="history-panel" hidden>
+              <div class="history-list" id="history-list"></div>
+            </div>
+          </section>
+
+          <div class="pane-handle horizontal" data-handle="split" id="handle-split"></div>
+
+          <section class="browser-pane" id="browser-pane">
+            <header class="browser-toolbar">
+              <button type="button" class="icon-btn" id="browser-back" title="后退">←</button>
+              <button type="button" class="icon-btn" id="browser-forward" title="前进">→</button>
+              <button type="button" class="icon-btn" id="browser-reload" title="刷新">↻</button>
+              <input id="browser-url" placeholder="http://localhost:5173/" autocomplete="off" />
+              <button type="button" class="icon-btn" id="browser-go" title="前往">↵</button>
+              <button type="button" class="icon-btn" id="browser-external" title="在系统浏览器打开">↗</button>
+            </header>
+            <div class="browser-canvas">
+              <webview id="preview-webview" class="preview-webview" partition="beepress-preview"></webview>
+              <div class="browser-empty" id="browser-empty">
+                <strong>浏览器</strong>
+                <span>启动原型或输入本地地址，在应用内查看页面。</span>
+              </div>
+            </div>
+          </section>
+        </aside>
+        <div class="pane-handle vertical" data-handle="rightbar" id="handle-rightbar"></div>
       </div>
 
       <footer class="statusbar">
         <span id="status-project">未打开项目</span>
         <span class="status-spacer"></span>
+        <button type="button" class="status-toggle active" id="status-inspector">检查器</button>
+        <button type="button" class="status-toggle active" id="status-browser">浏览器</button>
         <span id="status-mode">本地优先</span>
         <span class="status-sep">·</span>
         <span>⌘K 命令</span>
