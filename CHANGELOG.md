@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.4 — 2026-10-20
+
+- **Packaged desktop resources** — the packaged app resolves its `beepress`
+  CLI/scaffold from `Resources/beepress`, and electron-builder copies `bin`,
+  `pipeline`, `scaffold`, `docs/templates` and the package manifest there.
+- **Development path unchanged** — unpackaged runs keep using the repository
+  root or `BEEPRESS_KIT_ROOT`.
+
 ## 0.6.3 — 2026-10-20
 
 - **Branded desktop onboarding** — the desktop app now opens a Bee Press

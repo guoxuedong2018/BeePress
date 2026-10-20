@@ -7,7 +7,9 @@ const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
 
-const KIT_ROOT = path.resolve(__dirname, "../..");
+const KIT_ROOT = process.env.BEEPRESS_KIT_ROOT || (app?.isPackaged
+  ? path.join(process.resourcesPath, "beepress")
+  : path.resolve(__dirname, "../.."));
 const PROFILE = process.env.BEEPRESS_DSH_PROFILE || "web";
 const CONFIG_FILE = () => path.join(app.getPath("userData"), "desktop.json");
 const ONBOARDING = path.join(__dirname, "onboarding.html");
