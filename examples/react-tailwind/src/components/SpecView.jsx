@@ -21,7 +21,7 @@ import {
   THead,
   TR,
   cn,
-} from "beepress/ui";
+} from "builderharness/ui";
 
 import tokens from "../../../../ui-spec/tokens.json";
 import { Icon } from "./Icons";
@@ -574,7 +574,7 @@ function SpecView() {
               <Demo title="Code block" hint="Copy feedback, horizontal scroll, no wrapping.">
                 <CodeBlock
                   language="js"
-                  code={'beePress({\n  anchorLoc: "react",\n  frsRegistry: "src/config/frs-map.js",\n  barLinks: [{ label: "UI spec", route: "/ui-spec" }],\n});'}
+                  code={'builderHarness({\n  anchorLoc: "react",\n  frsRegistry: "src/config/frs-map.js",\n  barLinks: [{ label: "UI spec", route: "/ui-spec" }],\n});'}
                 />
               </Demo>
             </div>
@@ -584,7 +584,7 @@ function SpecView() {
                 <Message role="user" meta="14:32 · product">
                   Can we show where a comment is anchored?
                 </Message>
-                <Message role="assistant" meta="14:33 · Bee Press">
+                <Message role="assistant" meta="14:33 · BuilderHarness">
                   Yes. The composer shows the source coordinate, and the review queue keeps the anchor after a refresh.
                 </Message>
                 {lastPrompt && (

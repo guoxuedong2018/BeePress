@@ -1,6 +1,6 @@
 ---
 name: content-draft
-description: 写或改一页知识库（docs/kb/*.md）：先定话题与类型，按节意图和物料格子规划结构，再用 beepress kb context 取引用、路由、配方和规格原文，写正文、给事实打标记、补截图/录屏配方。也用于上游变化后按待审清单逐条核对。当用户说「/content-draft <页>」「把这页写一下」「这页上游变了」「给需求 X 补文档」时触发。不确认、不发布。
+description: 写或改一页知识库（docs/kb/*.md）：先定话题与类型，按节意图和物料格子规划结构，再用 builderharness kb context 取引用、路由、配方和规格原文，写正文、给事实打标记、补截图/录屏配方。也用于上游变化后按待审清单逐条核对。当用户说「/content-draft <页>」「把这页写一下」「这页上游变了」「给需求 X 补文档」时触发。不确认、不发布。
 ---
 
 # 知识库起草 / 回流
@@ -21,8 +21,8 @@ description: 写或改一页知识库（docs/kb/*.md）：先定话题与类型�
 2. 建页或改页：
 
 ```bash
-npx beepress kb new <模块>/<名字>.md <类型> "<话题>" --pages=/a,/b
-npx beepress kb context <页|路由>
+npx builderharness kb new <模块>/<名字>.md <类型> "<话题>" --pages=/a,/b
+npx builderharness kb context <页|路由>
 ```
 
 3. 按 `intent` / `slot` 蓝图排结构；`slot` 类型：`shot` / `clip` / `diagram` / `table`。
@@ -36,20 +36,20 @@ npx beepress kb context <页|路由>
 5. 补配方并重拍：
 
 ```bash
-npx beepress capture-kb-shots --only <key>
-npx beepress record-kb-clips --only <key>
+npx builderharness capture-kb-shots --only <key>
+npx builderharness record-kb-clips --only <key>
 ```
 
 6. 自检：
 
 ```bash
-npx beepress kb status
-npx beepress kb check
+npx builderharness kb status
+npx builderharness kb check
 ```
 
 ## 上游变了
 
-1. 跑 `npx beepress kb status`，逐条看：
+1. 跑 `npx builderharness kb status`，逐条看：
    - 引用断掉 → 修正文或补配方；
    - 值变了 → 核对后改正文；
    - 只是未确认 → 留给人在审阅台确认。

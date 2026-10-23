@@ -1,10 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { beePress } from "beepress/vite";
+import { builderHarness } from "builderharness/vite";
 
 export default defineConfig({
   plugins: [
-    beePress({
+    builderHarness({
       root: process.cwd(),
       frsRegistry: "src/config/frs-map.js",
     }),

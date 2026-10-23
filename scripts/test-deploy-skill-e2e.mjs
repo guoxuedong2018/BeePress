@@ -48,7 +48,7 @@ const BINDING = path.join(WEB, ".static-site-deploy.json");
 const DEPLOY_LOG = path.join(APP, "deploy.log");
 
 await fs.mkdir(path.join(APP, "builder-kit/pipeline/lib"), { recursive: true });
-await fs.mkdir(path.join(APP, "beepress/pipeline/lib"), { recursive: true });
+await fs.mkdir(path.join(APP, "builderharness/pipeline/lib"), { recursive: true });
 await fs.mkdir(path.join(APP, ".agent/skills/deploy-prototype"), { recursive: true });
 await fs.mkdir(path.join(APP, "docs/kb"), { recursive: true });
 await fs.mkdir(path.join(APP, "docs/reviews"), { recursive: true });
@@ -57,8 +57,10 @@ await fs.mkdir(path.join(WEB, "src/mock/real-tags"), { recursive: true });
 await fs.mkdir(BIN, { recursive: true });
 await fs.mkdir(path.join(HOME, ".npm-global/bin"), { recursive: true });
 
-await fs.copyFile(path.join(ROOT, "pipeline/lib/paths.mjs"), path.join(APP, "builder-kit/pipeline/lib/paths.mjs"));
-await fs.copyFile(path.join(ROOT, "pipeline/lib/paths.mjs"), path.join(APP, "beepress/pipeline/lib/paths.mjs"));
+for (const name of ["builder-kit", "builderharness"]) {
+  await fs.copyFile(path.join(ROOT, "pipeline/lib/paths.mjs"), path.join(APP, name, "pipeline/lib/paths.mjs"));
+  await fs.copyFile(path.join(ROOT, "pipeline/lib/env.mjs"), path.join(APP, name, "pipeline/lib/env.mjs"));
+}
 await fs.copyFile(SKILL, path.join(APP, ".agent/skills/deploy-prototype/deploy.mjs"));
 
 const skillSource = await fs.readFile(SKILL, "utf8");

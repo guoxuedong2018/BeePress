@@ -1,6 +1,9 @@
 # Content model
 
-The studio and the `kb` CLI share one model. Prose is handwritten; everything else is derived or verified.
+The studio and the `kb` CLI share one model. This is a downstream deliverable
+surface: it consumes the same specs and prototype as the review gate, and is not
+part of the gate itself. Prose is handwritten; everything else is derived or
+verified.
 
 ```text
 docs/kb/
@@ -92,10 +95,10 @@ The structure view renders these as dashed nodes. Filling a slot writes back int
 ## Commands
 
 ```bash
-beepress kb status                 # what needs review / reshoot / writing
-beepress kb context <page|route>   # bundle references, recipes and specs for an agent
-beepress kb shoot --stale          # reshoot only genuinely stale recipes
-beepress kb ack <page> [ref…]      # record a human confirmation
-beepress kb check                  # fail only on broken references
-beepress kb new <page> <type> "<topic>" --pages=/a,/b
+builderharness kb status                 # what needs review / reshoot / writing
+builderharness kb context <page|route>   # bundle references, recipes and specs for an agent
+builderharness kb shoot --stale          # reshoot only genuinely stale recipes
+builderharness kb ack <page> [ref…]      # record a human confirmation
+builderharness kb check                  # fail only on broken references
+builderharness kb new <page> <type> "<topic>" --pages=/a,/b
 ```

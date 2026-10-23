@@ -1,6 +1,6 @@
-# Helix · Bee Press React + Tailwind demo
+# Helix · BuilderHarness React + Tailwind demo
 
-A synthetic product workspace that demonstrates Bee Press on a **React 19 +
+A synthetic product workspace that demonstrates BuilderHarness on a **React 19 +
 Tailwind 4.3** prototype. It is intentionally data-free: every project, person
 and metric is made up.
 
@@ -20,13 +20,13 @@ Production build:
 npm run build:demo
 ```
 
-The demo runs from `examples/react-tailwind`, so Bee Press treats that folder
+The demo runs from `examples/react-tailwind`, so BuilderHarness treats that folder
 as the host project (`docs/`, `src/`, `package.json`). Review comments are
 written to `examples/react-tailwind/docs/reviews/`.
 
 ## What to try
 
-- **Review** — the Bee Press toolbar is mounted above the app. Click 「评论」,
+- **Review** — the BuilderHarness toolbar is mounted above the app. Click 「评论」,
   then click any element (a heading, a metric card, a table row). The comment
   composer shows the injected source coordinate, e.g. `src/App.jsx:83:9`.
 - **Drafts** — type a comment, close it, reopen the same element: the draft is
@@ -47,28 +47,28 @@ written to `examples/react-tailwind/docs/reviews/`.
 - Tailwind CSS 4.3 with [`ui-spec/impl/react/tailwind.config.cjs`](../../ui-spec/impl/react/tailwind.config.cjs)
 - Tokens from [`ui-spec/tokens.css`](../../ui-spec/tokens.css)
 - Components from [`ui-spec/impl/react`](../../ui-spec/impl/react)
-- The Bee Press React adapter (`client/adapters/react.jsx`)
+- The BuilderHarness React adapter (`client/adapters/react.jsx`)
 
 The Vite config aliases the in-repo package subpaths:
 
 ```js
-{ find: /^beepress\/react$/, replacement: path.join(kitRoot, "client/adapters/react.jsx") }
-{ find: /^beepress\/ui$/, replacement: path.join(kitRoot, "ui-spec/impl/react/index.ts") }
+{ find: /^builderharness\/react$/, replacement: path.join(kitRoot, "client/adapters/react.jsx") }
+{ find: /^builderharness\/ui$/, replacement: path.join(kitRoot, "ui-spec/impl/react/index.ts") }
 ```
 
 A project that installs the published package does not need those aliases; it
-imports `beepress/react` and `beepress/ui` directly.
+imports `builderharness/react` and `builderharness/ui` directly.
 
 ## Copy it out
 
 To use this as a starting point for a real prototype:
 
 1. Copy the folder.
-2. Replace `"beepress": "file:../.."` with the published version.
-3. Keep `docs/` next to `src/`; Bee Press detects the project root from it.
+2. Replace `"builderharness": "file:../.."` with the published version.
+3. Keep `docs/` next to `src/`; BuilderHarness detects the project root from it.
 4. Run `npm install && npm run dev`.
 5. Keep the dev-only dynamic import in `src/main.jsx`; production builds strip
-   Bee Press and React never enters the artifact as part of the toolkit.
+   BuilderHarness and React never enters the artifact as part of the toolkit.
 
 ## Tailwind notes
 

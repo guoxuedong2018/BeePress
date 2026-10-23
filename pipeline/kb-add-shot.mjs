@@ -5,7 +5,7 @@
  * 和示范录屏同一条路：人在原型上操作到那一屏、框出截图范围 → 写配方 → 截图 →
  * 放进那一节（有格子就填格子）→ 校验。旁边的文字要不要跟着改，交给人或 IDE 里的 Agent。
  *
- *   npx beepress kb-add-shot --spec /tmp/shot.json
+ *   npx builderharness kb-add-shot --spec /tmp/shot.json
  *
  * spec：{
  *   page, section: { line, text }, slot?,         同 kb-add-clip

@@ -5,8 +5,8 @@ Thanks for taking the time to contribute.
 ## Setup
 
 ```bash
-git clone https://github.com/guoxuedong2018/BeePress.git
-cd BeePress
+git clone https://github.com/guoxuedong2018/BuilderHarness.git
+cd BuilderHarness
 npm install
 npm run check
 ```
@@ -19,12 +19,12 @@ npm run check
 
 ## Scope
 
-Bee Press is intentionally small and local-first:
+BuilderHarness is intentionally small and local-first:
 
 - No hosted service, no telemetry, no account system.
 - Dev-only middleware; never ship the toolkit to production.
 - Markdown is the single source of truth. Do not add a second copy of the content graph.
-- The toolkit must not import product code. Business data crosses the boundary through `virtual:beepress/host`.
+- The toolkit must not import product code. Business data crosses the boundary through `virtual:builderharness/host`.
 
 ## Pull requests
 
@@ -33,6 +33,8 @@ Bee Press is intentionally small and local-first:
 - Run `npm run check` and `npm run build:demo` before opening a PR.
 - Follow [`ui-spec/AGENT-RULES.md`](./ui-spec/AGENT-RULES.md) for UI changes; token
   values come from `ui-spec/tokens.json`.
+- Read [`docs/brand.md`](./docs/brand.md) before changing README, product copy or
+  capability claims. The product and npm package are `builderharness`.
 - For UI changes, include a screenshot or a short description of the before/after.
 
 ## Reporting bugs

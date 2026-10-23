@@ -22,8 +22,8 @@
  * 需求迭代时才谈得上「这次改动落在 <页面>#<锚点>」——这是内容运营系统那一格的输入。
  *
  * 用法：
- *   npx beepress kb-scaffold          # 补齐缺失页面
- *   npx beepress kb-scaffold --list   # 只列大纲，不落盘
+ *   npx builderharness kb-scaffold          # 补齐缺失页面
+ *   npx builderharness kb-scaffold --list   # 只列大纲，不落盘
  */
 
 import { promises as fs } from "node:fs";

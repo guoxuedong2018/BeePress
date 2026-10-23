@@ -21,6 +21,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { readEnv } from "../pipeline/lib/env.mjs";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -38,7 +39,7 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-const dist = path.resolve(args.dir || path.join(process.env.BEEPRESS_WEB_DIR || process.env.BUILDER_KIT_WEB_DIR || ROOT, "dist"));
+const dist = path.resolve(args.dir || path.join(readEnv("WEB_DIR") || ROOT, "dist"));
 const EXT = new Set([".js", ".mjs", ".css", ".html", ".json", ".map", ".txt"]);
 
 const RULES = [

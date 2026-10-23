@@ -11,6 +11,6 @@ frs: [OVERVIEW]
 # Anchors
 
 A comment must answer “which element did you mean?” even after the prototype
-changes. Bee Press keeps three layers of evidence.
+changes. BuilderHarness keeps three layers of evidence.
 
 <!--slot diagram Draw the three anchor layers and their fallback order-->

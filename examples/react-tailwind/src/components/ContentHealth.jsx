@@ -1,4 +1,4 @@
-import { Badge, Button, Card } from "beepress/ui";
+import { Badge, Button, Card } from "builderharness/ui";
 
 import { Icon } from "./Icons";
 

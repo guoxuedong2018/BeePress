@@ -1,5 +1,5 @@
 import Vue from "vue";
-import { AGENT_PROMPT, FRS_REGISTRY, barExtras, barLinks } from "virtual:beepress/host";
+import { AGENT_PROMPT, FRS_REGISTRY, barExtras, barLinks } from "virtual:builderharness/host";
 
 import { mountKit } from "../core/mount";
 import "./vue2.less";
@@ -17,8 +17,8 @@ import "./vue2.less";
  *
  * 换一个 Vue 3 或 React 的原型，照这份写一个同样三件事的适配层即可，核心不用动。
  */
-export const BuilderKitRoot = {
-  name: "BuilderKitRoot",
+export const BuilderHarnessRoot = {
+  name: "BuilderHarnessRoot",
   mounted() {
     const router = this.$router;
     const parent = this;
@@ -62,6 +62,3 @@ export const BuilderKitRoot = {
     ]);
   },
 };
-
-/** Bee Press name for the same adapter. */
-export const BeePressRoot = BuilderKitRoot;

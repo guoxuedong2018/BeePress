@@ -1,7 +1,7 @@
 /**
  * 知识库录屏配方（宿主项目）
  * ------------------------------------------------------------------
- * 由 `npx beepress record-kb-clips` 消费，产物落 docs/kb/media/<页面>/。
+ * 由 `npx builderharness record-kb-clips` 消费，产物落 docs/kb/media/<页面>/。
  * 每段同时生成 MP4、GIF 和 SRT。
  *
  * 示例：

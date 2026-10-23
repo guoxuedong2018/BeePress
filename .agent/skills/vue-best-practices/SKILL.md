@@ -5,7 +5,7 @@ description: Vue 2 原型实现约定。仅当宿主原型使用 Vue 2 时读取
 
 # Vue 2 原型约定
 
-Bee Press 的 UI 是 React，但 Vue 2 宿主可以通过 `beepress/vue2` 适配层挂载；
+BuilderHarness 的 UI 是 React，但 Vue 2 宿主可以通过 `builderharness/vue2` 适配层挂载；
 工具 UI 不需要改写业务组件。
 
 ## 版本与写法
@@ -21,8 +21,8 @@ Bee Press 的 UI 是 React，但 Vue 2 宿主可以通过 `beepress/vue2` 适配
 
 ```js
 if (import.meta.env.DEV) {
-  import("beepress/vue2").then((m) => {
-    this.kitRoot = m.BeePressRoot;
+  import("builderharness/vue2").then((m) => {
+    this.kitRoot = m.BuilderHarnessRoot;
   });
 }
 ```

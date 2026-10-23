@@ -15,10 +15,10 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "bk-publish-gateway-"));
-const env = { ...process.env, BUILDER_KIT_ROOT: tmp };
-delete env.BUILDER_KIT_PUBLISH_GATEWAY;
-delete env.BUILDER_KIT_PUBLISH_DESTINATION;
-delete env.BUILDER_KIT_DOCS_CLI;
+const env = { ...process.env, BUILDERHARNESS_ROOT: tmp };
+delete env.BUILDERHARNESS_PUBLISH_GATEWAY;
+delete env.BUILDERHARNESS_PUBLISH_DESTINATION;
+delete env.BUILDERHARNESS_DOCS_CLI;
 
 try {
   await fs.mkdir(path.join(tmp, "docs", "kb"), { recursive: true });
@@ -49,7 +49,7 @@ export function setIntent() {}
       { cwd: ROOT, env: { ...env, ...extraEnv }, encoding: "utf8" },
     );
 
-  const configured = run({ BUILDER_KIT_PUBLISH_GATEWAY: "./publish-gateway.mjs" });
+  const configured = run({ BUILDERHARNESS_PUBLISH_GATEWAY: "./publish-gateway.mjs" });
   if (configured.status !== 0) {
     throw new Error(`custom adapter publish failed:\n${configured.stdout}\n${configured.stderr}`);
   }

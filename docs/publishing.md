@@ -2,11 +2,12 @@
 
 中文操作说明见 [publishing.zh-CN.md](./publishing.zh-CN.md)。
 
-Bee Press has two sibling tools:
+BuilderHarness gates the loop **spec ↔ same-stack prototype ↔ review**.
+Publishing is downstream of that gate, never the product category:
 
 - **Review** captures feedback on the running prototype with source anchors.
-- **Studio** produces publishable content from the prototype: manuals, launch
-  notes, message cards, campaign copy, screenshots, GIFs and clips.
+- **Studio** turns the same source into downstream deliverables: manuals,
+  launch notes, message cards, campaign copy, screenshots, GIFs and clips.
 
 Studio is a content pipeline, not a CMS. It keeps the source, facts, media
 recipes, review state and publishing workflow together. A **destination** is
@@ -45,25 +46,25 @@ fields.
 
 ```bash
 # A path relative to the host project root, a file: URL, or a package name
-BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs
-# BEEPRESS_PUBLISH_GATEWAY=@acme/beepress-publish
+BUILDERHARNESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs
+# BUILDERHARNESS_PUBLISH_GATEWAY=@acme/builderharness-publish
 ```
 
 When unset, publishing is disabled. To use the bundled
 [`pipeline/destinations/docs-cli.mjs`](../pipeline/destinations/docs-cli.mjs)
-reference adapter, set `BEEPRESS_PUBLISH_GATEWAY=docs-cli`; it still reads
-`BEEPRESS_DOCS_CLI` for its command prefix. Setting `BEEPRESS_DOCS_CLI`
+reference adapter, set `BUILDERHARNESS_PUBLISH_GATEWAY=docs-cli`; it still reads
+`BUILDERHARNESS_DOCS_CLI` for its command prefix. Setting `BUILDERHARNESS_DOCS_CLI`
 alone is also accepted as the legacy opt-in.
 
 ## Connect in five steps
 
 1. Put the adapter in the **host** project, e.g. `tools/publish-gateway.mjs`.
 2. Implement the five core methods below; read `source.path` for `file` or `zip`.
-3. Set `BEEPRESS_PUBLISH_GATEWAY` on the process that starts Vite, then
+3. Set `BUILDERHARNESS_PUBLISH_GATEWAY` on the process that starts Vite, then
    restart the dev server.
 4. Check `GET /__builder_studio/publish-config`; it should return your
    `destination` label.
-5. Run `beepress kb-publish --dry-run` once with `--root` and `--doc-base`,
+5. Run `builderharness kb-publish --dry-run` once with `--root` and `--doc-base`,
    then use the studio's publish panel to review the plan and confirm.
 
 The adapter runs in the Vite dev-server Node process, never in the browser. Keep

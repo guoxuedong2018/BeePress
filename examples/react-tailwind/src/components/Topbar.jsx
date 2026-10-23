@@ -1,4 +1,4 @@
-import { Button } from "beepress/ui";
+import { Button } from "builderharness/ui";
 
 import { ROUTES } from "../router";
 import { Icon } from "./Icons";

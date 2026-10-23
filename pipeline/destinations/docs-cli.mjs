@@ -1,12 +1,12 @@
 /**
  * Reference destination adapter: docs-cli
  * ------------------------------------------------------------------
- * This is one concrete publisher, not the beepress core. It talks to an
+ * This is one concrete publisher, not the BuilderHarness core. It talks to an
  * external document CLI through a small JSON protocol (create / write /
  * fetch-jsonml / update-jsonml / append-image / source-upload / list-wiki).
  *
- *   BEEPRESS_DOCS_CLI="docs-cli"          # default command prefix
- *   BEEPRESS_DOCS_CLI="npx my-docs-cli"   # any shell command prefix
+ *   BUILDERHARNESS_DOCS_CLI="docs-cli"          # default command prefix
+ *   BUILDERHARNESS_DOCS_CLI="npx my-docs-cli"   # any shell command prefix
  *
  * The protocol is JSON-in / JSON-out:
  *
@@ -14,7 +14,7 @@
  *   { "ok": false, "error": … } failure
  *
  * A business that publishes somewhere else writes its own adapter and points
- * `BEEPRESS_PUBLISH_GATEWAY` at it; the publishing workflow (plan, state,
+ * `BUILDERHARNESS_PUBLISH_GATEWAY` at it; the publishing workflow (plan, state,
  * retries, review UI) stays in the kit. See `docs/publishing.md`.
  *
  * ## Retry boundary
@@ -33,12 +33,12 @@ import { randomUUID } from "node:crypto";
 
 /** Per-call timeout. Creating a page with a zip upload is the slowest case. */
 const DEFAULT_TIMEOUT_MS = 150_000;
-const SCRIPT_DIR = path.join(os.tmpdir(), "beepress-docs-gateway");
+const SCRIPT_DIR = path.join(os.tmpdir(), "builderharness-docs-gateway");
 const RETRIABLE = /\b401\b|unauthorized|session expired|timeout/i;
 const ENV = process.env;
 
 /** Command prefix; everything after it is the documented `word` protocol. */
-const DOCS_CLI = process.env.BEEPRESS_DOCS_CLI || process.env.BEEPRESS_DOCS_CLI || "docs-cli";
+const DOCS_CLI = readEnv("DOCS_CLI") || "docs-cli";
 
 /** Metadata the studio can show without knowing the destination. */
 export const destination = {

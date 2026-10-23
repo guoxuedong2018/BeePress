@@ -80,8 +80,8 @@ function loadCompiler() {
   compilerPromise ??= import("vue/compiler-sfc").catch((error) => {
     compilerPromise = null;
     throw new Error(
-      "beepress: source anchor injection needs `vue` >= 2.7 (vue/compiler-sfc). " +
-        "Install Vue 2.7 or call beePress({ anchorLoc: false }) for non-Vue prototypes.\n" +
+      "builderharness: source anchor injection needs `vue` >= 2.7 (vue/compiler-sfc). " +
+        "Install Vue 2.7 or call builderHarness({ anchorLoc: false }) for non-Vue prototypes.\n" +
         error.message,
     );
   });
@@ -90,7 +90,7 @@ function loadCompiler() {
 
 export function anchorLoc({ root = process.cwd() } = {}) {
   return {
-    name: "beepress:anchor-loc",
+    name: "builderharness:anchor-loc",
     apply: "serve",
     enforce: "pre",
     async transform(code, id) {

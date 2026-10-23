@@ -12,8 +12,8 @@ import { StudioRoot } from "../studio/StudioRoot";
 import { openStudio } from "../studio/store";
 import { getHost } from "./host";
 
-const REVIEW_CHANNEL = "beepress-review";
-const EMBED_QUERY = "beepress_embed";
+const REVIEW_CHANNEL = "builderharness-review";
+const EMBED_QUERY = "builderharness_embed";
 
 function embeddedInCockpit() {
   try {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Badge, Button, Card, EmptyState, SegmentedControl, Table, TableWrap, TBody, TD, TH, THead, TR } from "beepress/ui";
+import { Badge, Button, Card, EmptyState, SegmentedControl, Table, TableWrap, TBody, TD, TH, THead, TR } from "builderharness/ui";
 
 import { ActivityTable } from "./components/ActivityTable";
 import { CommandPalette } from "./components/CommandPalette";
@@ -46,7 +46,7 @@ function Hero({ onNew, onReview }) {
             Make retrieval quality visible before it ships.
           </h1>
           <p className="mt-2 text-body-lg text-secondary wrap-pretty">
-            Helix is a synthetic product workspace for the Bee Press demo: runs, review threads and content health in one place.
+            Helix is a synthetic product workspace for the BuilderHarness demo: runs, review threads and content health in one place.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-caption">
             <span className="inline-flex items-center gap-1.5 rounded-sm bg-surface-3 px-2 py-1 font-mono text-tertiary">

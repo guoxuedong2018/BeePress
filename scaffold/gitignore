@@ -1,4 +1,4 @@
-# Bee Press generated artifacts
+# BuilderHarness generated artifacts
 docs/reviews/*.json
 !docs/reviews/.gitignore
 docs/prd/
@@ -8,7 +8,7 @@ docs/kb/_blobs/
 docs/kb/_media.json
 docs/kb/_index.json
 docs/kb/_published.json
-.beepress/
+.builderharness/
 
 # Never commit local credentials or real customer data
 .env

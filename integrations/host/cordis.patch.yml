@@ -1,5 +1,5 @@
-# Bee Press bundle patch for a dsh Web profile.
+# BuilderHarness bundle patch for a dsh Web profile.
 # The package is loaded once; its tools are visible to the agent after boot.
 - insert:
-    - id: beepress
-      name: '@beepress/dsh-bundle'
+    - id: builderharness
+      name: '@builderharness/dsh-bundle'

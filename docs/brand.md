@@ -1,71 +1,111 @@
-# Bee Press brand
+# BuilderHarness brand
 
-**A hive of agents. One source of truth.**
+**An agent harness for Product Builders.**
 
-Bee Press is the product name for the prototype-native content production and
-publishing layer. The npm package and import paths are `beepress`; the
-`builder-kit` / `bk` CLIs remain compatibility aliases, so the rebrand does not break existing
-hosts.
+BuilderHarness is the product name. The repository, prose and headings use
+**BuilderHarness** — one word, camel case. The npm package and import paths are
+`builderharness`.
 
-## Why Bee Press
+## Positioning
 
-Bee Press is not a chat box with a human in the middle. It is a hive of
-specialised agents working on shared artifacts:
+> **BuilderHarness is an agent harness for Product Builders.** Day to day it
+> keeps Claude (and similar agents) on a leash: executable specs, a same-stack
+> runnable prototype as the source of truth, and human review before ship.
 
-- **Worker roles** — reading source, inspecting pages, capturing screenshots and
-  clips, writing, reviewing and publishing can be separate agents.
-- **Stigmergy** — agents coordinate through the repository rather than a
-  conversation. Facts, review locks, media ledgers and publish state are the
-  traces they leave for each other.
-- **Honey** — the content bundle is the shared output.
-- **Pollination** — destination adapters carry the same bundle to docs, IM,
-  asset libraries or internal platforms.
-- **Press** — human review and publishing stay explicit, never automatic.
+| Dimension | Definition |
+| :-- | :-- |
+| **User** | Internet Product Builders — product × engineering × operations |
+| **Category** | Agent harness: constrain the agent, run the loop, gate the result |
+| **Job** | Build a maintainable product at 0→1; keep changing, accepting and announcing it at 1→100 |
+| **Source of truth** | A same-stack runnable prototype plus specs (FRS, `frs:` / `code:` facts) |
+| **Gate** | Spec ↔ same-stack prototype ↔ review before ship |
+| **Production pieces** | Auth, observability and deploy connect through adapters (Cloudflare, GCP, internal platforms) |
 
-The bee is not a mascot for "AI magic". It is an operating model: many small
-workers, one source of truth.
+The fixed sentence for any channel:
+
+> **Spec-gated → use mature infrastructure → review before ship.**
+
+### What it is not
+
+- Not a CMS, a content factory or a publishing platform as the main story.
+- Not WordPress-like publishing or a generic AI writing assistant.
+- Not a Lovable / Bolt / v0 page generator.
+- Not a delivered auth / observability / deploy / SRE stack.
+- The gate is not a gold label or a reward-model loop. Passing means the spec
+  and the same-stack prototype agree.
+
+## Why "harness"
+
+- **Builder** names the buyer and the output perspective: the person who builds
+  the product, writes the spec and reviews the result.
+- **Harness** names the category and the mechanism: constrain the agent, run
+  the loop, score and gate the result. This maps to the review anchors,
+  `frs:` / `code:` facts, Agent context, preflight, the DSH sidebar and the
+  adapter hooks.
+- Avoid `Spec`, `Ship`, `Kit`, `Press` or `Bee` in the name: they read as a
+  one-off CI tool, a PR bot, a component bundle, a CMS or a mascot.
+
+The harness constrains the process; it does not replace implementation. Keep
+lifecycle claims (0→1→100) in vision or buyer-story language, never as a
+delivered production lifecycle.
+
+## Content is a side effect
+
+When the loop is in place, manuals, launch notes, message cards, screenshots and
+clips are throughput on the same source of truth. They are useful, but they are
+**downstream deliverables**, not the product category. In prose, mention the
+loop first and the deliverables second.
+
+**Connecting ≠ bundling ≠ production-ready by default.** Never imply that
+plugging in Cloudflare or GCP makes a prototype production-ready.
 
 ## Naming
 
 | Context | Name |
 | :-- | :-- |
-| Product name | **Bee Press** |
-| Package | `beepress` (current); `builder-kit` (compatibility) |
-| CLI | `beepress`, `builder-kit`, `bk` |
-| Review capability | Bee Review |
-| Content capability | Bee Studio |
-| Publishing capability | Bee Publish |
-| Repository | [BeePress](https://github.com/guoxuedong2018/BeePress) |
+| Product name | **BuilderHarness** |
+| Package | `builderharness` |
+| Import paths | `builderharness/*` |
+| CLI | `builderharness` |
+| Environment variables | `BUILDERHARNESS_*` |
+| Review capability | Review |
+| Content capability | Studio |
+| Publishing capability | Publish |
+| Repository | [BuilderHarness](https://github.com/guoxuedong2018/BuilderHarness) |
 
-Use **Bee Press** in prose and headings. Use `beepress` for package-like
-identifiers and commands. Do not write `BeePress` in prose.
+Use **BuilderHarness** in prose and headings. Use `builderharness` for
+package-like identifiers and commands. Do not write `Builder Harness` (two
+words) as the product name.
 
 ## Taglines
 
 Primary:
 
-> **A hive of agents. One source of truth.**
+> **An agent harness for Product Builders.**
 
 Supporting:
 
-- **Many agents. One story.**
-- **Pollinate every destination.**
-- **Review the prototype. Publish with proof.**
+- **Spec-gated. Prototype-as-truth. Review before ship.**
+- **Constrain the agent; gate the result.**
+- **Same source, downstream deliverables.**
+- **Connect, don't bundle.**
 
 ## Voice
 
-- Evidence first: name the source, the page, the fact or the artifact.
-- Calm and precise; no "magic", "revolutionary" or anthropomorphic bee puns.
-- Explain the task before the mechanism. "Confirm this page is still accurate"
-  comes before "review lock" or "content bundle".
+- Evidence first: name the spec id, the page, the source coordinate or the
+  artifact.
+- Calm and precise; no "magic", "revolutionary" or animal metaphors.
+- Explain the task before the mechanism. "Confirm this claim is still true"
+  comes before "review lock" or "fact reference".
+- State boundaries plainly: what is in the box, what connects, what a human
+  must decide.
 - The human sets intent and approves. Agents do the repetitive work.
 
 ## Visual direction
 
-- Editorial hive: a hexagonal grid used as structure, not decoration.
-- One small bee mark, preferably line art; avoid cartoon mascots, wings on every
-  icon or yellow-heavy surfaces.
-- Amber is an accent, not the page background. Keep the existing warm neutral
-  palette and semantic status colors.
-- The wordmark is `Bee Press` in the existing UI type scale; no custom display
-  font is required.
+- Show the loop: spec, prototype, review pins, gate. Diagrams are structural,
+  not decorative.
+- Avoid mascots, hive patterns and bee/amber motifs. Keep the existing warm
+  neutral palette and semantic status colors.
+- The wordmark is `BuilderHarness` in the existing UI type scale; no custom
+  display font is required.

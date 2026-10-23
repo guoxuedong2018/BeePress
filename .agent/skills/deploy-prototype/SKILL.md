@@ -15,7 +15,7 @@ description: 把原型构建产物部署到静态托管或内部预览环境。�
 
 ```bash
 npm run build
-npx beepress preflight
+npx builderharness preflight
 ```
 
 预检失败时先修，不要带泄漏产物部署。至少确认：

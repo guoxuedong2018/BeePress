@@ -51,7 +51,7 @@ try {
  *
  * utils/contrast.js 里的黑白是色彩算法的取值边界，不是设计色值。
  *
- * 工具套件（beepress/）不在扫描范围内：本脚本只扫宿主的 src/。它的批注标记
+ * 工具套件（builderharness/）不在扫描范围内：本脚本只扫宿主的 src/。它的批注标记
  * 用固定色值是刻意的——要在任意主题、任意页面背景上都看得清。
  */
 const EXEMPT = [
@@ -180,7 +180,7 @@ const RULES = [
     level: "error",
     id: "import-kit",
     // 静态与动态两种写法都要拦：套件是 dev 动态挂载的，只查 `from "…"` 会漏掉 import()
-    test: (line) => /(from\s+["']|import\(\s*["'])beepress/.test(line),
+    test: (line) => /(from\s+["']|import\(\s*["'])builderharness/.test(line),
     // App.vue 是套件唯一被允许的落点。只对这一条规则开口子，其余规则照常管它
     skip: ["App.vue"],
     msg: "业务代码引用了工具套件",

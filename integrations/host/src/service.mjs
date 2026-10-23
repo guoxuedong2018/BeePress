@@ -4,6 +4,7 @@ import http from "node:http";
 import net from "node:net";
 import path from "node:path";
 import { addReview, readContext, readOpenReviews, readPublishPlan, readStatus, resolveReview } from "./project.mjs";
+import { readEnv } from "./env.mjs";
 import { resolveKitRoot, runKit } from "./kit.mjs";
 import { detectPrototype, detectStack, devCommand, installCommand } from "./prototype.mjs";
 
@@ -36,7 +37,7 @@ async function copyDirectory(from, to) {
 
 async function readSettings(root) {
   try {
-    return JSON.parse(await fs.readFile(path.join(root, ".beepress", "desktop.json"), "utf8"));
+    return JSON.parse(await fs.readFile(path.join(root, ".builderharness", "desktop.json"), "utf8"));
   } catch {
     return {};
   }
@@ -45,8 +46,8 @@ async function readSettings(root) {
 async function writeSettings(root, patch) {
   const current = await readSettings(root);
   const next = { ...current, ...patch };
-  await fs.mkdir(path.join(root, ".beepress"), { recursive: true });
-  await fs.writeFile(path.join(root, ".beepress", "desktop.json"), `${JSON.stringify(next, null, 2)}\n`);
+  await fs.mkdir(path.join(root, ".builderharness"), { recursive: true });
+  await fs.writeFile(path.join(root, ".builderharness", "desktop.json"), `${JSON.stringify(next, null, 2)}\n`);
   return next;
 }
 
@@ -87,7 +88,7 @@ async function createFeature(root, title) {
   frs.createdAt = new Date().toISOString().slice(0, 10);
   frs.updatedAt = frs.createdAt;
   await fs.writeFile(frsFile, `${JSON.stringify(frs, null, 2)}\n`);
-  return { key, relativePath: path.relative(project, featureDir), checkCommand: `npx beepress check-frs ${key}` };
+  return { key, relativePath: path.relative(project, featureDir), checkCommand: `npx builderharness check-frs ${key}` };
 }
 
 /**
@@ -290,13 +291,13 @@ function summarizeStatus(data) {
 }
 
 /**
- * The Bee Press domain service. Keeping workspace access here lets tools,
+ * The BuilderHarness domain service. Keeping workspace access here lets tools,
  * HTTP routes, and future UI packages share one contract instead of each
  * reading docs/kb directly.
  */
-export function createBeePressService() {
+export function createBuilderHarnessService() {
   return {
-    name: "beepress",
+    name: "builderharness",
 
     async baseline(root) {
       const settings = await readSettings(root);

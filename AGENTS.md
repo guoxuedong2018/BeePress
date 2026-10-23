@@ -1,6 +1,6 @@
-# Bee Press · Agent 工作指南
+# BuilderHarness · Agent 工作指南
 
-> 本仓库既是 Bee Press 工具本身，也是它的第一个宿主项目（dogfooding）。
+> 本仓库既是 BuilderHarness 工具本身，也是它的第一个宿主项目（dogfooding）。
 > 不要把内部平台名、域名、账号或密钥写进仓库。
 
 ## 这个仓库是什么
@@ -30,6 +30,7 @@
 | Vue 2 宿主 | `.agent/skills/vue-best-practices/SKILL.md` |
 | 提交前质量检查 | `.agent/skills/frontend-quality/SKILL.md` |
 | 发布 | `.agent/skills/prd-publish/SKILL.md` + `docs/WORKFLOW.md` |
+| 产品定位 / 对外文案 | `docs/brand.md` |
 | 部署原型 | `.agent/skills/deploy-prototype/SKILL.md` + `docs/DEPLOY.md` |
 
 ## 角色边界
@@ -62,17 +63,17 @@
 ## 常用命令
 
 ```bash
-npx beepress kb status
-npx beepress kb context <页|路由>
-npx beepress kb ack <页>
-npx beepress check-frs <KEY>
-npx beepress check-ui          # reference host check; see caveat below
-npx beepress check-routes
-npx beepress prd <KEY> --dry-run
+npx builderharness kb status
+npx builderharness kb context <页|路由>
+npx builderharness kb ack <页>
+npx builderharness check-frs <KEY>
+npx builderharness check-ui          # reference host check; see caveat below
+npx builderharness check-routes
+npx builderharness prd <KEY> --dry-run
 ```
 
 ## Harness
 
 - Cursor / Claude Code / Codex：把本文件作为入口，按表格按需读取 Skill。
-- DeepSeek Harness：安装 `@beepress/dsh-bundle`，使用右侧栏面板和 `beepress_*` 工具。
+- DeepSeek Harness：安装 `@builderharness/dsh-bundle`，使用右侧栏面板和 `builderharness_*` 工具。
 - 其他 Agent：只要能读文件、跑命令，就能使用同一套工作流。

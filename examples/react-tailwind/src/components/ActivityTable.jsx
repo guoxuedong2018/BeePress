@@ -1,4 +1,4 @@
-import { Badge, Button, Table, TableWrap, TBody, TD, TH, THead, TR } from "beepress/ui";
+import { Badge, Button, Table, TableWrap, TBody, TD, TH, THead, TR } from "builderharness/ui";
 
 import { ACTIVITY } from "../data";
 import { Icon } from "./Icons";

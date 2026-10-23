@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Badge, Button, SegmentedControl } from "beepress/ui";
+import { Badge, Button, SegmentedControl } from "builderharness/ui";
 
 import { THREADS } from "../data";
 import { Icon } from "./Icons";

@@ -18,7 +18,7 @@
  * 不改也不删，列出来交给人。没有底稿就分不清，所有改写与删除都会落到云端现状上。
  *
  * 用法：
- *   npx beepress prd-patch-ops <FEATURE_KEY> --cloud <fetch-jsonml 的输出> [--base <底稿>] [--out <ops 文件>]
+ *   npx builderharness prd-patch-ops <FEATURE_KEY> --cloud <fetch-jsonml 的输出> [--base <底稿>] [--out <ops 文件>]
  */
 
 import { promises as fs } from "node:fs";
@@ -196,7 +196,7 @@ function parseArgs(argv) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.key || !args.cloud) {
-    console.error("用法: npx beepress prd-patch-ops <FEATURE_KEY> --cloud <fetch-jsonml 的输出> [--base <底稿>] [--out <文件>]");
+    console.error("用法: npx builderharness prd-patch-ops <FEATURE_KEY> --cloud <fetch-jsonml 的输出> [--base <底稿>] [--out <文件>]");
     process.exitCode = 1;
     return;
   }

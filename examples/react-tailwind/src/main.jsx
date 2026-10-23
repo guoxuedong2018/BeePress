@@ -13,12 +13,12 @@ function render(app) {
 }
 
 if (import.meta.env.DEV) {
-  // Dev-only integration: production builds contain no Bee Press code.
-  import("beepress/react").then(({ BeePressRoot }) => {
+  // Dev-only integration: production builds contain no BuilderHarness code.
+  import("builderharness/react").then(({ BuilderHarnessRoot }) => {
     render(
-      <BeePressRoot router={router}>
+      <BuilderHarnessRoot router={router}>
         <App />
-      </BeePressRoot>,
+      </BuilderHarnessRoot>,
     );
   });
 } else {

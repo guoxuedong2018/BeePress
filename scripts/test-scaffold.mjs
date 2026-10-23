@@ -7,8 +7,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const BIN = path.join(ROOT, "bin", "beepress.mjs");
-const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "beepress-scaffold-"));
+const BIN = path.join(ROOT, "bin", "builderharness.mjs");
+const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "builderharness-scaffold-"));
 
 function init(args) {
   const result = spawnSync(process.execPath, [BIN, "init", "--target", tmp, ...args], {

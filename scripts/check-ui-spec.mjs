@@ -2,7 +2,7 @@
 /**
  * Tool UI Spec conformance check (subset of ui-spec/SELF-CHECK.md A1–A8).
  *
- * Scope: Bee Press UI (`client/`) and the React + Tailwind demo. The
+ * Scope: BuilderHarness UI (`client/`) and the React + Tailwind demo. The
  * canonical spec components under `ui-spec/impl` are the source of truth and
  * are not re-linted here.
  *

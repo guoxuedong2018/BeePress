@@ -73,5 +73,5 @@
 | [FRS.json](./FRS.json) | 结构化规格：goal / scope / acceptance / verification |
 | [FLOW.md](./FLOW.md) | 用户流程图 |
 | [STATE.md](./STATE.md) | 状态机（仅涉及复杂状态时保留，否则连同本行一起删除） |
-| 高保真页面（UI 类需求） | 在宿主原型工程（默认 `web/`，可用 `BEEPRESS_WEB_DIR` 改）内新增/迭代，此处用链接指向对应页面路径（非 UI 需求则连同本行一起删除） |
+| 高保真页面（UI 类需求） | 在宿主原型工程（默认 `web/`，可用 `BUILDERHARNESS_WEB_DIR` 改）内新增/迭代，此处用链接指向对应页面路径（非 UI 需求则连同本行一起删除） |
 | [ACCEPTANCE.md](./ACCEPTANCE.md) | 验收记录 |

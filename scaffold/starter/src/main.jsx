@@ -6,12 +6,12 @@ import "./styles.css";
 const root = createRoot(document.getElementById("root"));
 
 if (import.meta.env.DEV) {
-  import("beepress/react").then(({ BeePressRoot }) => {
+  import("builderharness/react").then(({ BuilderHarnessRoot }) => {
     root.render(
       <StrictMode>
-        <BeePressRoot router={hashRouter()}>
+        <BuilderHarnessRoot router={hashRouter()}>
           <App />
-        </BeePressRoot>
+        </BuilderHarnessRoot>
       </StrictMode>,
     );
   });

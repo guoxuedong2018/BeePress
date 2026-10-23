@@ -1,6 +1,6 @@
 # Adapters
 
-Bee Press has two adapter layers:
+BuilderHarness has two adapter layers:
 
 1. **Host adapters** — mount the React UI into a prototype framework.
 2. **Pipeline adapters** — teach the screenshot/clip engine how to manipulate a particular stack.
@@ -44,11 +44,11 @@ For Vue 3 or React, copy that file and call `mountKit` with the equivalent objec
 ```jsx
 // App entry, dev-only
 if (import.meta.env.DEV) {
-  import("beepress/react").then(({ BeePressRoot }) => {
+  import("builderharness/react").then(({ BuilderHarnessRoot }) => {
     root.render(
-      <BeePressRoot router={router}>
+      <BuilderHarnessRoot router={router}>
         <App />
-      </BeePressRoot>,
+      </BuilderHarnessRoot>,
     );
   });
 }
@@ -61,7 +61,7 @@ toolbar controls.
 
 ### Source anchors
 
-`beePress({ anchorLoc })` controls the dev source-anchor plugin:
+`builderHarness({ anchorLoc })` controls the dev source-anchor plugin:
 
 | Value | Behaviour |
 |---|---|
@@ -88,7 +88,7 @@ The screenshot and clip engine (`pipeline/lib/cdp.mjs`, `capture-*.mjs`, `record
 Select an adapter with:
 
 ```bash
-BEEPRESS_ADAPTER=react-router npx beepress capture-kb-shots
+BUILDERHARNESS_ADAPTER=react-router npx builderharness capture-kb-shots
 ```
 
 `PROTO_ADAPTER` is still accepted for projects migrating from older versions.

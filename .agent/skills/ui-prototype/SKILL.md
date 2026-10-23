@@ -7,8 +7,8 @@ description: 在宿主原型工程内新增或迭代高保真页面。适用于�
 
 ## 技术栈
 
-- 默认 React + Tailwind；组件优先用 `beepress/ui`。
-- Vue 2 宿主可用 `beepress/vue2` 适配层。
+- 默认 React + Tailwind；组件优先用 `builderharness/ui`。
+- Vue 2 宿主可用 `builderharness/vue2` 适配层。
 - 工具 UI 只在 `import.meta.env.DEV` 挂载，生产构建不包含。
 
 ## 三原则
@@ -22,7 +22,7 @@ description: 在宿主原型工程内新增或迭代高保真页面。适用于�
 1. 读现有页面、路由、`src/config/frs-map.js` 和设计 token。
 2. 在 `docs/features/<KEY>/FRS.json` 确认本次范围和规则。
 3. 实现页面；新路由同步登记导航、路由、FRS 区域。
-4. 跑 `npx beepress check-ui` 和 `npx beepress check-routes`（参考宿主检查；
+4. 跑 `npx builderharness check-ui` 和 `npx builderharness check-routes`（参考宿主检查；
    宿主没有对应 token / 路由登记时，按 `docs/adapters.md` 适配或跳过）。
 5. 在浏览器里走主路径和反例；需要时补 `shots.config.mjs` 配方。
 

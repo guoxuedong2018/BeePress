@@ -16,8 +16,7 @@ import { getHost } from "../core/host";
  */
 
 const API = "/__builder_studio";
-const DEMO_KEY = "beepress:demo";
-const LEGACY_DEMO_KEY = "builder-kit:demo";
+const DEMO_KEY = "builderharness:demo";
 
 export const studioState = proxy({
   open: false,
@@ -56,7 +55,7 @@ export const studioState = proxy({
 
 function loadDemo() {
   try {
-    return JSON.parse(window.sessionStorage.getItem(DEMO_KEY) || window.sessionStorage.getItem(LEGACY_DEMO_KEY) || "null");
+    return JSON.parse(window.sessionStorage.getItem(DEMO_KEY) || "null");
   } catch {
     return null;
   }
@@ -66,7 +65,6 @@ export function saveDemo() {
   if (studioState.demo) window.sessionStorage.setItem(DEMO_KEY, JSON.stringify(studioState.demo));
   else {
     window.sessionStorage.removeItem(DEMO_KEY);
-    window.sessionStorage.removeItem(LEGACY_DEMO_KEY);
   }
 }
 

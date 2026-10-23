@@ -8,10 +8,10 @@ description: 前端提交前质量检查。适用于用户说「自检」「revi
 按顺序跑，先失败先修：
 
 ```bash
-npx beepress check-prototype-syntax
-npx beepress check-ui      # reference host check
-npx beepress check-routes  # reference host check
-npx beepress check-frs <KEY>   # 有需求件套时
+npx builderharness check-prototype-syntax
+npx builderharness check-ui      # reference host check
+npx builderharness check-routes  # reference host check
+npx builderharness check-frs <KEY>   # 有需求件套时
 ```
 
 ## 手工走查

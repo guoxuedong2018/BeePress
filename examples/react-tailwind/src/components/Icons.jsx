@@ -1,4 +1,4 @@
-import { cn } from "beepress/ui";
+import { cn } from "builderharness/ui";
 
 /**
  * Inline icon set. All icons are decorative; the surrounding control supplies

@@ -1,11 +1,11 @@
 window.__ModuleLoader__.load({
-  id: "@beepress/dsh-bundle",
+  id: "@builderharness/dsh-bundle",
   factory: (require) => {
     const React = require("react");
     const h = React.createElement;
 
-    const ID = "@beepress/dsh-bundle";
-    const API_ROOT = "/beepress/api";
+    const ID = "@builderharness/dsh-bundle";
+    const API_ROOT = "/builderharness/api";
     const API = `${API_ROOT}/state`;
 
     const colors = {
@@ -110,9 +110,9 @@ window.__ModuleLoader__.load({
       { key: "publish", title: "发布", description: "目标适配器、dry-run 和发布状态。", icon: "↗" },
     ];
 
-    const COCKPIT_PANEL_ID = "beepress-workbench";
-    const REVIEW_CHANNEL = "beepress-review";
-    const EMBED_QUERY = "beepress_embed";
+    const COCKPIT_PANEL_ID = "builderharness-workbench";
+    const REVIEW_CHANNEL = "builderharness-review";
+    const EMBED_QUERY = "builderharness_embed";
 
     const bridge = {
       openBrowser(url) {},
@@ -183,7 +183,7 @@ window.__ModuleLoader__.load({
     }
 
     function BeeBrandName() {
-      return h("span", { style: { fontWeight: 700, letterSpacing: "-0.02em" } }, "Bee Press");
+      return h("span", { style: { fontWeight: 700, letterSpacing: "-0.02em" } }, "BuilderHarness");
     }
 
     function Metric({ label, value }) {
@@ -214,7 +214,7 @@ window.__ModuleLoader__.load({
         body: body === undefined ? undefined : JSON.stringify(body),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || `Bee Press request failed: ${response.status}`);
+      if (!response.ok) throw new Error(data.error || `BuilderHarness request failed: ${response.status}`);
       return data;
     }
 
@@ -226,7 +226,7 @@ window.__ModuleLoader__.load({
         try {
           const query = new URLSearchParams({ root: cwd });
           const response = await fetch(`${API}?${query}`, { headers: { accept: "application/json" } });
-          if (!response.ok) throw new Error(`Bee Press state request failed: ${response.status}`);
+          if (!response.ok) throw new Error(`BuilderHarness state request failed: ${response.status}`);
           setState({ loading: false, error: null, data: await response.json() });
         } catch (error) {
           setState({ loading: false, error: error instanceof Error ? error.message : String(error), data: null });
@@ -240,16 +240,16 @@ window.__ModuleLoader__.load({
 
     function StageFrame({ stage, cwd, state, reload, embedded = false, children }) {
       const body = !cwd
-        ? h("div", { style: styles.loading }, "打开一个 Session 后使用 Bee Press。")
+        ? h("div", { style: styles.loading }, "打开一个 Session 后使用 BuilderHarness。")
         : state.error
           ? h("div", { style: styles.error }, state.error)
           : state.loading && !state.data
-            ? h("div", { style: styles.loading }, "读取 Bee Press 工作区…")
+            ? h("div", { style: styles.loading }, "读取 BuilderHarness 工作区…")
             : children;
-      if (embedded) return h("div", { style: styles.embeddedBody, "data-beepress-panel": stage.key }, body);
+      if (embedded) return h("div", { style: styles.embeddedBody, "data-builderharness-panel": stage.key }, body);
       return h(
         "div",
-        { style: styles.root, "data-beepress-panel": stage.key },
+        { style: styles.root, "data-builderharness-panel": stage.key },
         h(
           "div",
           { style: styles.stageHead },
@@ -263,13 +263,13 @@ window.__ModuleLoader__.load({
 
     function BaselineStage({ stage, cwd, state, reload, embedded }) {
       const [stack, setStack] = React.useState("existing");
-      const [uiPreset, setUiPreset] = React.useState("bee-press");
+      const [uiPreset, setUiPreset] = React.useState("builderharness");
       const [output, setOutput] = React.useState("");
       const detected = state.data?.baseline?.detected;
       React.useEffect(() => {
         if (state.data?.baseline) {
           setStack(state.data.baseline.stack || "existing");
-          setUiPreset(state.data.baseline.uiPreset || "bee-press");
+          setUiPreset(state.data.baseline.uiPreset === "bee-press" ? "builderharness" : state.data.baseline.uiPreset || "builderharness");
         }
       }, [state.data?.baseline?.stack, state.data?.baseline?.uiPreset]);
       const save = async (nextStack = stack, nextPreset = uiPreset) => {
@@ -294,7 +294,7 @@ window.__ModuleLoader__.load({
                 h("div", { style: styles.itemMeta }, [detected.appDir ? `应用目录 ${detected.appDir}` : null, detected.typescript ? "TypeScript" : null, detected.bundler || null].filter(Boolean).join(" · ") || "来自 package.json"),
               ),
               detected.evidence?.length ? h("div", { style: styles.itemMeta }, detected.evidence.join(" · ")) : null,
-              h(Button, { primary: true, onClick: () => save(detected.stack, "bee-press") }, "采用检测结果"),
+              h(Button, { primary: true, onClick: () => save(detected.stack, "builderharness") }, "采用检测结果"),
             )
           : h(Section, { title: "检测结果" }, h("div", { style: styles.empty }, "没识别出技术栈。手动选择下面的选项即可，之后可以改。")),
         h(
@@ -318,7 +318,7 @@ window.__ModuleLoader__.load({
             h(
               "select",
               { style: styles.input, value: uiPreset, onChange: (event) => setUiPreset(event.target.value) },
-              h("option", { value: "bee-press" }, "Bee Press UI Spec"),
+              h("option", { value: "builderharness" }, "BuilderHarness UI Spec"),
               h("option", { value: "existing" }, "沿用现有产品"),
             ),
           ),
@@ -841,8 +841,8 @@ window.__ModuleLoader__.load({
       const status = data?.status;
       if (!data?.baseline?.stack) return { stage: "baseline", label: "设置生产基线", detail: "先锁定技术栈和 UI 规范，后面的原型与评审才有可对齐的标准。" };
       if (!(status?.docs?.features?.specs > 0)) return { stage: "requirements", label: "创建第一份 FRS", detail: "把要做的功能写成可验收的需求件套，评审批注才能归档到具体功能。" };
-      if (!status?.prototype?.devScript) return { stage: "prototype", label: "接入原型 dev server", detail: status?.prototype?.reason || "在工作区的应用目录 package.json 添加 dev 脚本，Bee Press 会启动真实原型并把它嵌进操作台。" };
-      if (status?.prototype?.installed === false) return { stage: "prototype", label: "安装原型依赖", detail: status.prototype.reason || "先安装依赖，Bee Press 才能启动真实原型。" };
+      if (!status?.prototype?.devScript) return { stage: "prototype", label: "接入原型 dev server", detail: status?.prototype?.reason || "在工作区的应用目录 package.json 添加 dev 脚本，BuilderHarness 会启动真实原型并把它嵌进操作台。" };
+      if (status?.prototype?.installed === false) return { stage: "prototype", label: "安装原型依赖", detail: status.prototype.reason || "先安装依赖，BuilderHarness 才能启动真实原型。" };
       if (openReviewCount(data) > 0) return { stage: "review", label: "处理待解决批注", detail: `${openReviewCount(data)} 条批注还没有关闭；在原型里点选元素，或者在右侧逐条处理。` };
       if (!(status?.docs?.kb?.files > 0)) return { stage: "content", label: "建立内容锁", detail: "把文档、截图和引用纳入 _lock.json，确认哪些内容已经随原型一起验收。" };
       if (!data?.publish?.configured) return { stage: "publish", label: "配置发布目的地", detail: "接上发布适配器，先跑 dry-run，确认新增页面和覆盖范围。" };
@@ -870,7 +870,7 @@ window.__ModuleLoader__.load({
 
     function readCockpitStage() {
       try {
-        return localStorage.getItem("beepress.cockpit.stage") || "prototype";
+        return localStorage.getItem("builderharness.cockpit.stage") || "prototype";
       } catch {
         return "prototype";
       }
@@ -878,13 +878,13 @@ window.__ModuleLoader__.load({
 
     function writeCockpitStage(stage) {
       try {
-        localStorage.setItem("beepress.cockpit.stage", stage);
+        localStorage.setItem("builderharness.cockpit.stage", stage);
       } catch {
         // Keep the in-memory stage when storage is unavailable.
       }
     }
 
-    const COCKPIT_CWD_KEY = "beepress.cockpit.cwd";
+    const COCKPIT_CWD_KEY = "builderharness.cockpit.cwd";
 
     function rememberCockpitCwd(cwd) {
       try {
@@ -933,7 +933,7 @@ window.__ModuleLoader__.load({
         ["▤", "需求规格", "FRS、验收标准和功能点规则。"],
         ["▷", "真实原型", "直接运行 dev server，不再看截图猜交互。"],
         ["◎", "源码级评审", "点选原型元素，把批注锚到源码坐标。"],
-        ["▥", "内容锁", "文档、引用、截图与录屏统一验收。"],
+        ["▥", "下游交付", "文档、引用、截图与录屏在门禁之后统一验收。"],
         ["↗", "发布 dry-run", "目的地适配器先演练，再真正发布。"],
       ];
       return h(
@@ -942,9 +942,9 @@ window.__ModuleLoader__.load({
         h(
           "div",
           { className: "bp-empty-inner" },
-          h("div", { className: "bp-kicker" }, "Bee Press · Prototype to production"),
+          h("div", { className: "bp-kicker" }, "BuilderHarness · Prototype to production"),
           h("h1", null, "把你的 vibecoding 玩具", h("br"), "变成生产级产品应用"),
-          h("p", null, "Bee Press 是 DSH 之上的原型开发操作台：需求、真实原型、源码锚点评审、内容锁和发布，在同一条流水线上完成。"),
+          h("p", null, "BuilderHarness 是 DSH 之上的产品构建 Harness：规格、同源真实原型与源码锚点评审在同一个环里完成；内容与发布是门禁之后的下游交付。"),
           h(
             "div",
             { className: "bp-empty-actions" },
@@ -1017,7 +1017,7 @@ window.__ModuleLoader__.load({
       };
       return h(
         "aside",
-        { className: "bp-panel", role: "dialog", "aria-label": "Bee Press 面板" },
+        { className: "bp-panel", role: "dialog", "aria-label": "BuilderHarness 面板" },
         h(
           "div",
           { className: "bp-panel-head" },
@@ -1119,8 +1119,8 @@ window.__ModuleLoader__.load({
           if (!installed) install();
           else start();
         };
-        window.addEventListener("beepress:restart-prototype", restart);
-        return () => window.removeEventListener("beepress:restart-prototype", restart);
+        window.addEventListener("builderharness:restart-prototype", restart);
+        return () => window.removeEventListener("builderharness:restart-prototype", restart);
       }, [cwd, install, installed, start]);
 
       return { status, found, installed, ready, url, setUrl, error, setError, starting, installing, start, install };
@@ -1329,7 +1329,7 @@ window.__ModuleLoader__.load({
                     key: `${url}-${nonce}`,
                     ref: frameRef,
                     src: withEmbed(url),
-                    title: "Bee Press prototype",
+                    title: "BuilderHarness prototype",
                     allow: "clipboard-read; clipboard-write",
                     onLoad: () => setLoaded(true),
                     style: { visibility: loaded ? "visible" : "hidden", position: loaded ? "relative" : "absolute", inset: 0 },
@@ -1381,7 +1381,7 @@ window.__ModuleLoader__.load({
         setBusy("baseline");
         setMessage("");
         try {
-          await request("/baseline", { root: cwd, stack: detected.stack || "existing", uiPreset: "bee-press" });
+          await request("/baseline", { root: cwd, stack: detected.stack || "existing", uiPreset: "builderharness" });
           await reload();
         } catch (error) {
           setMessage(error instanceof Error ? error.message : String(error));
@@ -1427,7 +1427,7 @@ window.__ModuleLoader__.load({
         ];
       } else if (current.key === "requirements") {
         body = [
-          h("p", { className: "bp-start-desc" }, requirementsDone ? `已有 ${features.specs} 份需求件套。` : "给要做的功能起个名字，Bee Press 会生成需求、流程和验收模板。"),
+          h("p", { className: "bp-start-desc" }, requirementsDone ? `已有 ${features.specs} 份需求件套。` : "给要做的功能起个名字，BuilderHarness 会生成需求、流程和验收模板。"),
           requirementsDone
             ? h("div", { className: "bp-start-actions" }, h("button", { className: "bp-btn", onClick: () => goStage("requirements") }, "看需求"))
             : h("div", { className: "bp-start-actions" },
@@ -1445,7 +1445,7 @@ window.__ModuleLoader__.load({
         const hint = !status.found
           ? "这个工作区没有可运行的前端应用。换一个工作区，或在应用目录加一个 dev 脚本。"
           : status.installed === false
-            ? `${status.packageManager || "npm"} 依赖还没安装，Bee Press 可以直接装好并启动。`
+            ? `${status.packageManager || "npm"} 依赖还没安装，BuilderHarness 可以直接装好并启动。`
             : `将运行 ${status.packageManager || "npm"} run dev（${status.devScript}）${status.dir && status.dir !== "." ? `，应用目录 ${status.dir}` : ""}。`;
         body = [
           h("p", { className: "bp-start-desc" }, hint),
@@ -1503,7 +1503,7 @@ window.__ModuleLoader__.load({
       );
     }
 
-    const START_SKIP_PREFIX = "beepress.start.skip.";
+    const START_SKIP_PREFIX = "builderharness.start.skip.";
 
     function readStartSkip(cwd) {
       try {
@@ -1540,7 +1540,7 @@ window.__ModuleLoader__.load({
       }, []);
       return h(
         "div",
-        { className: "bp-help", role: "dialog", "aria-modal": "false", "aria-label": "Bee Press 帮助" },
+        { className: "bp-help", role: "dialog", "aria-modal": "false", "aria-label": "BuilderHarness 帮助" },
         h(
           "div",
           { className: "bp-help-head" },
@@ -1607,7 +1607,7 @@ window.__ModuleLoader__.load({
             const tag = String(document.activeElement?.tagName || "").toLowerCase();
             if (tag === "input" || tag === "textarea" || tag === "select") return;
             event.preventDefault();
-            window.dispatchEvent(new Event("beepress:restart-prototype"));
+            window.dispatchEvent(new Event("builderharness:restart-prototype"));
           }
         };
         window.addEventListener("keydown", onKey);
@@ -1619,7 +1619,7 @@ window.__ModuleLoader__.load({
 
       return h(
         "div",
-        { className: "bp-cockpit", "data-beepress-cockpit": stage },
+        { className: "bp-cockpit", "data-builderharness-cockpit": stage },
         h("style", null, cockpitCss),
         !cwd
           ? h(CockpitEmpty)
@@ -1717,7 +1717,7 @@ window.__ModuleLoader__.load({
         ctx.layout.selectPanel(COCKPIT_PANEL_ID);
       };
 
-      window.__beepressDesktop = {
+      window.__builderHarnessDesktop = {
         async openProject(root) {
           const workspace = await ctx.workspaces.create({ path: root });
           await ctx.uiWorkspace.openWorkspace(workspace.workspaceId);
@@ -1735,21 +1735,21 @@ window.__ModuleLoader__.load({
 
       ctx.effect(
         () => ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: COCKPIT_PANEL_ID }, CockpitRoot)),
-        "beepress: cockpit",
+        "builderharness: cockpit",
       );
       ctx.effect(
         () =>
           ctx.slots.inject("sidebar.panellist", () =>
-            ctx.slots.register({ name: "sidebar.panellist", id: COCKPIT_PANEL_ID, order: -10, label: () => "Bee Press" }, CockpitIcon),
+            ctx.slots.register({ name: "sidebar.panellist", id: COCKPIT_PANEL_ID, order: -10, label: () => "BuilderHarness" }, CockpitIcon),
           ),
-        "beepress: cockpit icon",
+        "builderharness: cockpit icon",
       );
       const openCockpit = (attempt = 0) => {
         try {
           ctx.layout.selectPanel(COCKPIT_PANEL_ID);
         } catch (error) {
           if (attempt < 20) setTimeout(() => openCockpit(attempt + 1), 150);
-          else console.warn("[beepress] could not open cockpit", error);
+          else console.warn("[builderharness] could not open cockpit", error);
         }
       };
       setTimeout(() => openCockpit(), 0);
@@ -1757,33 +1757,33 @@ window.__ModuleLoader__.load({
       ctx.effect(
         () =>
           ctx.shortcuts.register({
-            id: "beepress.open",
-            label: () => "Bee Press",
-            aliases: ["bee press", "content check"],
+            id: "builderharness.open",
+            label: () => "BuilderHarness",
+            aliases: ["builder harness", "bee press"],
             defaults: {},
             regions: ["page", "editable", "terminal"],
             modals: [],
             resolve: ({ target }) => {
               const sessionTarget = ctx.sidebarRight.commandTarget(target);
               if (!sessionTarget) return { status: "blocked", reason: "Open a session first" };
-              return { status: "handled", run: () => ctx.sidebarRight.openTabFromTarget("beepress-baseline", sessionTarget) };
+              return { status: "handled", run: () => ctx.sidebarRight.openTabFromTarget("builderharness-baseline", sessionTarget) };
             },
           }),
-        "beepress: shortcut",
+        "builderharness: shortcut",
       );
 
       ctx.effect(
         () => ctx.slots.inject("sidebar.brand.mark", () => ctx.slots.register({ name: "sidebar.brand.mark", priority: -100 }, BeeBrandMark)),
-        "beepress: brand mark",
+        "builderharness: brand mark",
       );
       ctx.effect(
         () => ctx.slots.inject("sidebar.brand.name", () => ctx.slots.register({ name: "sidebar.brand.name", priority: -100 }, BeeBrandName)),
-        "beepress: brand name",
+        "builderharness: brand name",
       );
 
       for (const stage of STAGES) {
         const id = `${ID}/${stage.key}`;
-        const kind = `beepress-${stage.key}`;
+        const kind = `builderharness-${stage.key}`;
         ctx.effect(
           () =>
             ctx.sidebarRightTabs.register({
@@ -1802,28 +1802,28 @@ window.__ModuleLoader__.load({
                 },
               ],
             }),
-          `beepress: tab ${stage.key}`,
+          `builderharness: tab ${stage.key}`,
         );
         ctx.effect(
           () => ctx.slots.inject("sidebar.right.pane.tab", () => ctx.slots.register({ name: "sidebar.right.pane.tab", key: id }, makeStageBody(stage))),
-          `beepress: body ${stage.key}`,
+          `builderharness: body ${stage.key}`,
         );
         ctx.effect(
           () => ctx.slots.inject("sidebar.right.pane.tab.title", () => ctx.slots.register({ name: "sidebar.right.pane.tab.title", key: id }, BeeTitle)),
-          `beepress: title ${stage.key}`,
+          `builderharness: title ${stage.key}`,
         );
       }
     }
 
     return {
       id: ID,
-      name: "beepress-client",
+      name: "builderharness-client",
       inject: ["slots", "layout", "sidebarRightTabs", "sidebarRight", "shortcuts", "uiWorkspace", "workspaces"],
       apply(ctx) {
         try {
           install(ctx);
         } catch (error) {
-          console.error("[beepress] client apply failed", error);
+          console.error("[builderharness] client apply failed", error);
           throw error;
         }
       },

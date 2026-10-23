@@ -1,10 +1,10 @@
 export default function App() {
   return (
     <main className="page">
-      <p className="eyebrow">Bee Press prototype</p>
+      <p className="eyebrow">BuilderHarness prototype</p>
       <h1>从一个真实页面开始。</h1>
       <p className="lede">
-        这是新建项目的 React + Tailwind 起点。把产品界面放在这里，然后用右侧 Bee Press 面板做评审、内容和发布。
+        这是新建项目的 React + Tailwind 起点。把产品界面放在这里，然后用右侧 BuilderHarness 面板做评审、内容和发布。
       </p>
       <section className="card">
         <h2>下一步</h2>

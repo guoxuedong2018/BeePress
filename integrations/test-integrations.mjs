@@ -8,7 +8,7 @@ import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 
 import { addReview, readContext, readOpenReviews, readPublishPlan, readStatus, resolveReview } from "./host/src/project.mjs";
-import { createBeePressService } from "./host/src/service.mjs";
+import { createBuilderHarnessService } from "./host/src/service.mjs";
 import { detectPrototype, detectStack } from "./host/src/prototype.mjs";
 import { apply as applyDshPlugin } from "./host/src/dsh.mjs";
 
@@ -16,14 +16,14 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const mcpServer = path.join(here, "host", "src", "mcp.mjs");
 
 async function fixture() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "beepress-spike-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "builderharness-spike-"));
   await fs.mkdir(path.join(root, "docs", "kb", "guides"), { recursive: true });
   await fs.mkdir(path.join(root, "docs", "kb", "concepts"), { recursive: true });
   await fs.mkdir(path.join(root, "docs", "reviews"), { recursive: true });
   await fs.mkdir(path.join(root, "docs", "features", "OVERVIEW"), { recursive: true });
   await fs.writeFile(
     path.join(root, "package.json"),
-    JSON.stringify({ scripts: { dev: "vite" }, dependencies: { "beepress": "^0.4.0" } }, null, 2),
+    JSON.stringify({ scripts: { dev: "vite" }, dependencies: { builderharness: "^0.8.0" } }, null, 2),
   );
   await fs.writeFile(path.join(root, "docs", "kb", "guides", "import.md"), "# Import guide\n\nImport a CSV file.\n");
   await fs.writeFile(
@@ -64,10 +64,10 @@ async function testManifest() {
   const hostDir = path.join(here, "host");
   const pkg = JSON.parse(await fs.readFile(path.join(hostDir, "package.json"), "utf8"));
   assert.equal(pkg.dsh.bundle.patch, "./cordis.patch.yml");
-  assert.equal(pkg.bin["beepress-mcp"], "./src/mcp.mjs");
+  assert.equal(pkg.bin["builderharness-mcp"], "./src/mcp.mjs");
   assert.equal(pkg.exports["./mcp"], "./src/mcp.mjs");
   const patch = await fs.readFile(path.join(hostDir, pkg.dsh.bundle.patch), "utf8");
-  assert.match(patch, /@beepress\/dsh-bundle/);
+  assert.match(patch, /@builderharness\/dsh-bundle/);
 }
 
 async function testCore(root) {
@@ -95,7 +95,7 @@ async function testCore(root) {
 }
 
 async function testPrototypeDetection() {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "beepress-prototype-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "builderharness-prototype-"));
   try {
     await fs.writeFile(path.join(dir, "README.md"), "# no app here\n");
     const empty = await detectPrototype(dir);
@@ -115,13 +115,13 @@ async function testPrototypeDetection() {
     assert.equal(found.packageManager, "pnpm");
     assert.equal(found.installed, false);
     assert.match(found.reason, /pnpm install/);
-    await assert.rejects(() => createBeePressService().startPrototype(dir), /pnpm install/);
+    await assert.rejects(() => createBuilderHarnessService().startPrototype(dir), /pnpm install/);
 
     await fs.mkdir(path.join(dir, "web", "node_modules"), { recursive: true });
     const installed = await detectPrototype(dir);
     assert.equal(installed.installed, true);
     assert.equal(installed.reason, null);
-    const service = createBeePressService();
+    const service = createBuilderHarnessService();
     assert.deepEqual(await service.installPrototype(dir), {
       ok: true,
       dir: "web",
@@ -140,11 +140,11 @@ async function testPrototypeDetection() {
     );
     await fs.writeFile(path.join(dir, "web", "package.json"), JSON.stringify({ scripts: { dev: "node server.mjs" } }));
     assert.equal((await detectPrototype(dir)).installed, true, "zero-dependency apps need no install");
-    const running = await createBeePressService().startPrototype(dir);
+    const running = await createBuilderHarnessService().startPrototype(dir);
     assert.equal(running.target, "http://localhost:5399/");
     assert.match(running.url, /^http:\/\/127\.0\.0\.1:\d+\/$/);
     assert.equal(await (await fetch(running.url)).text(), "fixture ok");
-    assert.equal(createBeePressService().stopPrototype(dir).stopped, true);
+    assert.equal(createBuilderHarnessService().stopPrototype(dir).stopped, true);
 
     await fs.writeFile(
       path.join(dir, "web", "package.json"),
@@ -170,7 +170,7 @@ async function testPrototypeDetection() {
 }
 
 async function testContentService(root) {
-  const service = createBeePressService();
+  const service = createBuilderHarnessService();
   const status = await service.contentStatus(root);
   assert.equal(status.summary.pages, 2);
   assert.equal(status.lock, "docs/kb/_lock.json");
@@ -232,37 +232,37 @@ async function testDshPlugin(root) {
   assert.deepEqual(
     tools.map((tool) => tool.name).sort(),
     [
-      "beepress_capture_media",
-      "beepress_content_confirm",
-      "beepress_content_status",
-      "beepress_context",
-      "beepress_publish_plan",
-      "beepress_review_add",
-      "beepress_review_open",
-      "beepress_review_resolve",
-      "beepress_status",
+      "builderharness_capture_media",
+      "builderharness_content_confirm",
+      "builderharness_content_status",
+      "builderharness_context",
+      "builderharness_publish_plan",
+      "builderharness_review_add",
+      "builderharness_review_open",
+      "builderharness_review_resolve",
+      "builderharness_status",
     ],
   );
   assert.deepEqual(routes.map((route) => route.path).sort(), [
-    "/beepress/api/baseline",
-    "/beepress/api/content",
-    "/beepress/api/content/capture",
-    "/beepress/api/prototype/install",
-    "/beepress/api/prototype/start",
-    "/beepress/api/publish/dry-run",
-    "/beepress/api/requirements/check",
-    "/beepress/api/requirements/create",
-    "/beepress/api/review/resolve",
-    "/beepress/api/state",
+    "/builderharness/api/baseline",
+    "/builderharness/api/content",
+    "/builderharness/api/content/capture",
+    "/builderharness/api/prototype/install",
+    "/builderharness/api/prototype/start",
+    "/builderharness/api/publish/dry-run",
+    "/builderharness/api/requirements/check",
+    "/builderharness/api/requirements/create",
+    "/builderharness/api/review/resolve",
+    "/builderharness/api/state",
   ]);
-  assert.equal(provided[0][0], "beepress");
+  assert.equal(provided[0][0], "builderharness");
   assert.equal(typeof provided[0][1].contentStatus, "function");
   assert.equal(typeof provided[0][1].baseline, "function");
   assert.equal(typeof provided[0][1].saveBaseline, "function");
   assert.equal(typeof provided[0][1].createFeature, "function");
   assert.equal(typeof provided[0][1].startPrototype, "function");
 
-  const statusTool = tools.find((tool) => tool.name === "beepress_status");
+  const statusTool = tools.find((tool) => tool.name === "builderharness_status");
   const value = await statusTool.execute({}, { agent: {}, signal: new AbortController().signal });
   const status = JSON.parse(value);
   assert.equal(status.root, root);
@@ -283,7 +283,7 @@ async function testDshPlugin(root) {
     },
   };
   await routes[0].handler(
-    { method: "GET", url: `/beepress/api/state?root=${encodeURIComponent(root)}` },
+    { method: "GET", url: `/builderharness/api/state?root=${encodeURIComponent(root)}` },
     res,
   );
   assert.equal(res.statusCode, 200);
@@ -297,7 +297,7 @@ async function testClientBundle() {
   let registration;
   const sandbox = { window: { __ModuleLoader__: { load: (entry) => { registration = entry; } } } };
   vm.runInNewContext(code, sandbox);
-  assert.equal(registration.id, "@beepress/dsh-bundle");
+  assert.equal(registration.id, "@builderharness/dsh-bundle");
   const exported = registration.factory(() => ({
     createElement() {},
     useState() {},
@@ -305,14 +305,14 @@ async function testClientBundle() {
     useCallback() {},
     Fragment: {},
   }));
-  assert.equal(exported.name, "beepress-client");
+  assert.equal(exported.name, "builderharness-client");
   assert.equal(typeof exported.apply, "function");
   assert.ok(exported.inject.includes("sidebarRightTabs"));
 }
 
 function startMcp(root) {
   const child = spawn(process.execPath, [mcpServer], {
-    env: { ...process.env, BEEPRESS_ROOT: root },
+    env: { ...process.env, BUILDERHARNESS_ROOT: root },
     stdio: ["pipe", "pipe", "inherit"],
   });
   const pending = new Map();
@@ -342,17 +342,17 @@ async function testMcp(root) {
     capabilities: {},
     clientInfo: { name: "spike-test", version: "0.0.0" },
   });
-  assert.equal(initialized.serverInfo.name, "bee-press-mcp");
+  assert.equal(initialized.serverInfo.name, "builderharness-mcp");
   child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`);
 
   const list = await request("tools/list");
   assert.deepEqual(
     list.tools.map((tool) => tool.name).sort(),
-    ["beepress_context", "beepress_publish_plan", "beepress_review_open", "beepress_status"],
+    ["builderharness_context", "builderharness_publish_plan", "builderharness_review_open", "builderharness_status"],
   );
 
   const called = await request("tools/call", {
-    name: "beepress_review_open",
+    name: "builderharness_review_open",
     arguments: {},
   });
   assert.equal(called.isError, undefined);
@@ -361,7 +361,7 @@ async function testMcp(root) {
   assert.equal(reviews.comments[0].id, "c1");
 
   const context = await request("tools/call", {
-    name: "beepress_context",
+    name: "builderharness_context",
     arguments: { topic: "import", limit: 5 },
   });
   const contextValue = JSON.parse(context.content[0].text);

@@ -1,6 +1,6 @@
-# Bee Press integrations
+# BuilderHarness integrations
 
-This directory is the integration layer for running Bee Press beside an agent
+This directory is the integration layer for running BuilderHarness beside an agent
 runtime instead of inside a prototype. The dsh plugin now has a right-sidebar
 panel and review write tools; the MCP entrypoint remains read-only.
 
@@ -8,7 +8,7 @@ panel and review write tools; the MCP entrypoint remains read-only.
 
 | Path | What it is |
 | :-- | :-- |
-| [`host/`](./host/README.md) | `@beepress/dsh-bundle`: a dsh plugin plus a `beepress-mcp` entrypoint |
+| [`host/`](./host/README.md) | `@builderharness/dsh-bundle`: a dsh plugin plus a `builderharness-mcp` entrypoint |
 | [`host/src/project.mjs`](./host/src/project.mjs) | Dependency-free workspace reader used by both hosts |
 | [`test-integrations.mjs`](./test-integrations.mjs) | Mock-harness and MCP protocol tests |
 
@@ -22,19 +22,19 @@ DeepSeek Harness ──Cordis──────┘
 
 Both hosts expose the same three read tools:
 
-- `beepress_status`
-- `beepress_context`
-- `beepress_review_open`
+- `builderharness_status`
+- `builderharness_context`
+- `builderharness_review_open`
 
 The dsh host adds:
 
-- `beepress_review_add`
-- `beepress_review_resolve`
-- a **Bee Press** right-sidebar tab with workspace status, content pages,
+- `builderharness_review_add`
+- `builderharness_review_resolve`
+- a **BuilderHarness** right-sidebar tab with workspace status, content pages,
   open reviews and in-place resolution
 
 The workspace is the contract, not the agent runtime. That is what keeps the
-kit usable with an external IDE agent and with a bundled Bee Press Desktop.
+kit usable with an external IDE agent and with a bundled BuilderHarness Desktop.
 
 ## Run the checks
 
@@ -42,7 +42,7 @@ kit usable with an external IDE agent and with a bundled Bee Press Desktop.
 npm run test:integrations
 ```
 
-The test creates a temporary Bee Press workspace, exercises the shared reader
+The test creates a temporary BuilderHarness workspace, exercises the shared reader
 and review writes, registers the dsh plugin against a mock `ctx.tools` and HTTP
 route, validates the client bundle factory, and drives the MCP server over
 newline-delimited JSON-RPC.
@@ -58,13 +58,13 @@ that before treating them as a full-lifecycle agent.
 ## Status
 
 The dsh bundle is installed and verified in dsh `0.2.1-rc.2`: the plugin loads,
-the Bee Press guide entry opens a right-sidebar tab, the tab resolves the
+the BuilderHarness guide entry opens a right-sidebar tab, the tab resolves the
 Session workspace, and the agent can call the read/write review tools. The MCP
 protocol is tested separately.
 
 ## What comes next
 
-1. A `ctx.beepress` service instead of direct filesystem reads in tools.
+1. A `ctx.builderharness` service instead of direct filesystem reads in tools.
 2. Content confirmation tools backed by the review lock.
 3. Media capture through dsh `browser-use` / `computer-use`.
 4. Publish planning through the existing destination gateway.

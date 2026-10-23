@@ -85,8 +85,8 @@ publish: false                  # 可选：维护者页面不发布
 图由配方驱动，不手动截：
 
 ```bash
-npx beepress capture-kb-shots --only <key> --headed   # 调配方
-npx beepress capture-kb-shots --stale                # 只重拍过期的
+npx builderharness capture-kb-shots --only <key> --headed   # 调配方
+npx builderharness capture-kb-shots --stale                # 只重拍过期的
 ```
 
 - 配方：`shots.config.mjs`
@@ -100,7 +100,7 @@ npx beepress capture-kb-shots --stale                # 只重拍过期的
 录屏讲操作过程：鼠标怎么走、点了哪里、浮层怎么弹出。
 
 ```bash
-npx beepress record-kb-clips --only <key>
+npx builderharness record-kb-clips --only <key>
 ```
 
 配方在 `clips.config.mjs`，产物在 `media/`，同时生成 MP4、GIF 和 SRT。
@@ -109,8 +109,8 @@ GIF 适合嵌入文档，MP4 适合归档。
 ## 审阅与确认
 
 ```bash
-npx beepress kb status
-npx beepress kb ack <页>
+npx builderharness kb status
+npx builderharness kb ack <页>
 ```
 
 - `status` 是 Agent 的待办清单；`ack` 是人的确认动作。

@@ -6,15 +6,15 @@
  * 输出可交给宿主发布适配器（或内置 docs-cli 参考适配器）的 Markdown。
  *
  * 这条链路和「需求 → PRD」是两回事：那条的输入是 docs/features/<KEY>/ 的 FRS 件套，
- * 走 beepress export-frs-prd 与 beepress prd，产出给研发推敲细节的规格文档。
+ * 走 builderharness export-frs-prd 与 builderharness prd，产出给研发推敲细节的规格文档。
  * 这里产出的是评审意见清单，受众是需求方与设计评审。
  *
  * 用法：
- *   npx beepress export-review-notes                        # 全部批注 → docs/prd/<日期>-评审意见.md
- *   npx beepress export-review-notes --status open          # 只导出未解决项
- *   npx beepress export-review-notes --frs DESIGN_SYSTEM    # 只导出指定区域
- *   npx beepress export-review-notes --out -                # 输出到 stdout
- *   npx beepress export-review-notes --title "登录改版评审意见"
+ *   npx builderharness export-review-notes                        # 全部批注 → docs/prd/<日期>-评审意见.md
+ *   npx builderharness export-review-notes --status open          # 只导出未解决项
+ *   npx builderharness export-review-notes --frs DESIGN_SYSTEM    # 只导出指定区域
+ *   npx builderharness export-review-notes --out -                # 输出到 stdout
+ *   npx builderharness export-review-notes --title "登录改版评审意见"
  *
  * 使用内置 docs-cli 参考适配器发布（需安装并登录兼容 CLI）：
  *   docs-cli word +create --title "<标题>" --content-file <生成的 md> --link-share READ_ONLY
@@ -140,7 +140,7 @@ async function main() {
   if (args.help) {
     console.log(
       [
-        "用法: npx beepress export-review-notes [选项]",
+        "用法: npx builderharness export-review-notes [选项]",
         "",
         "  --status <all|open|resolved>  按状态筛选，默认 all",
         "  --frs <KEY>                   只导出指定需求区域",

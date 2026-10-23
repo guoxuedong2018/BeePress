@@ -6,9 +6,9 @@
  * 改一轮已发布的 PRD 更贵——取大纲找表格锚点、抠 JSON、打补丁，一轮两百多次工具调用。
  * 全是确定的步骤，收在这里。Agent 只管 FRS 里写什么、这一版该不该发。
  *
- *   npx beepress prd <KEY> [--scope delta]             只出计划：校验、渲染、截图、和目标端比，不写目标端
- *   npx beepress prd <KEY> [--scope delta] --yes       按计划外发
- *   npx beepress prd <KEY> --yes --rewrite             已有的那篇整篇覆盖（确认没人改过才用）
+ *   npx builderharness prd <KEY> [--scope delta]             只出计划：校验、渲染、截图、和目标端比，不写目标端
+ *   npx builderharness prd <KEY> [--scope delta] --yes       按计划外发
+ *   npx builderharness prd <KEY> --yes --rewrite             已有的那篇整篇覆盖（确认没人改过才用）
  *
  * 新建（FRS 没有 prdDocId）：建空文档 → 追图换 imageId → 带图渲染 → 整篇写入 → 回读核对 → 回写 prdDocId。
  * 更新：只补功能点表里变了的段落，目标端有人改过的段落不动、列出来。需求背景与方案设计变了只提醒——
@@ -58,7 +58,7 @@ async function ensureDev() {
 }
 
 async function main() {
-  if (!key) stop("用法：npx beepress prd <FEATURE_KEY> [--scope delta] [--yes] [--rewrite]");
+  if (!key) stop("用法：npx builderharness prd <FEATURE_KEY> [--scope delta] [--yes] [--rewrite]");
   if (!["all", "delta"].includes(scope)) stop(`--scope 只接受 all 或 delta，收到「${scope}」`);
   const frsFile = path.join(FEATURES_DIR, key, "FRS.json");
   const frs = await readJson(frsFile, null);
@@ -153,7 +153,7 @@ async function main() {
   }
 
   function intent() {
-    gateway.setIntent?.(`publish the PRD for ${key} to the configured destination. The user reviewed the plan printed by beepress prd and re-ran it with --yes.`);
+    gateway.setIntent?.(`publish the PRD for ${key} to the configured destination. The user reviewed the plan printed by builderharness prd and re-ran it with --yes.`);
   }
 
   async function publishWhole() {

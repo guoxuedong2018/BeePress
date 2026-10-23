@@ -11,7 +11,7 @@ const SKIP_DIRS = new Set([
   "build",
   "coverage",
   "docs",
-  ".beepress",
+  ".builderharness",
   ".pnpm-store",
   ".venv",
   "__pycache__",
@@ -133,7 +133,7 @@ export async function detectPrototype(inputRoot) {
       scanned: inspected.map((entry) => path.relative(root, entry.dir) || "."),
       reason:
         manifestDirs.length === 0
-          ? "工作区没有 package.json。Bee Press 需要一个带 dev 脚本的前端应用。"
+          ? "工作区没有 package.json。BuilderHarness 需要一个带 dev 脚本的前端应用。"
           : `找到 ${manifestDirs.length} 个 package.json，但都没有 dev 脚本：${manifestDirs
               .map((entry) => path.relative(root, entry.dir) || ".")
               .join("、")}`,

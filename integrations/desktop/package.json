@@ -1,8 +1,8 @@
 {
-  "name": "@beepress/desktop",
+  "name": "@builderharness/desktop",
   "private": true,
   "version": "0.4.6",
-  "description": "Thin Bee Press desktop shell around an upstream DeepSeek Harness profile.",
+  "description": "Thin BuilderHarness desktop shell around an upstream DeepSeek Harness profile.",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
@@ -15,10 +15,10 @@
     "electron-builder": "^26.0.0"
   },
   "license": "MIT",
-  "productName": "Bee Press",
+  "productName": "BuilderHarness",
   "build": {
-    "appId": "com.beepress.desktop",
-    "productName": "Bee Press",
+    "appId": "com.builderharness.desktop",
+    "productName": "BuilderHarness",
     "directories": {
       "output": "release"
     },
@@ -45,7 +45,7 @@
     "extraResources": [
       {
         "from": "../../",
-        "to": "beepress",
+        "to": "builderharness",
         "filter": [
           "bin/**/*",
           "pipeline/**/*",
@@ -56,7 +56,7 @@
       },
       {
         "from": "../../integrations/host",
-        "to": "beepress/host",
+        "to": "builderharness/host",
         "filter": [
           "**/*",
           "!**/node_modules/**/*"

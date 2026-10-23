@@ -43,7 +43,7 @@ PM / Agent 产出：`FRS.json`、`README.md`、`FLOW.md`、`STATE.md`（按需�
 ## 校验
 
 ```bash
-npx beepress check-frs <KEY>
+npx builderharness check-frs <KEY>
 ```
 
 硬失败必须修：AC 引用不存在、功能点没有 AC、四类规则全空、路由不在

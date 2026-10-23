@@ -4,7 +4,7 @@ import { Btn, Icon } from "../core/ui";
 import { openStudio, studioState } from "./store";
 
 /**
- * Bee Press 内容检查台在评审工具栏里的入口。
+ * BuilderHarness 内容检查台在评审工具栏里的入口。
  *
  * 不在入口上挂待审计数：算一次工作清单要比对截图，每次打开原型都算一遍不划算。
  * 也不做成页面右下角的浮标——原型里列表页占多数，那个位置是分页控件的地盘。
@@ -12,7 +12,7 @@ import { openStudio, studioState } from "./store";
 export function StudioEntry() {
   const snap = useSnapshot(studioState);
   return (
-    <Btn kind={snap.open ? "primary" : undefined} title="打开 Bee Press 内容检查：哪些内容待确认、哪些图该重拍、检查完再发布到宿主配置的目标端" onClick={openStudio}>
+    <Btn kind={snap.open ? "primary" : undefined} title="打开 BuilderHarness 内容检查：哪些内容待确认、哪些图该重拍、检查完再发布到宿主配置的目标端" onClick={openStudio}>
       <Icon name="doc" />
       内容
     </Btn>

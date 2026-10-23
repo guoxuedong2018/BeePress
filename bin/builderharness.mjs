@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 /**
- * Bee Press CLI dispatcher.
+ * BuilderHarness CLI dispatcher.
  *
- * The package is `beepress`; `builder-kit` and `bk` remain aliases for this
- * entry point. All pipeline scripts live in `pipeline/`:
+ * All pipeline scripts live in `pipeline/`:
  *
- *   beepress kb status
- *   beepress review open
- *   beepress prd MY_FEATURE --scope delta
+ *   builderharness kb status
+ *   builderharness review open
+ *   builderharness prd MY_FEATURE --scope delta
  *
  * Commands run with the current working directory as the host project root
- * (or `BEEPRESS_ROOT` / `BUILDER_KIT_ROOT` when set).
+ * (or `BUILDERHARNESS_ROOT` when set).
  */
 import { spawnSync } from "node:child_process";
 import path from "node:path";
@@ -44,12 +43,10 @@ const COMMANDS = {
 };
 
 function printHelp(code = 0) {
-  console.log(`Bee Press — a hive of agents for prototype review & content
+  console.log(`BuilderHarness — an agent harness for Product Builders
 
 Usage:
-  beepress <command> [options]
-  builder-kit <command> [options]   # compatibility alias
-  bk <command> [options]            # short compatibility alias
+  builderharness <command> [options]
 
 Commands:
   init                     Copy the project scaffold (docs/templates, skills, kb configs)
@@ -75,15 +72,14 @@ Commands:
   kb-add-shot              Add a captured screenshot to a section
 
 Environment:
-  BEEPRESS_ROOT            Host project root (default: auto-detect from cwd)
-  BEEPRESS_DOCS_DIR        Docs directory inside the project (default: docs)
-  BEEPRESS_WEB_DIR         Prototype app directory (default: web, or project root)
-  BEEPRESS_ADAPTER         Pipeline adapter (default: vue2-vite)
-  BEEPRESS_PUBLISH_GATEWAY Publish destination adapter (default: disabled)
-  BEEPRESS_DOCS_CLI        Command prefix for the bundled docs-cli adapter
-  BUILDER_KIT_*            Legacy aliases for the variables above
+  BUILDERHARNESS_ROOT            Host project root (default: auto-detect from cwd)
+  BUILDERHARNESS_DOCS_DIR        Docs directory inside the project (default: docs)
+  BUILDERHARNESS_WEB_DIR         Prototype app directory (default: web, or project root)
+  BUILDERHARNESS_ADAPTER         Pipeline adapter (default: vue2-vite)
+  BUILDERHARNESS_PUBLISH_GATEWAY Publish destination adapter (default: disabled)
+  BUILDERHARNESS_DOCS_CLI        Command prefix for the bundled docs-cli adapter
 
-Run \`beepress kb --help\` for command-specific options.`);
+Run \`builderharness kb --help\` for command-specific options.`);
   process.exit(code);
 }
 

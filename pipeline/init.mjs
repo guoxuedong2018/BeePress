@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * 把 Bee Press scaffold 复制进宿主项目。
+ * 把 BuilderHarness scaffold 复制进宿主项目。
  *
- *   npx beepress init
- *   npx beepress init --list
- *   npx beepress init --force
- *   npx beepress init --only docs
+ *   npx builderharness init
+ *   npx builderharness init --list
+ *   npx builderharness init --force
+ *   npx builderharness init --only docs
  *
  * 已存在的文件默认不覆盖；只有 --force 才覆盖。
  */
@@ -89,6 +89,6 @@ for (const { rel, from } of files) {
   copied += 1;
 }
 
-console.log(`Bee Press scaffold → ${target}`);
+console.log(`BuilderHarness scaffold → ${target}`);
 console.log(`  复制 ${copied} 个，跳过已存在 ${skipped} 个${force ? "（--force）" : ""}`);
 if (skipped && !force) console.log("  需要覆盖时加 --force，或先手动合并。");

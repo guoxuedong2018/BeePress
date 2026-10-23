@@ -6,14 +6,14 @@
 ## 前置
 
 - `npm run build` 通过；
-- `npx beepress preflight` 通过；
+- `npx builderharness preflight` 通过；
 - 目标环境已配置，且本次发布范围已确认。
 
 ## 命令
 
 ```bash
 npm run build
-npx beepress preflight
+npx builderharness preflight
 <deploy-cli> --dir dist --dry-run   # 先看计划
 <deploy-cli> --dir dist             # 人确认后执行
 ```

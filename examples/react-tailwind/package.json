@@ -1,18 +1,18 @@
 {
-  "name": "bee-press-demo",
+  "name": "builderharness-demo",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "React + Tailwind demo prototype for Bee Press",
+  "description": "React + Tailwind demo prototype for BuilderHarness",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "beepress": "file:../..",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "builderharness": "file:../.."
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

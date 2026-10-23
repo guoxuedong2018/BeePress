@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { beePress } from "../../vite.mjs";
+import { builderHarness } from "../../vite.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const kitRoot = path.resolve(root, "../..");
@@ -10,7 +10,7 @@ const kitRoot = path.resolve(root, "../..");
 export default defineConfig({
   root,
   plugins: [
-    beePress({
+    builderHarness({
       root,
       anchorLoc: "react",
       frsRegistry: "src/config/frs-map.js",
@@ -22,9 +22,9 @@ export default defineConfig({
   resolve: {
     alias: [
       // In-repo demo: resolve package subpaths to the local source. A published
-      // consumer would use `beepress/react` and `beepress/ui` directly.
-      { find: /^beepress\/react$/, replacement: path.join(kitRoot, "client/adapters/react.jsx") },
-      { find: /^beepress\/ui$/, replacement: path.join(kitRoot, "ui-spec/impl/react/index.ts") },
+      // consumer would use `builderharness/react` and `builderharness/ui` directly.
+      { find: /^builderharness\/react$/, replacement: path.join(kitRoot, "client/adapters/react.jsx") },
+      { find: /^builderharness\/ui$/, replacement: path.join(kitRoot, "ui-spec/impl/react/index.ts") },
       { find: /^@\//, replacement: path.join(root, "src") + "/" },
     ],
   },

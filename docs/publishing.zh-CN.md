@@ -1,13 +1,13 @@
 # 内容发布目的地接入
 
-## 先分清两个工具和三层边界
+## 先分清门禁与下游交付
 
-Bee Press 有两个平级工具：
+BuilderHarness 的核心环是 **规格 ↔ 同源可跑原型 ↔ 评审**。发布位于这个门禁之后，不是产品品类：
 
-| 工具 | 解决的问题 | 产物 |
+| 能力 | 解决的问题 | 产物 |
 | :-- | :-- | :-- |
-| **Review** | 在运行中的原型上圈选、批注、定位源码 | 评审意见、批注锚点 |
-| **Studio** | 把原型相关内容生产成可发布的内容资源 | 操作手册、上线通知、消息卡片、宣传图文、截图/录屏/GIF/视频 |
+| **Review** | 在运行中的原型上圈选、批注、定位源码 | 评审意见、批注锚点、回审状态 |
+| **Studio** | 把同一事实源生产成下游交付物 | 操作手册、上线通知、消息卡片、宣传图文、截图/录屏/GIF/视频 |
 
 Studio **不是文档编辑器，也不是 CMS**。它是一条内容生产管线：
 
@@ -23,7 +23,7 @@ Markdown 叙述 + 事实引用 + 媒体配方
 外部载体：飞书文档 / 腾讯文档 / 内部内容平台 / IM 卡片 ...
 ```
 
-**发布目的地不是“内容从哪里来”，而是“内容最终投递到哪个载体”。** 载体负责租户、权限、文档空间、卡片渲染、消息投递；Bee Press 负责内容真源、生产、校验、评审和发布流程。
+**发布目的地不是“内容从哪里来”，而是“内容最终投递到哪个载体”。** 载体负责租户、权限、文档空间、卡片渲染、消息投递；BuilderHarness 负责内容真源、生产、校验、评审和发布流程。
 
 ## 发布的不只是长文
 
@@ -89,9 +89,9 @@ interface ContentBundle {
 
 | 方式 | 适合场景 | 配置 |
 | :-- | :-- | :-- |
-| 内置 `docs-cli` 参考适配器 | 已有兼容的文档 CLI | `BEEPRESS_PUBLISH_GATEWAY=docs-cli` |
-| 宿主项目内的适配器文件 | 内部 Wiki、CMS、业务 API、IM 机器人 | `BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs` |
-| 独立 npm 包 | 多个原型共享同一套发布能力 | `BEEPRESS_PUBLISH_GATEWAY=@acme/beepress-publish` |
+| 内置 `docs-cli` 参考适配器 | 已有兼容的文档 CLI | `BUILDERHARNESS_PUBLISH_GATEWAY=docs-cli` |
+| 宿主项目内的适配器文件 | 内部 Wiki、CMS、业务 API、IM 机器人 | `BUILDERHARNESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs` |
+| 独立 npm 包 | 多个原型共享同一套发布能力 | `BUILDERHARNESS_PUBLISH_GATEWAY=@acme/builderharness-publish` |
 
 ### 2. 在宿主项目里创建适配器
 
@@ -148,7 +148,7 @@ type Source =
 环境变量必须设置在启动 Vite 的进程上：
 
 ```bash
-BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npm run dev
+BUILDERHARNESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npm run dev
 ```
 
 配置后需要重启 dev server；修改适配器文件本身通常由 Node 重新加载，但环境变量不会自动更新。
@@ -160,7 +160,7 @@ BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npm run dev
 curl http://localhost:5173/__builder_studio/publish-config
 
 # 2. 只算发布计划，不写目标端（首次需要根节点和地址前缀）
-npx beepress kb-publish --root <目标根 id> --doc-base https://your-destination.example --dry-run
+npx builderharness kb-publish --root <目标根 id> --doc-base https://your-destination.example --dry-run
 
 # 3. 在内容检查台打开「发布」，先看计划，再确认
 ```
@@ -239,7 +239,7 @@ export async function publishResource({ resource, target }) {
 
 ## 核心优势与定位
 
-Bee Press 的内容创作不是“让模型凭空写一篇文章”，而是把 Agent 放进**可验证的原型环境**：
+下游交付物的生产不是“让模型凭空写一篇文章”，而是把 Agent 放进**可验证的原型环境**：
 
 1. **Agent 读源码和页面，而不是猜界面。** 路由、组件、文案、交互都能从源码和 DOM 得到；操作步骤可以对照真实页面。
 2. **媒体是构建产物，不是截图附件。** Chrome/CDP 负责截图和录屏，ffmpeg 负责 GIF/视频/合成；配方可复现，画面变化可以比较。
@@ -250,7 +250,7 @@ Bee Press 的内容创作不是“让模型凭空写一篇文章”，而是把 
 
 一句话定位：
 
-> **Bee Press 是原型原生的内容生产与发布层：让 Agent 基于源码、页面和真实媒体生成可信内容，再通过统一接入层投递到任意内容载体。**
+> **BuilderHarness 是 Product Builder 的 Agent Harness：规格门禁 + 同源原型真相源 + 回审放行。** 评审放行之后，同一事实源上的手册、上线通知与素材通过统一接入层投递到任意内容载体。
 
 它替代的不是通用文档编辑器，而是“人工从原型里抄步骤、截图、拼长文、再复制到各个平台”的整条低效链路。
 
@@ -258,7 +258,7 @@ Bee Press 的内容创作不是“让模型凭空写一篇文章”，而是把 
 
 | 现象 | 检查 |
 | :-- | :-- |
-| UI 显示「发布（未配置）」 | 是否设置了 `BEEPRESS_PUBLISH_GATEWAY`，是否重启了 dev server |
+| UI 显示「发布（未配置）」 | 是否设置了 `BUILDERHARNESS_PUBLISH_GATEWAY`，是否重启了 dev server |
 | `加载发布目标失败` | 相对路径是否相对宿主项目根；包名是否安装在宿主 `node_modules` |
 | `缺少 createDoc、writeDoc…` | 对照接口补齐核心方法 |
 | `发布计划没算出来` | 先看适配器抛出的错误，再用 `kb-publish --dry-run` 复现 |
@@ -273,9 +273,9 @@ Bee Press 的内容创作不是“让模型凭空写一篇文章”，而是把 
 只使用内置 `docs-cli` 参考实现时：
 
 ```bash
-BEEPRESS_PUBLISH_GATEWAY=docs-cli \
-BEEPRESS_DOCS_CLI="docs-cli" \
+BUILDERHARNESS_PUBLISH_GATEWAY=docs-cli \
+BUILDERHARNESS_DOCS_CLI="docs-cli" \
 npm run dev
 ```
 
-只设置 `BEEPRESS_DOCS_CLI=...`（或兼容的 `BUILDER_KIT_DOCS_CLI`）也会自动选用内置适配器；新接入建议显式设置 `BEEPRESS_PUBLISH_GATEWAY`。
+只设置 `BUILDERHARNESS_DOCS_CLI=...` 也会自动选用内置适配器；新接入建议显式设置 `BUILDERHARNESS_PUBLISH_GATEWAY`。

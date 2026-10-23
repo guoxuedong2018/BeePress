@@ -33,5 +33,5 @@ docs/kb/
 └── media/<页面>/
 ```
 
-先用 `npx beepress kb-scaffold` 按大纲生成页面，再用
-`npx beepress kb status` 看哪些引用需要确认。
+先用 `npx builderharness kb-scaffold` 按大纲生成页面，再用
+`npx builderharness kb status` 看哪些引用需要确认。

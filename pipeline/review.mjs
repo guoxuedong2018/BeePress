@@ -6,9 +6,9 @@
  * `{ comments }`，再过滤、分组、改 status、写回——同一件事前后写了约 100 遍，回复的字段名
  * 还写出过两种（`at` / `createdAt`），界面上就显示不出时间。读写收在这里，Agent 只管改代码。
  *
- *   npx beepress review open [--route /eval-set]     没解决的，按页面分组，每条一行带源码坐标
- *   npx beepress review resolve <id…> [--note "…"]   标已解决；带 --note 顺手回复一句改了什么
- *   npx beepress review reply <id> "…"               只回复，不改状态
+ *   npx builderharness review open [--route /eval-set]     没解决的，按页面分组，每条一行带源码坐标
+ *   npx builderharness review resolve <id…> [--note "…"]   标已解决；带 --note 顺手回复一句改了什么
+ *   npx builderharness review reply <id> "…"               只回复，不改状态
  *
  * 写回的形状与评审层（client/review/store.js）一致；dev 服务开着也能用，界面刷新即见。
  */
@@ -68,12 +68,12 @@ async function find(ids) {
     if (store) hits.push({ store, comment: store.comments.find((c) => c.id === id) });
     else missing.push(id);
   }
-  if (missing.length) throw new Error(`找不到这些批注：${missing.join("、")}（先跑 beepress review open 看 id）`);
+  if (missing.length) throw new Error(`找不到这些批注：${missing.join("、")}（先跑 builderharness review open 看 id）`);
   return hits;
 }
 
 async function resolve(ids, note) {
-  if (!ids.length) throw new Error("要给批注 id：beepress review resolve <id…> [--note \"改了什么\"]");
+  if (!ids.length) throw new Error("要给批注 id：builderharness review resolve <id…> [--note \"改了什么\"]");
   const hits = await find(ids);
   const at = new Date().toISOString();
   for (const { comment } of hits) {
@@ -85,7 +85,7 @@ async function resolve(ids, note) {
 }
 
 async function reply(id, body) {
-  if (!id || !flat(body)) throw new Error("用法：beepress review reply <id> \"回复内容\"");
+  if (!id || !flat(body)) throw new Error("用法：builderharness review reply <id> \"回复内容\"");
   const [{ store, comment }] = await find([id]);
   (comment.replies ??= []).push({ author: AUTHOR, body: body.trim(), at: new Date().toISOString() });
   await save(store);
@@ -99,7 +99,7 @@ async function main() {
   if (cmd === "open") return open(opt("--route"));
   if (cmd === "resolve") return resolve(positional, opt("--note"));
   if (cmd === "reply") return reply(positional[0], positional.slice(1).join(" "));
-  console.log("用法：beepress review open [--route <路由>] | resolve <id…> [--note \"…\"] | reply <id> \"…\"");
+  console.log("用法：builderharness review open [--route <路由>] | resolve <id…> [--note \"…\"] | reply <id> \"…\"");
   if (cmd && cmd !== "--help" && cmd !== "-h") process.exitCode = 1;
 }
 

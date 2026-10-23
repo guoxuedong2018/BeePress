@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.0 — 2026-10-23
+
+- **Brand and positioning: BuilderHarness** — the README (EN/ZH), brand guide
+  and core docs now lead with the product category: an agent harness for
+  Product Builders, **spec-gated · prototype-as-truth · review before ship**.
+  The old “prototype-native content production and publishing layer” framing is
+  retired; manuals, launch notes and media are documented as downstream
+  deliverables.
+- **Product surface** — npm package `builderharness`, imports
+  `builderharness/*`, CLI `builderharness`, environment variables
+  `BUILDERHARNESS_*`, config files `builderharness.config.*`, project settings
+  `.builderharness/`, MCP tools `builderharness_*`, and integration packages
+  `@builderharness/*`.
+- **Boundaries are explicit** — auth, observability and deploy are documented as
+  integration points: *connecting ≠ bundling ≠ production-ready by default*.
+
 ## 0.7.6 — 2026-10-20
 
 - **One canvas, one rail, one toolbar** — removed the Bee Press brand header

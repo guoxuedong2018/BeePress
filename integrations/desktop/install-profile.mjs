@@ -5,10 +5,14 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const profile = process.argv[2] || process.env.BEEPRESS_DSH_PROFILE || "web";
+function readEnv(name) {
+  return process.env[`BUILDERHARNESS_${name}`] || "";
+}
+
+const profile = process.argv[2] || readEnv("DSH_PROFILE") || "web";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const bundle = path.join(root, "integrations", "host");
-const dsh = process.env.BEEPRESS_DSH_BIN || "dsh";
+const dsh = readEnv("DSH_BIN") || "dsh";
 const result = spawnSync(dsh, ["plugin", "--profile", profile, "add", `file:${bundle}`], {
   cwd: root,
   stdio: "inherit",
@@ -22,7 +26,8 @@ if (result.status !== 0) process.exit(result.status ?? 1);
 // `dsh plugin add` records the dependency but keeps the previously copied
 // bundle, so edits and new files never reach the profile on their own.
 const dshHome = process.env.DSH_HOME || path.join(os.homedir(), ".dsh");
-const target = path.join(dshHome, "profiles", profile, "node_modules", "@beepress", "dsh-bundle");
+const scope = path.join(dshHome, "profiles", profile, "node_modules");
+const target = path.join(scope, "@builderharness", "dsh-bundle");
 fs.rmSync(target, { recursive: true, force: true });
 fs.cpSync(bundle, target, { recursive: true, filter: (source) => !source.includes(`${path.sep}node_modules`) });
 console.log(`✓ synced ${path.relative(process.cwd(), target)}`);

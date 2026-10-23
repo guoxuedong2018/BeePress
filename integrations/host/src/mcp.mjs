@@ -1,21 +1,22 @@
 #!/usr/bin/env node
 import { createInterface } from "node:readline";
 
+import { readEnv } from "./env.mjs";
 import { readContext, readOpenReviews, readPublishPlan, readStatus } from "./project.mjs";
 
-const SERVER_INFO = { name: "bee-press-mcp", version: "0.0.0-spike" };
+const SERVER_INFO = { name: "builderharness-mcp", version: "0.0.0-spike" };
 const PROTOCOL_VERSION = "2024-11-05";
 
 const ROOT_SCHEMA = {
   type: "string",
-  description: "Bee Press workspace root. Defaults to BEEPRESS_ROOT or the server working directory.",
+  description: "BuilderHarness workspace root. Defaults to BUILDERHARNESS_ROOT or the server working directory.",
 };
 
 const TOOLS = [
   {
-    name: "beepress_status",
+    name: "builderharness_status",
     description:
-      "Inspect a Bee Press workspace: content pages, open review comments, feature specs, prototype dev script and publish configuration.",
+      "Inspect a BuilderHarness workspace: content pages, open review comments, feature specs, prototype dev script and publish configuration.",
     inputSchema: {
       type: "object",
       properties: { root: ROOT_SCHEMA },
@@ -23,9 +24,9 @@ const TOOLS = [
     },
   },
   {
-    name: "beepress_context",
+    name: "builderharness_context",
     description:
-      "Read Bee Press content context from docs/kb. Use topic to narrow pages and limit to bound the result.",
+      "Read BuilderHarness content context from docs/kb. Use topic to narrow pages and limit to bound the result.",
     inputSchema: {
       type: "object",
       properties: {
@@ -37,7 +38,7 @@ const TOOLS = [
     },
   },
   {
-    name: "beepress_review_open",
+    name: "builderharness_review_open",
     description: "List unresolved prototype review comments from docs/reviews, including anchors and reply counts.",
     inputSchema: {
       type: "object",
@@ -46,7 +47,7 @@ const TOOLS = [
     },
   },
   {
-    name: "beepress_publish_plan",
+    name: "builderharness_publish_plan",
     description:
       "Show the local-to-destination publishing plan: configured destination, previously published pages, and pages that have never been published.",
     inputSchema: {
@@ -70,11 +71,11 @@ function error(id, code, message) {
 }
 
 async function callTool(name, args = {}) {
-  const root = args.root || process.env.BEEPRESS_ROOT || process.env.BUILDER_KIT_ROOT || process.cwd();
-  if (name === "beepress_status") return readStatus(root);
-  if (name === "beepress_context") return readContext(root, { topic: args.topic, limit: args.limit });
-  if (name === "beepress_review_open") return readOpenReviews(root);
-  if (name === "beepress_publish_plan") return readPublishPlan(root);
+  const root = args.root || readEnv("ROOT") || process.cwd();
+  if (name === "builderharness_status") return readStatus(root);
+  if (name === "builderharness_context") return readContext(root, { topic: args.topic, limit: args.limit });
+  if (name === "builderharness_review_open") return readOpenReviews(root);
+  if (name === "builderharness_publish_plan") return readPublishPlan(root);
   throw new Error(`Unknown tool: ${name}`);
 }
 

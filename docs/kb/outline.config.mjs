@@ -1,7 +1,7 @@
 /**
  * 知识库大纲（宿主项目的业务内容）
  * ------------------------------------------------------------------
- * `npx beepress kb-scaffold` 按这份大纲补齐 docs/kb/ 页面。
+ * `npx builderharness kb-scaffold` 按这份大纲补齐 docs/kb/ 页面。
  * 这里只放「有哪些模块、每个模块有哪些页」；四层结构和页面骨架由套件提供。
  *
  * kind: howto / concept / reference / troubleshoot / overview

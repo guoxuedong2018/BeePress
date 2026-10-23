@@ -12,8 +12,8 @@
  *
  * 用法：
  *   cd web && npm run dev                  # 另开终端，固定 5273
- *   npx beepress record-kb-clips
- *   npx beepress record-kb-clips --only push-display-template/add-field --headed
+ *   npx builderharness record-kb-clips
+ *   npx builderharness record-kb-clips --only push-display-template/add-field --headed
  */
 
 import { promises as fs } from "node:fs";
@@ -199,7 +199,7 @@ async function main() {
   if (args.help) {
     console.log(
       [
-        "用法: npx beepress record-kb-clips [选项]",
+        "用法: npx builderharness record-kb-clips [选项]",
         "",
         "  --base-url <地址>  原型地址，默认 http://localhost:5273",
         "  --only <clipKey>   只录某几段，可重复",

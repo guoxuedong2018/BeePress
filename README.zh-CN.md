@@ -1,56 +1,146 @@
-# Bee Press
+# BuilderHarness
 
-**蜂群协作，一个事实源。**
+**Product Builder 的 Agent Harness。**
 
-Bee Press 是原型原生的内容生产与发布层。把运行中的原型变成可评审、可校验、可持续更新的内容资源——操作手册、上线通知、消息卡片、宣传图文、截图/GIF/视频——并投递到任意内容载体。
+BuilderHarness 是给 Product Builder 用的 Agent Harness。日常配合 Claude（以及同类 Agent），把它拴在可执行规格与同源可跑原型上，评审放行之后才允许 ship：产出更专业的前端与更完整的 PRD，而不是 vibecoding 玩具页。上线之后，发布说明、手册与素材仍然从同一个事实源派生。
+
+**规格门禁 · 同源原型即真相 · 回审放行 · 生产件可插拔**
+
+auth、观测与部署通过成熟设施对接：
+**对接 ≠ 内置 ≠ 装上即生产就绪。**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
 
 [English](./README.md) · [品牌说明](./docs/brand.md)
 
-> **命名：** Bee Press 是产品名。npm 包和导入路径是 `beepress`；`builder-kit` 包与 CLI 作为兼容别名保留，`BUILDER_KIT_*` 环境变量也继续接受。
+## 它是什么
 
-两个平级工具，都挂在运行中的原型上：
+| 维度 | 定义 |
+|---|---|
+| **用户** | 互联网 Product Builder —— 产品 × 技术 × 运营 |
+| **品类** | Agent Harness：约束 Agent、跑完环、门禁结果 |
+| **场景** | 0→1 做出可维护的产品；1→100 持续修改、验收、宣贯——Harness 覆盖门禁，不代管整条生命周期 |
+| **真相源** | 同源可跑原型 + 规格（FRS、`frs:` / `code:` 事实） |
+| **承诺** | 少出 vibecoding 玩具页；规格成为工作单元；每次改动都能回审 |
 
-| 工具 | 做什么 | 落到哪 |
+Harness 只管三件事：**规格**、**同源原型即真相**、**评审门禁**。
+
+## 跑环
+
+```text
+规格 ──▶ 同源可跑原型 ──▶ 评审 ──▶ 门禁 ──▶ ship
+  ▲             │                    │         │
+  └── 事实与变更回审 ───────────────┴─────────┘
+```
+
+| 环节 | 发生什么 | 落到哪 |
 |---|---|---|
-| `client/review` | 收集对原型的**意见** —— 圈选批注、定位源码 | `docs/reviews/<区域>.json` |
-| `client/studio` | 把原型变成可发布的**内容资源** —— 操作手册、上线通知、消息卡片、宣传图文 | `docs/kb/*.md` + `images/` + `media/` + 发布状态 |
+| **规格** | 需求变成可被 Agent 引用的机器可读事实，带 id。 | `docs/features/<KEY>/FRS.json` |
+| **原型** | 跑在你自己技术栈里的真实应用；Agent 读源码、路由、组件和 DOM，不靠猜。 | 你的 Vite 应用（`web/`） |
+| **评审** | 批注锚到 `file:line:column`，失效时按组件语义、几何位置降级，并报告置信度。 | `docs/reviews/<区域>.json` |
+| **门禁** | 批注按源码坐标闭环；`check-frs` 校验规格；preflight 在部署前扫描生产产物。 | `docs/reviews/`、preflight 输出 |
 
-界面是 **React**，挂在 `<body>` 下独立的根上；原型保持自己的框架，不用装 React。**React 是主适配层**（`beepress/react`）；**Vue 2**（`beepress/vue2`）是可选的兼容适配层。换框架只需按 `client/core/host.js` 写一层很薄的适配。
+界面是 **React**，挂在 `<body>` 下独立的根上；原型保持自己的框架，不用装 React。**React 是主适配层**（`builderharness/react`）；**Vue 2**（`builderharness/vue2`）是可选的兼容适配层。换框架只需按 `client/core/host.js` 写一层很薄的适配。
 
 套件**只在 dev 生效**：入口组件的 `import.meta.env.DEV` 动态 import 在生产构建期被消除，产物里不留任何套件代码。
 
-## 内容生产定位
+## 架构
 
-Bee Press 的核心不是“让模型写一篇文章”，而是把可验证的原型环境交给 Agent：
+```mermaid
+flowchart TB
+  subgraph Host["宿主项目"]
+    App["原型应用<br/>Vue 2 · React · Vite"]
+    FRS["规格<br/>docs/features/*/FRS.json"]
+    Reviews["评审数据<br/>docs/reviews/*.json"]
+    KB["内容工作区<br/>docs/kb"]
+  end
 
-- Agent 能读源码、路由、组件、FRS 和页面 DOM，知道真实界面和真实文案，不靠猜。
-- Agent 能调用 Chrome/CDP 截图、录屏，调用 ffmpeg 生成 GIF/视频、裁剪和合成，媒体是可复现的构建产物。
-- 正文里的事实引用 `frs:` / `code:` 会在上游变化时进入待确认队列；内容不会发出去就失控。
-- 同一份内容资源可以生成长文、上线通知、消息卡片、宣传图文，通过统一发布层投递到飞书文档、腾讯文档、内部内容平台或 IM。
-- Markdown、媒体配方、事实和评审锁都留在仓库里，可 diff、可回滚、可继续由 Agent 编辑。
+  subgraph Plugins["builderharness/vite · 仅 dev"]
+    Anchor["源码坐标注入<br/>data-loc · data-use · data-comp"]
+    ReviewServer["评审中间件<br/>/__proto_review"]
+    StudioServer["工作台中间件<br/>/__builder_studio"]
+    Bridge["virtual:builderharness/host<br/>区域 · 工具栏 · 链接"]
+  end
 
-Bee Press 不内嵌后台写作 Agent：它把源码、页面、媒体配方、事实校验和发布状态组织成 Agent 可用的上下文，管线负责执行和核对。
+  subgraph UI["评审与工作台 UI · 独立 React 根"]
+    Mount["mountKit"]
+    ReviewUI["评审<br/>工具栏 · 锚点 · 抽屉"]
+    StudioUI["工作台<br/>内容 · 媒体 · 发布"]
+  end
 
-一句话：**Bee Press 是原型原生的内容生产与发布层，而不是通用文档编辑器或截图工具。**
+  CLI["builderharness CLI<br/>init · kb · review · prd · check-*"]
+  Pipeline["管线<br/>适配器 · 内容构建 · 目的地"]
+  Gate{{"规格门禁<br/>FRS 校验 + 评审"}}
+  Dest["发布目的地<br/>docs-cli · 宿主适配器"]
 
-### 为什么叫 Bee Press
+  App --> Anchor
+  App --> ReviewServer
+  App --> StudioServer
+  App --> Bridge
+  Anchor --> ReviewUI
+  Bridge --> Mount
+  Mount --> ReviewUI
+  Mount --> StudioUI
+  ReviewUI <--> ReviewServer
+  StudioUI <--> StudioServer
+  ReviewServer <--> Reviews
+  StudioServer <--> KB
+  FRS --> Gate
+  Reviews --> Gate
+  Gate --> CLI
+  CLI --> Pipeline
+  StudioUI --> Pipeline
+  Pipeline --> Dest
+```
 
-Bee Press 不是“人类和 AI 一起写文档”的聊天框，而是一个 Agent 蜂巢在共享工件上协作：
+宿主应用保持自己的技术栈；套件通过一个 Vite 插件接入，把 React UI 挂到独立根上，并通过 dev 中间件读写工作区。CLI 与 UI 复用同一套管线模块，终端和浏览器不会给出不同结论。这张图里的任何部分都不会进入生产构建。更多细节见[架构说明](./docs/architecture.md)。
 
-- **工蜂角色** —— 读源码、看页面、截图录屏、写作、审阅、发布，都可以是不同的 Agent。
-- **共识主动性（stigmergy）** —— Agent 不靠聊天协调，而是通过仓库里的痕迹协作：事实引用、评审锁、媒体台账、发布状态。
-- **蜂蜜** —— 最终的内容 Bundle。
-- **授粉** —— 发布适配器把同一份 Bundle 送到文档、IM、素材库或内部平台。
-- **Press** —— 审阅和发布始终显式发生，不会自动发出去。
+## 它不是什么
 
-蜜蜂不是“AI 魔法”的吉祥物，而是一种工作模型：许多小工蜂，一个事实源。
+- **不是 CMS，也不是内容工厂。** 手册、上线通知、素材是下游交付物，不是品类。
+- **不是 WordPress 式发布工具，也不是通用 AI 写作助手。** Agent 对着源码、路由、规格和 DOM 工作。
+- **不是 Lovable / Bolt / v0 式一键出页器。** 承诺的不是 demo 速度，而是可维护的仓库和评审门禁。
+- **不是纯 coding IDE，也不是 hardening harness。** Cursor / Claude Code / DSH 已经把写代码和隔离验证做得很好；BuilderHarness 补的是规格门禁与 Product Builder 的工作流。
+- **不是已交付的 auth / 观测 / 部署 / SRE 栈。** Harness 管门禁与钩子，系统本身归成熟设施。
+- **不是金标 / 奖励模型闭环。** 过闸只代表规格与同源原型一致，不代表模型“赢了”。
 
-### 产出形态
+## 为什么需要它
 
-| 产出 | Bee Press 提供什么 | 典型载体 |
+Agent 的活坏在生命周期两头。开始阶段，一句 prompt 出来的 demo 经不起 auth、支付、安全、测试和可观测；结束阶段，原型一改，没人说得清哪些断言、文档和截图还成立。
+
+更好的 prompt 解决不了，得靠 Harness：
+
+- **规格可被引用。** FRS 条目有 id；正文事实引用 `frs:` / `code:` 来源；引用断掉就直接失败。
+- **原型就是真相。** Agent 读真实源码和真实 DOM；批注锚回 `file:line:column`，讨论留在工件上，而不是聊天记录里。
+- **上线前有门禁。** 上游变化把断言送回评审；陈旧媒体按内容哈希判定，不看时间；preflight 拦截开发接口、本机路径和密钥。
+- **所有权在你手里。** 原型是你的技术栈、你的仓库；没有托管沙箱决定产品能长在哪。
+
+这也解释了哪些东西是故意不做的：Harness 约束流程，不替代实现。完整的 SRE 或安全加固，仍然是一笔工程交付。
+
+## 盒子里有什么
+
+- **Review** —— 圈选元素、写批注、落盘；三层锚点：源码坐标（L1）、组件语义（L2）、几何位置（L3）。
+- **规格与事实** —— FRS 模板与校验；`frs:` / `code:` 事实在上游变化时回到待确认；`kb check` 遇到断引用直接失败。
+- **Agent 上下文** —— `kb context` 与「复制给 Agent」把页面引用、媒体配方、规格和源码位置交给 IDE 里的 Agent；BuilderHarness 不跑隐藏的写作 Agent。
+- **变更检测** —— 截图/录屏是否过期按内容哈希与画面比对判定，不看文件时间。
+- **Preflight** —— 部署或发布之前扫描生产产物。
+- **宿主入口** —— 同一份工作区可用于 CLI、只读 MCP 客户端、DeepSeek Harness 右侧栏面板，以及随包的桌面壳。
+- **下游交付物** —— 过闸之后，同一事实源还能生成手册、上线通知、消息卡片、截图与录屏，并通过目的地适配器投递。见[下游交付物](#下游交付物)。
+
+## 生产件是对接点
+
+auth、观测、部署与 SRE 是**对接点**，不是内置能力：
+
+- 原型跑在你自己的技术栈和仓库里；
+- 需要时用适配器接 Cloudflare、GCP 或内部平台；
+- **对接 ≠ 内置 ≠ 装上即生产就绪。** 适配器契约与 provenance 字段由宿主负责。
+
+## 下游交付物
+
+评审门禁就位之后，内容是同一事实源上的副作用，不是第二个产品：
+
+| 产出 | BuilderHarness 提供什么 | 典型载体 |
 | :-- | :-- | :-- |
 | 操作手册 / 功能说明 | 正文 + 真实截图 + 可核对步骤 | 飞书文档、腾讯文档、Wiki、站点 |
 | 上线通知 / 版本更新 | 发布事实 + 封面 + 跳转链接 | 文档、IM、邮件、内部信息流 |
@@ -59,9 +149,13 @@ Bee Press 不是“人类和 AI 一起写文档”的聊天框，而是一个 Ag
 | PRD / 评审报告 | FRS 事实、评审意见和生成结构 | 文档、评审归档 |
 | 内容 Bundle | 正文 + 资产 + 事实 + 元数据 + 评审状态 | 任意目的地适配器 |
 
+交付物仍以 Markdown 为唯一真源，不另存一份内容 JSON。
+
+细节见[内容模型](./docs/content-model.md)与[发布目的地](./docs/publishing.zh-CN.md)。
+
 ## 为什么单独一层
 
-原型是产品资产，随业务演进、要整份交付研发；套件是跨原型复用的能力，生命周期完全不同。把套件寄居在原型源码里，后果是「删掉工具层还得动产品代码」。Bee Press 把两者的边界收敛成宿主工程里的两行配置。
+原型是产品资产，随业务演进、要整份交付研发；套件是跨原型复用的能力，生命周期完全不同。把套件寄居在原型源码里，后果是「删掉工具层还得动产品代码」。BuilderHarness 把两者的边界收敛成宿主工程里的两行配置。
 
 ## 做工具时的几条判断
 
@@ -74,18 +168,14 @@ Bee Press 不是“人类和 AI 一起写文档”的聊天框，而是一个 Ag
 ## 安装
 
 ```bash
-npm install --save-dev beepress
-# CLI 别名：beepress、builder-kit、bk
+npm install --save-dev builderharness
 # 宿主还没有这些 peer 时
 npm install --save-dev vite less
 # 仅当宿主使用可选 Vue 2 适配层时
 npm install --save-dev vue@2.7
 ```
 
-已有项目迁移期可以安装 `builder-kit` 兼容包，继续使用旧导入；它只是
-`beepress` 的薄转发。新代码应使用 `beepress/*` 和 `BEEPRESS_*`。
-
-要求：Node.js >= 18、Vite >= 5、Vue 2.7（可选，仅使用 Vue 2 适配层与 Vue 源码坐标注入时）、React 18/19（使用 React 适配层时，套件自身已依赖 React）、Tailwind >= 4（使用 `beepress/ui` 的规范组件时）、Less >= 3（使用自带样式时）。
+要求：Node.js >= 18、Vite >= 5、Vue 2.7（可选，仅使用 Vue 2 适配层与 Vue 源码坐标注入时）、React 18/19（使用 React 适配层时，套件自身已依赖 React）、Tailwind >= 4（使用 `builderharness/ui` 的规范组件时）、Less >= 3（使用自带样式时）。
 
 ## 目录约定
 
@@ -93,7 +183,7 @@ npm install --save-dev vue@2.7
 my-prototype/
 ├── docs/
 │   ├── templates/                   # FRS / FLOW / STATE / ACCEPTANCE 模板
-│   ├── WORKFLOW.md                  # 需求 → FRS → 原型 → 内容 → 发布
+│   ├── WORKFLOW.md                  # 需求 → FRS → 原型 → 评审放行 → 交付物 → 发布
 │   ├── features/<KEY>/FRS.json      # 需求件套（可选）
 │   ├── kb/
 │   │   ├── outline.config.mjs       # 内容大纲
@@ -102,13 +192,13 @@ my-prototype/
 │   │   └── *.md                     # 正文，唯一真源
 │   ├── prd/                         # 生成的 PRD
 │   └── reviews/                     # 批注（生成）
-├── web/                             # 原型工程（可用 BEEPRESS_WEB_DIR 改）
+├── web/                             # 原型工程（可用 BUILDERHARNESS_WEB_DIR 改）
 │   └── src/
 ├── .agent/skills/                   # 需求 / PRD / 内容 / 评审技能
 └── package.json
 ```
 
-项目根从当前工作目录向上找：最近的包含 `docs/`、`beepress.config.*`，或 `package.json` 依赖 `beepress` 的目录。也可以用 `BEEPRESS_ROOT` 显式指定；`BUILDER_KIT_ROOT` 仍兼容。
+项目根从当前工作目录向上找：最近的包含 `docs/`、`builderharness.config.*`，或 `package.json` 依赖 `builderharness` 的目录。也可以用 `BUILDERHARNESS_ROOT` 显式指定。
 
 ## 接入
 
@@ -116,9 +206,9 @@ my-prototype/
 
 ```bash
 cd my-prototype
-npx beepress init
-# 先看会复制什么：npx beepress init --list
-# 覆盖已生成的文件：npx beepress init --force
+npx builderharness init
+# 先看会复制什么：npx builderharness init --list
+# 覆盖已生成的文件：npx builderharness init --force
 ```
 
 会把 `docs/templates/`、`docs/WORKFLOW.md`、`docs/kb/CONTRIBUTING.md`、
@@ -127,7 +217,7 @@ npx beepress init
 然后运行：
 
 ```bash
-npx beepress kb-scaffold
+npx builderharness kb-scaffold
 ```
 
 ### 1. 宿主 `vite.config.js`
@@ -136,20 +226,20 @@ npx beepress kb-scaffold
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue2";
-import { beePress } from "beepress/vite";
+import { builderHarness } from "builderharness/vite";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
   plugins: [
-    beePress({
+    builderHarness({
       root,
       frsRegistry: "src/config/frs-map.js",   // 需求区域注册表（业务数据）
       barExtras: ["src/components/common/ThemeToggle.vue"], // 注入工具栏的宿主控件
       barLinks: [{ label: "设计规范", route: { name: "design-system" } }],
       agentPrompt: "",                        // “复制给 Agent”的指令前缀
     }),
-    vue(),   // beePress 内的 anchor-loc 必须先拿到原始 SFC
+    vue(),   // builderHarness 内的 anchor-loc 必须先拿到原始 SFC
   ],
 });
 ```
@@ -162,7 +252,7 @@ export default {
   data: () => ({ kitRoot: null }),
   mounted() {
     if (import.meta.env.DEV) {
-      import("beepress/vue2").then((m) => { this.kitRoot = m.BeePressRoot; });
+      import("builderharness/vue2").then((m) => { this.kitRoot = m.BuilderHarnessRoot; });
     }
   },
 };
@@ -177,22 +267,22 @@ export default {
 </template>
 ```
 
-React 原型用 `beepress/react`：
+React 原型用 `builderharness/react`：
 
 ```jsx
 // main.jsx
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
-import { hashRouter } from "beepress/react";
+import { hashRouter } from "builderharness/react";
 
 const root = createRoot(document.getElementById("root"));
 
 if (import.meta.env.DEV) {
-  import("beepress/react").then(({ BeePressRoot }) => {
+  import("builderharness/react").then(({ BuilderHarnessRoot }) => {
     root.render(
-      <BeePressRoot router={hashRouter()}>
+      <BuilderHarnessRoot router={hashRouter()}>
         <App />
-      </BeePressRoot>,
+      </BuilderHarnessRoot>,
     );
   });
 } else {
@@ -211,7 +301,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
-const kitRoot = path.dirname(require.resolve("beepress/package.json"));
+const kitRoot = path.dirname(require.resolve("builderharness/package.json"));
 const themeDefaults = path.join(kitRoot, "client/core/theme-defaults.less");
 
 export default defineConfig({
@@ -236,8 +326,8 @@ export default defineConfig({
 仓库内置 **Tool UI Spec**（[`ui-spec/`](./ui-spec)）：令牌、Tailwind 配置与 React 参考组件。
 
 ```jsx
-import { Badge, Button, Card, Dialog, EmptyState, SegmentedControl, Table } from "beepress/ui";
-import "beepress/tokens.css";
+import { Badge, Button, Card, Dialog, EmptyState, SegmentedControl, Table } from "builderharness/ui";
+import "builderharness/tokens.css";
 ```
 
 令牌管线、Less 桥接与门禁见 [docs/ui-spec.md](./docs/ui-spec.md)。
@@ -262,19 +352,19 @@ npm run build:demo  # 生产构建
 
 ## Agent Host 集成：DeepSeek Harness + MCP
 
-[`integrations/`](./integrations) 把 Bee Press 接到 Agent runtime 上：
+[`integrations/`](./integrations) 把 BuilderHarness 接到 Agent runtime 上：
 
-- [`integrations/host`](./integrations/host) — `@beepress/dsh-bundle`，包含 DeepSeek Harness 插件、右侧栏 Bee Press 面板、评论写工具，以及 `beepress-mcp` stdio 入口，可接 Cursor、Claude、Codex 或其他 MCP 客户端。
-- [`integrations/desktop`](./integrations/desktop) — 品牌化薄 Electron 壳，启动上游 dsh profile 并加载 Web UI，不 fork 内核。首屏是 Bee Press 启动器：导入已有项目、新建脚手架项目，或打开最近工作区。桌面端只保留一个薄项目选择器，选中后直接进入 DSH 工作区。Bee Press 通过 DSH 自己的右侧栏注册六个领域标签（生产基线、需求、原型、评审、内容、发布），文件、浏览器和终端直接复用 DSH 自带标签，不再维护平行工作台。操作台就是 DSH 主面板，跟随你当前查看的会话；即使 dev server 在 `web/`、`app/` 或 `apps/*` 也能定位，依赖缺失时会用项目自己的包管理器先安装，再把运行中的原型嵌进来。
+- [`integrations/host`](./integrations/host) — `@builderharness/dsh-bundle`，包含 DeepSeek Harness 插件、右侧栏 BuilderHarness 面板、评论写工具，以及 `builderharness-mcp` stdio 入口，可接 Cursor、Claude、Codex 或其他 MCP 客户端。
+- [`integrations/desktop`](./integrations/desktop) — 品牌化薄 Electron 壳，启动上游 dsh profile 并加载 Web UI，不 fork 内核。首屏是 BuilderHarness 启动器：导入已有项目、新建脚手架项目，或打开最近工作区。桌面端只保留一个薄项目选择器，选中后直接进入 DSH 工作区。BuilderHarness 通过 DSH 自己的右侧栏注册六个领域标签（生产基线、需求、原型、评审、内容、发布），文件、浏览器和终端直接复用 DSH 自带标签，不再维护平行工作台。操作台就是 DSH 主面板，跟随你当前查看的会话；即使 dev server 在 `web/`、`app/` 或 `apps/*` 也能定位，依赖缺失时会用项目自己的包管理器先安装，再把运行中的原型嵌进来。
 - 所有入口共用同一个无依赖的工作区读取器，项目文件仍是契约。
 
 ```bash
 npm run test:integrations
 ```
 
-dsh 插件可以检查工作区、列出内容与评论、新增并解决评论、读取/确认内容锁、查看发布计划，并用可复现的配方重建截图或录屏。同一组能力通过 `ctx.beepress` 服务暴露；MCP 仍只读。
+dsh 插件可以检查工作区、列出内容与评论、新增并解决评论、读取/确认内容锁、查看发布计划，并用可复现的配方重建截图或录屏。同一组能力通过 `ctx.builderharness` 服务暴露；MCP 仍只读。
 
-![DeepSeek Harness 中的 Bee Press 面板](./docs/assets/dsh-bee-press-panel.png)
+![DeepSeek Harness 中的 BuilderHarness 面板](./docs/assets/dsh-builderharness-panel.png)
 
 详见 [integrations/README.md](./integrations/README.md)。
 
@@ -297,7 +387,7 @@ DEPLOY_SKILL=/path/to/deploy.mjs npm run test:deploy-skill
 ## 配置
 
 ```js
-beePress({
+builderHarness({
   root,                 // 宿主应用根，默认 process.cwd()
   frsRegistry,          // 导出 FRS_REGISTRY 的模块，相对 root
   barExtras: [],        // 注入评审工具栏的宿主组件
@@ -312,16 +402,16 @@ beePress({
 
 | 变量 | 含义 | 默认 |
 |---|---|---|
-| `BEEPRESS_ROOT` | 宿主项目根（`BUILDER_KIT_ROOT` 兼容） | 自动探测 |
-| `BEEPRESS_DOCS_DIR` | 文档目录，相对项目根（`BUILDER_KIT_DOCS_DIR` 兼容） | `docs` |
-| `BEEPRESS_WEB_DIR` | 原型工程目录，相对项目根（`BUILDER_KIT_WEB_DIR` 兼容） | 有 `web/` 用 `web`，否则项目根 |
-| `BEEPRESS_ADAPTER` | 管线适配器名（`BUILDER_KIT_ADAPTER` 兼容） | `vue2-vite` |
-| `BEEPRESS_PUBLISH_GATEWAY` | 发布目标适配器：路径、`file:` URL 或包名（`BUILDER_KIT_PUBLISH_GATEWAY` 兼容） | 未配置 |
-| `BEEPRESS_DOCS_CLI` | 内置 `docs-cli` 适配器的命令前缀（`BUILDER_KIT_DOCS_CLI` 兼容） | `docs-cli` |
+| `BUILDERHARNESS_ROOT` | 宿主项目根 | 自动探测 |
+| `BUILDERHARNESS_DOCS_DIR` | 文档目录，相对项目根 | `docs` |
+| `BUILDERHARNESS_WEB_DIR` | 原型工程目录，相对项目根 | 有 `web/` 用 `web`，否则项目根 |
+| `BUILDERHARNESS_ADAPTER` | 管线适配器名 | `vue2-vite` |
+| `BUILDERHARNESS_PUBLISH_GATEWAY` | 发布目标适配器：路径、`file:` URL 或包名 | 未配置 |
+| `BUILDERHARNESS_DOCS_CLI` | 内置 `docs-cli` 适配器的命令前缀 | `docs-cli` |
 
-## 内容工作台
+## 工作台：门禁之后的下游交付
 
-**这条链路是一个内容构建系统。** 叙述由 Agent 或人写成源文件，截图录屏是按配方可复现的构建产物，事实是被校验的断言；「上游变了之后，这几句还成立吗」是唯一需要人判断的事。
+工作台是可选的。它位于上面那个环之后，而不是替代它：一份手册或上线通知，应该能引用刚刚评审过的同一份规格与原型。**这条链路是一个内容构建系统。** 叙述由 Agent 或人写成源文件，截图录屏是按配方可复现的构建产物，事实是被校验的断言；「上游变了之后，这几句还成立吗」是唯一需要人判断的事。
 
 | 概念 | 在哪 | 谁维护 |
 |---|---|---|
@@ -346,42 +436,42 @@ beePress({
 
 ## 命令行
 
-安装后提供统一入口，三个别名等价：`beepress`、`builder-kit`、`bk`。
+安装后提供统一入口：`builderharness`。
 
 ```bash
-npx beepress kb status            # 哪些内容待确认、哪些图该重拍
-npx beepress kb context <页|路由>  # 给 Agent：引用、可用媒体配方、可引的规格原文
-npx beepress kb shoot --stale     # 只重拍源码真变了的
-npx beepress kb ack <页> [<id>…]  # 我看过了
-npx beepress kb where <配方|路由|依据> # 谁在引用它
-npx beepress kb check             # 引用断了才失败，要审只提醒
-npx beepress kb new <页> <类型> "<话题>" --pages=/a,/b
-npx beepress review open          # 未解决的批注，带源码坐标
-npx beepress review resolve <id…> --note "…"
-npx beepress export-review-notes --status open
-npx beepress prd <KEY> --scope delta
+npx builderharness kb status            # 哪些内容待确认、哪些图该重拍
+npx builderharness kb context <页|路由>  # 给 Agent：引用、可用媒体配方、可引的规格原文
+npx builderharness kb shoot --stale     # 只重拍源码真变了的
+npx builderharness kb ack <页> [<id>…]  # 我看过了
+npx builderharness kb where <配方|路由|依据> # 谁在引用它
+npx builderharness kb check             # 引用断了才失败，要审只提醒
+npx builderharness kb new <页> <类型> "<话题>" --pages=/a,/b
+npx builderharness review open          # 未解决的批注，带源码坐标
+npx builderharness review resolve <id…> --note "…"
+npx builderharness export-review-notes --status open
+npx builderharness prd <KEY> --scope delta
 ```
 
-完整列表见 `npx beepress --help`。`pipeline/` 下的脚本也可以直接用 `node` 运行。
+完整列表见 `npx builderharness --help`。`pipeline/` 下的脚本也可以直接用 `node` 运行。
 
 `check-ui` / `check-routes` / `check-frs` 是**宿主符合性检查的参考实现**，写死了一套设计体系约定（iView 组件、token 文件、导航登记）。换产品时照抄约定或改这三份脚本；其余能力与框架无关。
 
 ## 发布
 
-发布是可选的。Bee Press 只提供核心流程——内容 bundle、计划确认、可续跑状态和内容工作台 UI；**投递到哪个载体**由宿主自己的适配器决定：
+发布是可选的，属于下游交付物的投递边界。BuilderHarness 只提供核心流程——内容 bundle、计划确认、可续跑状态和内容工作台 UI；**投递到哪个载体**由宿主自己的适配器决定：
 
 ```bash
-BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx beepress kb-publish --dry-run
+BUILDERHARNESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs npx builderharness kb-publish --dry-run
 ```
 
 适配器可以接飞书文档、腾讯文档、内部 Wiki/CMS、IM 机器人等内容平台。发布物不只长文：操作手册、上线通知、消息卡片、截图/录屏/GIF/视频都可以走同一个接入层。接口契约和最小示例见
 [`docs/publishing.zh-CN.md`](./docs/publishing.zh-CN.md)（接口契约见 [publishing.md](./docs/publishing.md)）。未配置时发布功能关闭；要使用内置的
-[`docs-cli` 参考适配器](./pipeline/destinations/docs-cli.mjs)，设置 `BEEPRESS_PUBLISH_GATEWAY=docs-cli`（它仍通过
-`BEEPRESS_DOCS_CLI` 接收外部 CLI 命令前缀；`BUILDER_KIT_*` 仍兼容）。完全不接发布目标时，本地批注、内容清单、截图录屏都照常可用。
+[`docs-cli` 参考适配器](./pipeline/destinations/docs-cli.mjs)，设置 `BUILDERHARNESS_PUBLISH_GATEWAY=docs-cli`（它仍通过
+`BUILDERHARNESS_DOCS_CLI` 接收外部 CLI 命令前缀）。完全不接发布目标时，本地批注、内容清单、截图录屏都照常可用。
 
 ## 边界规矩
 
-套件**不得 import 任何产品模块**。需要业务侧的东西一律走 `virtual:beepress/host` 虚拟模块，由宿主在 Vite 配置里接线。反过来产品代码也只在入口组件一处引用套件。
+套件**不得 import 任何产品模块**。需要业务侧的东西一律走 `virtual:builderharness/host` 虚拟模块，由宿主在 Vite 配置里接线。反过来产品代码也只在入口组件一处引用套件。
 
 知识库侧同理：产品内容全在 `docs/kb/` 的几份配置里，套件不含一个产品词。
 

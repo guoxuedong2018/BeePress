@@ -10,7 +10,7 @@ description: 读取、回复或解决原型批注。适用于用户说「看下�
 ## 读
 
 ```bash
-npx beepress review open
+npx builderharness review open
 ```
 
 每条批注关注：
@@ -27,8 +27,8 @@ npx beepress review open
 3. 修改后回复并解决：
 
 ```bash
-npx beepress review reply <id> "已调整按钮层级"
-npx beepress review resolve <id> --note "已修复"
+npx builderharness review reply <id> "已调整按钮层级"
+npx builderharness review resolve <id> --note "已修复"
 ```
 
 4. 需求级意见归并到 `docs/features/<KEY>/`，不要只留在批注里。

@@ -16,8 +16,8 @@
  * 不要手改。
  *
  * 用法：
- *   npx beepress kb-index           # 重建索引
- *   npx beepress kb-index --check   # 只校验不写盘（校验失败退出码非 0）
+ *   npx builderharness kb-index           # 重建索引
+ *   npx builderharness kb-index --check   # 只校验不写盘（校验失败退出码非 0）
  */
 
 import { promises as fs } from "node:fs";
@@ -154,7 +154,7 @@ async function main() {
       const files = [...s.changed, ...s.added].slice(0, 3).join("、") || s.removed.slice(0, 3).join("、");
       console.log(`     ${s.key}  ← ${files}${s.changed.length + s.added.length > 3 ? " 等" : ""}`);
     }
-    console.log("\n     重拍：npx beepress kb shoot --stale");
+    console.log("\n     重拍：npx builderharness kb shoot --stale");
     console.log("     （只是提醒，不阻断构建——重拍后图没变，引用它的文档不会被打扰）");
   }
 

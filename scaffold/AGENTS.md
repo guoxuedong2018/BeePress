@@ -1,14 +1,14 @@
 # <项目名> · Agent 工作指南
 
-> 这是 Bee Press scaffold 生成的起点。把 `<项目名>`、目录和命令替换成宿主项目的真实值；
+> 这是 BuilderHarness scaffold 生成的起点。把 `<项目名>`、目录和命令替换成宿主项目的真实值；
 > 不要把内部平台名、域名、账号或密钥写进仓库。
 
 ## 这个仓库是什么
 
-需求规格、原型、评审和内容在同一个仓库里协作：
+需求规格、原型、评审门禁和下游交付物在同一个仓库里协作：
 
 - 需求：`docs/features/<KEY>/`，模板在 `docs/templates/`
-- 原型：`web/`（可用 `BEEPRESS_WEB_DIR` 改）
+- 原型：`web/`（可用 `BUILDERHARNESS_WEB_DIR` 改）
 - 批注：`docs/reviews/`
 - 内容：`docs/kb/`
 - 发布状态：`docs/kb/_published.json`
@@ -59,17 +59,17 @@
 ## 常用命令
 
 ```bash
-npx beepress kb status
-npx beepress kb context <页|路由>
-npx beepress kb ack <页>
-npx beepress check-frs <KEY>
-npx beepress check-ui          # reference host check; see caveat below
-npx beepress check-routes
-npx beepress prd <KEY> --dry-run
+npx builderharness kb status
+npx builderharness kb context <页|路由>
+npx builderharness kb ack <页>
+npx builderharness check-frs <KEY>
+npx builderharness check-ui          # reference host check; see caveat below
+npx builderharness check-routes
+npx builderharness prd <KEY> --dry-run
 ```
 
 ## Harness
 
 - Cursor / Claude Code / Codex：把本文件作为入口，按表格按需读取 Skill。
-- DeepSeek Harness：安装 `@beepress/dsh-bundle`，使用右侧栏面板和 `beepress_*` 工具。
+- DeepSeek Harness：安装 `@builderharness/dsh-bundle`，使用右侧栏面板和 `builderharness_*` 工具。
 - 其他 Agent：只要能读文件、跑命令，就能使用同一套工作流。

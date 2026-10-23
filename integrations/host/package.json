@@ -1,9 +1,9 @@
 {
-  "name": "@beepress/dsh-bundle",
+  "name": "@builderharness/dsh-bundle",
   "version": "0.0.0-spike",
   "private": true,
   "type": "module",
-  "description": "Bee Press host spike: DeepSeek Harness domain bundle plus MCP entrypoint.",
+  "description": "BuilderHarness host spike: DeepSeek Harness domain bundle plus MCP entrypoint.",
   "main": "src/dsh.mjs",
   "exports": {
     ".": "./src/dsh.mjs",
@@ -12,7 +12,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "beepress-mcp": "./src/mcp.mjs"
+    "builderharness-mcp": "./src/mcp.mjs"
   },
   "files": [
     "src",
@@ -39,10 +39,10 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "beepress": ">=0.6.0"
+    "builderharness": ">=0.8.0"
   },
   "peerDependenciesMeta": {
-    "beepress": {
+    "builderharness": {
       "optional": true
     }
   }

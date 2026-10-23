@@ -6,7 +6,7 @@
  *
  * 由审阅台「构成」里的示范录制触发（studio-server 起成后台任务），也能在命令行跑：
  *
- *   npx beepress kb-add-clip --spec /tmp/clip.json
+ *   npx builderharness kb-add-clip --spec /tmp/clip.json
  *
  * spec：{
  *   page:    "labeling/label-template.md",

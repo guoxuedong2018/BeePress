@@ -1,11 +1,11 @@
-# Bee Press desktop shell
+# BuilderHarness desktop shell
 
 A thin Electron wrapper around an **upstream** DeepSeek Harness profile. It
 does not fork the kernel: the shell starts `dsh --profile <name>`, waits for
 the printed local URL, and loads it in a native window. Upstream plugin,
 model and update support stays intact.
 
-The first screen is a Bee Press product entry, not a chat box:
+The first screen is a BuilderHarness product entry, not a chat box:
 
 1. **Drop or pick a project** — a folder or `package.json`; read-only import.
 2. **Ask the Agent to find one** — the command opens a directory picker as an
@@ -21,13 +21,13 @@ After project selection and baseline confirmation, the shell shows a **project w
 dev script, open reviews, content pages and publish configuration. The
 “enter project workspace” action then starts dsh in that workspace, adds it as
 a dsh workspace and opens a session. The dsh sidebar brand is replaced with
-Bee Press; the rest of the upstream chat, model and plugin UI remains
+BuilderHarness; the rest of the upstream chat, model and plugin UI remains
 available.
 
 ## Install and test locally
 
 ```bash
-# 1. Install the Bee Press bundle into a dsh profile (default: web)
+# 1. Install the BuilderHarness bundle into a dsh profile (default: web)
 node integrations/desktop/install-profile.mjs web
 
 # 2. Install the shell's Electron dependency
@@ -42,8 +42,8 @@ A successful start first opens the launcher window. After choosing a project,
 the log prints:
 
 ```text
-[beepress-desktop] profile=web dsh=/Users/.../.npm-global/bin/dsh project=/path/to/project
-[beepress-desktop] loading http://127.0.0.1:<port>/?token=...
+[builderharness-desktop] profile=web dsh=/Users/.../.npm-global/bin/dsh project=/path/to/project
+[builderharness-desktop] loading http://127.0.0.1:<port>/?token=...
 ```
 
 The shell does not need a separate `dsh web` process; an existing `dsh` on
@@ -68,26 +68,26 @@ printf 'Electron.app/Contents/MacOS/Electron' > node_modules/electron/path.txt
 
 If the app shows a startup dialog, check `dsh` resolution:
 `~/.npm-global/bin/dsh`, `/opt/homebrew/bin/dsh`, `/usr/local/bin/dsh`, or set
-`BEEPRESS_DSH_BIN=/absolute/path/to/dsh`.
+`BUILDERHARNESS_DSH_BIN=/absolute/path/to/dsh`.
 
 For windowless verification, skip Electron and use the Web UI:
 
 ```bash
-BEEPRESS_KIT_ROOT="$PWD" dsh web --no-open --port 3080
-curl "http://127.0.0.1:3080/beepress/api/state?root=$PWD&token=..."
+BUILDERHARNESS_KIT_ROOT="$PWD" dsh web --no-open --port 3080
+curl "http://127.0.0.1:3080/builderharness/api/state?root=$PWD&token=..."
 ```
 
 Environment:
 
 | Variable | Default | Purpose |
 | :-- | :-- | :-- |
-| `BEEPRESS_DSH_PROFILE` | `web` | dsh profile to boot |
-| `BEEPRESS_DSH_BIN` | `dsh` | dsh executable |
-| `BEEPRESS_KIT_ROOT` | repository root | where the bundle finds the `beepress` CLI |
+| `BUILDERHARNESS_DSH_PROFILE` | `web` | dsh profile to boot |
+| `BUILDERHARNESS_DSH_BIN` | `dsh` | dsh executable |
+| `BUILDERHARNESS_KIT_ROOT` | repository root | where the bundle finds the `builderharness` CLI |
 
 For a branded distribution, publish a small profile package that depends on
-`@beepress/dsh-bundle` and the upstream `web` bundles, then change the default
-profile name. This keeps the desktop shell and the Bee Press domain bundle
+`@builderharness/dsh-bundle` and the upstream `web` bundles, then change the default
+profile name. This keeps the desktop shell and the BuilderHarness domain bundle
 separate from the upstream runtime, so upstream upgrades remain a version bump
 rather than a merge.
 
@@ -96,7 +96,7 @@ rather than a merge.
 
 `electron-builder` configuration lives in `package.json`; `npm run dist:mac`
 produces unsigned DMG/ZIP artifacts in `release/`. The build includes the
-Bee Press CLI/scaffold under `Resources/beepress`, so project creation and
+BuilderHarness CLI/scaffold under `Resources/builderharness`, so project creation and
 `kb-*` actions work after packaging.
 
 For a signed/notarized build, provide the usual Apple credentials on the

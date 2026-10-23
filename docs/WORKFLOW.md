@@ -1,21 +1,23 @@
-# 需求 → FRS → 原型 → 内容 → 发布
+# 需求 → FRS → 原型 → 评审放行 → 交付物 → 发布
 
-> 这是一份可裁剪的工作流模板。它把「需求规格、原型、评审、内容、发布」放在同一个仓库里，
+> 这是一份可裁剪的工作流模板。它把「需求规格、原型、评审、交付物、发布」放在同一个仓库里，
 > 让 Agent 和人看到同一份事实。产品名、目录名和发布目标都可以按宿主项目替换。
+>
+> 主链路是**规格 ↔ 同源原型 ↔ 评审**；内容与发布属于门禁之后的下游交付物，不需要时整段裁掉。
 
 ## 1. 一条主链路
 
 ```text
-需求评审 → FRS 件套 → 高保真原型 → 页面批注 → 内容生产 → 确认 → 发布
-             │              │           │           │
-             └── docs/features/<KEY>/   │           └── docs/kb/
-                                        └── docs/reviews/
+需求评审 → FRS 件套 → 高保真原型 → 页面批注 → 评审放行 → 交付物 → 发布
+             │              │           │                      │
+             └── docs/features/<KEY>/   └── docs/reviews/      └── docs/kb/
 ```
 
 - **FRS** 是需求的机器可读事实源，`README.md` 是人读入口。
 - **原型** 是已有界面的 Delta，不是从零重画；原型代码归业务，工具只挂载开发期 UI。
 - **批注** 必须带源码坐标，能被 Agent 定位，源码改动后要能显式降级。
-- **内容** 以 Markdown 为唯一真源；截图、录屏由配方生成，事实引用上游 FRS / 源码。
+- **评审放行** 是门禁：规格与同源原型一致，才算这一步完成。
+- **交付物** 是门禁之后的下游产物，以 Markdown 为唯一真源；截图、录屏由配方生成，事实引用上游 FRS / 源码。
 - **发布** 是外发动作，必须有人确认；目标由宿主提供适配器。
 
 ## 2. 需求分级
@@ -65,15 +67,15 @@ docs/features/<MMDDHHMM>_<MODULE>_<NAME>/
 1. 先对齐宿主已有的页面骨架、设计 token 和组件语言。
 2. 只精修本次 Delta；周边区域复用现状，未实现区域用占位。
 3. 覆盖成功态之外的空态、加载、错误、权限受限和取消。
-4. 用 React + Tailwind 时优先复用 `beepress/ui`；其他框架通过适配层挂载同一套工具。
+4. 用 React + Tailwind 时优先复用 `builderharness/ui`；其他框架通过适配层挂载同一套工具。
 
 在 `vite.config.js` 中挂一次：
 
 ```js
-import { beePress } from "beepress/vite";
+import { builderHarness } from "builderharness/vite";
 
 export default {
-  plugins: [beePress({ root, frsRegistry: "src/config/frs-map.js" })],
+  plugins: [builderHarness({ root, frsRegistry: "src/config/frs-map.js" })],
 };
 ```
 
@@ -90,8 +92,8 @@ Agent 处理批注时按坐标定位；坐标失效时按组件语义、几何�
 常用命令：
 
 ```bash
-npx beepress review open
-npx beepress review resolve <id> --note "已修复"
+npx builderharness review open
+npx builderharness review resolve <id> --note "已修复"
 ```
 
 ## 6. 内容
@@ -100,10 +102,10 @@ npx beepress review resolve <id> --note "已修复"
 先由 `outline.config.mjs` 定大纲，再生成页面骨架：
 
 ```bash
-npx beepress kb-scaffold
-npx beepress kb status
-npx beepress kb context <页|路由>
-npx beepress kb ack <页>
+npx builderharness kb-scaffold
+npx builderharness kb status
+npx builderharness kb context <页|路由>
+npx builderharness kb ack <页>
 ```
 
 内容页引用事实时使用 `frs:` / `code:` 标记；截图和录屏写进
@@ -114,8 +116,8 @@ npx beepress kb ack <页>
 发布由宿主提供 destination adapter：
 
 ```bash
-export BEEPRESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs
-npx beepress kb-publish --dry-run --root <id> --doc-base <url>
+export BUILDERHARNESS_PUBLISH_GATEWAY=./tools/publish-gateway.mjs
+npx builderharness kb-publish --dry-run --root <id> --doc-base <url>
 ```
 
 没有配置目标时，评审、内容状态、截图和录屏仍然可用；发布按钮保持「未配置」。

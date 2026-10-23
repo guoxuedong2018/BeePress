@@ -23,6 +23,6 @@ export function setHost(h) {
 }
 
 export function getHost() {
-  if (!host) throw new Error("beepress：还没挂载宿主（mountKit 没调用）");
+  if (!host) throw new Error("builderharness：还没挂载宿主（mountKit 没调用）");
   return host;
 }

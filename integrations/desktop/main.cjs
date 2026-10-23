@@ -8,14 +8,19 @@ const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
 
-app.setName("Bee Press");
+/** Read a `BUILDERHARNESS_*` environment variable. */
+function readEnv(name) {
+  return process.env[`BUILDERHARNESS_${name}`] || "";
+}
 
-const KIT_ROOT = process.env.BEEPRESS_KIT_ROOT || (app?.isPackaged
-  ? path.join(process.resourcesPath, "beepress")
+app.setName("BuilderHarness");
+
+const KIT_ROOT = readEnv("KIT_ROOT") || (app?.isPackaged
+  ? path.join(process.resourcesPath, "builderharness")
   : path.resolve(__dirname, "../.."));
-const PROFILE = process.env.BEEPRESS_DSH_PROFILE || "web";
-const HOST_BUNDLE = process.env.BEEPRESS_HOST_BUNDLE || (app?.isPackaged
-  ? path.join(process.resourcesPath, "beepress", "host")
+const PROFILE = readEnv("DSH_PROFILE") || "web";
+const HOST_BUNDLE = readEnv("HOST_BUNDLE") || (app?.isPackaged
+  ? path.join(process.resourcesPath, "builderharness", "host")
   : path.resolve(__dirname, "../host"));
 const CONFIG_FILE = () => path.join(app.getPath("userData"), "desktop.json");
 const ONBOARDING = path.join(__dirname, "onboarding.html");
@@ -23,9 +28,9 @@ const ONBOARDING = path.join(__dirname, "onboarding.html");
 let child;
 let window;
 
-app.setName("Bee Press");
+app.setName("BuilderHarness");
 try {
-  app.setPath("userData", path.join(app.getPath("appData"), "Bee Press"));
+  app.setPath("userData", path.join(app.getPath("appData"), "BuilderHarness"));
 } catch {
   // Keep Electron's default when appData is unavailable.
 }
@@ -57,7 +62,10 @@ function rememberProject(root) {
 }
 
 async function isProject(root) {
-  const checks = ["package.json", "docs", "beepress.config.mjs", "beepress.config.js", "beepress.config.json"];
+  const checks = [
+    "package.json", "docs",
+    "builderharness.config.mjs", "builderharness.config.js", "builderharness.config.json",
+  ];
   for (const name of checks) {
     try {
       await fs.promises.access(path.join(root, name));
@@ -71,7 +79,7 @@ async function isProject(root) {
 
 function resolveDsh() {
   const candidates = [
-    process.env.BEEPRESS_DSH_BIN,
+    readEnv("DSH_BIN"),
     path.join(os.homedir(), ".npm-global", "bin", "dsh"),
     "/opt/homebrew/bin/dsh",
     "/usr/local/bin/dsh",
@@ -96,7 +104,8 @@ function resolveDsh() {
  * the same code.
  */
 function syncHostBundle() {
-  const target = path.join(os.homedir(), ".dsh", "profiles", PROFILE, "node_modules", "@beepress", "dsh-bundle");
+  const scope = path.join(os.homedir(), ".dsh", "profiles", PROFILE, "node_modules");
+  const target = path.join(scope, "@builderharness", "dsh-bundle");
   if (!fs.existsSync(path.join(HOST_BUNDLE, "package.json"))) return false;
   fs.rmSync(target, { recursive: true, force: true });
   fs.cpSync(HOST_BUNDLE, target, {
@@ -112,7 +121,7 @@ function ensureProfileBundle() {
   let declared = false;
   try {
     const profilePkg = JSON.parse(fs.readFileSync(profilePkgFile, "utf8"));
-    declared = Boolean(profilePkg.dependencies?.["@beepress/dsh-bundle"]);
+    declared = Boolean(profilePkg.dependencies?.["@builderharness/dsh-bundle"]);
   } catch {
     // A missing profile is created by the plugin command below.
   }
@@ -122,14 +131,14 @@ function ensureProfileBundle() {
       env: { ...process.env },
     });
     if (result.status !== 0) {
-      console.warn(`[beepress-desktop] profile install failed: ${(result.stderr || result.stdout || "").trim()}`);
+      console.warn(`[builderharness-desktop] profile install failed: ${(result.stderr || result.stdout || "").trim()}`);
       return;
     }
   }
   try {
     syncHostBundle();
   } catch (error) {
-    console.warn(`[beepress-desktop] bundle sync failed: ${error instanceof Error ? error.message : String(error)}`);
+    console.warn(`[builderharness-desktop] bundle sync failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -139,7 +148,7 @@ function stopHarness() {
 }
 
 function projectSettingsFile(root) {
-  return path.join(root, ".beepress", "desktop.json");
+  return path.join(root, ".builderharness", "desktop.json");
 }
 
 function readProjectSettings(root) {
@@ -163,14 +172,14 @@ function kitEnv(root) {
   return {
     ...process.env,
     ELECTRON_RUN_AS_NODE: "1",
-    BEEPRESS_ROOT: root,
-    BEEPRESS_KIT_ROOT: KIT_ROOT,
-    ...(settings.publishGateway ? { BEEPRESS_PUBLISH_GATEWAY: settings.publishGateway } : {}),
+    BUILDERHARNESS_ROOT: root,
+    BUILDERHARNESS_KIT_ROOT: KIT_ROOT,
+    ...(settings.publishGateway ? { BUILDERHARNESS_PUBLISH_GATEWAY: settings.publishGateway } : {}),
   };
 }
 
 async function runKit(root, args, timeout = 120_000) {
-  const bin = path.join(KIT_ROOT, "bin", "beepress.mjs");
+  const bin = path.join(KIT_ROOT, "bin", "builderharness.mjs");
   try {
     const result = await execFileAsync(process.execPath, [bin, ...args], {
       cwd: root,
@@ -230,7 +239,7 @@ async function createFeature(root, title) {
   const templates = fs.existsSync(path.join(project, "docs", "templates"))
     ? path.join(project, "docs", "templates")
     : path.join(KIT_ROOT, "docs", "templates");
-  if (!fs.existsSync(templates)) throw new Error("找不到 FRS 模板；先运行 npx beepress init。");
+  if (!fs.existsSync(templates)) throw new Error("找不到 FRS 模板；先运行 npx builderharness init。");
   await copyDirectory(templates, featureDir);
   const replace = async (name) => {
     const file = path.join(featureDir, name);
@@ -256,11 +265,11 @@ async function createFeature(root, title) {
     key,
     path: featureDir,
     relativePath: path.relative(project, featureDir),
-    checkCommand: `npx beepress check-frs ${key}`,
+    checkCommand: `npx builderharness check-frs ${key}`,
   };
 }
 
-const PREFERRED_PORT = Number(process.env.BEEPRESS_DSH_PORT || 43117);
+const PREFERRED_PORT = Number(readEnv("DSH_PORT") || 43117);
 
 /**
  * A random DSH port changes the browser origin on every launch, which wipes
@@ -281,7 +290,7 @@ async function startHarness(projectRoot) {
   stopHarness();
   const dsh = resolveDsh();
   const port = (await isPortFree(PREFERRED_PORT)) ? PREFERRED_PORT : 0;
-  console.log(`[beepress-desktop] profile=${PROFILE} dsh=${dsh} project=${projectRoot} port=${port}`);
+  console.log(`[builderharness-desktop] profile=${PROFILE} dsh=${dsh} project=${projectRoot} port=${port}`);
   child = spawn(dsh, ["--profile", PROFILE, "--no-open", "--port", String(port)], {
     cwd: projectRoot,
     env: { ...kitEnv(projectRoot) },
@@ -303,7 +312,7 @@ async function startHarness(projectRoot) {
       if (!match || settled) return;
       settled = true;
       clearTimeout(timer);
-      console.log(`[beepress-desktop] loading ${match[0]}`);
+      console.log(`[builderharness-desktop] loading ${match[0]}`);
       resolve(match[0]);
     };
     child.stdout.on("data", onData);
@@ -328,35 +337,35 @@ async function startHarness(projectRoot) {
 async function loadHarness(projectRoot) {
   const root = path.resolve(projectRoot);
   if (!(await isProject(root))) {
-    throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 beepress.config.*。");
+    throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 builderharness.config.*。");
   }
   ensureProfileBundle();
   const url = await startHarness(root);
   rememberProject(root);
   await window.loadURL(url);
-  window.setTitle("Bee Press");
+  window.setTitle("BuilderHarness");
   try {
     await openProjectInUi(root);
   } catch (error) {
-    console.warn(`[beepress-desktop] workspace selection failed: ${error instanceof Error ? error.message : String(error)}`);
+    console.warn(`[builderharness-desktop] workspace selection failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
 async function openProjectInUi(root) {
   for (let attempt = 0; attempt < 80; attempt += 1) {
     const ready = await window.webContents
-      .executeJavaScript("Boolean(window.__beepressDesktop?.openProject)")
+      .executeJavaScript("Boolean(window.__builderHarnessDesktop?.openProject)")
       .catch(() => false);
     if (ready) {
       await window.webContents.executeJavaScript(
-        `window.__beepressDesktop.openProject(${JSON.stringify(root)})`,
+        `window.__builderHarnessDesktop.openProject(${JSON.stringify(root)})`,
         true,
       );
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  console.warn("[beepress-desktop] Bee Press client helper did not load; open the workspace manually.");
+  console.warn("[builderharness-desktop] BuilderHarness client helper did not load; open the workspace manually.");
 }
 
 async function walkFiles(dir, predicate) {
@@ -486,7 +495,7 @@ async function inspectProject(root) {
     // Missing paths are reported by the project-marker check below.
   }
   if (!(await isProject(project))) {
-    throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 beepress.config.*。");
+    throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 builderharness.config.*。");
   }
   const pkgFile = path.join(project, "package.json");
   let pkg = {};
@@ -517,8 +526,8 @@ async function inspectProject(root) {
     }
   }
   const settings = readProjectSettings(project);
-  const gateway = settings.publishGateway || process.env.BEEPRESS_PUBLISH_GATEWAY || process.env.BUILDER_KIT_PUBLISH_GATEWAY || null;
-  const docsCli = process.env.BEEPRESS_DOCS_CLI || process.env.BUILDER_KIT_DOCS_CLI || null;
+  const gateway = settings.publishGateway || readEnv("PUBLISH_GATEWAY") || null;
+  const docsCli = readEnv("DOCS_CLI") || null;
   let publishedPages = 0;
   try {
     const published = JSON.parse(await fs.promises.readFile(path.join(project, "docs", "kb", "_published.json"), "utf8"));
@@ -565,7 +574,7 @@ function createWindow() {
     height: 800,
     minWidth: 960,
     minHeight: 640,
-    title: "Bee Press",
+    title: "BuilderHarness",
     titleBarStyle: "hiddenInset",
     trafficLightPosition: { x: 16, y: 14 },
     icon: path.join(__dirname, "assets", "icon.png"),
@@ -580,7 +589,7 @@ function createWindow() {
   });
   window.on("page-title-updated", (event) => {
     event.preventDefault();
-    window.setTitle("Bee Press");
+    window.setTitle("BuilderHarness");
   });
   window.webContents.on("will-attach-webview", (event, webPreferences, params) => {
     delete webPreferences.preload;
@@ -600,7 +609,7 @@ function createWindow() {
 }
 
 function sendMenuCommand(command) {
-  if (window && !window.isDestroyed()) window.webContents.send("beepress:menu", command);
+  if (window && !window.isDestroyed()) window.webContents.send("builderharness:menu", command);
 }
 
 async function openProjectFromMenu() {
@@ -613,9 +622,9 @@ async function openProjectFromMenu() {
   if (!(await isProject(root))) {
     await dialog.showMessageBox(window, {
       type: "error",
-      title: "Bee Press",
+      title: "BuilderHarness",
       message: "这个目录不像一个项目",
-      detail: "需要 package.json、docs/ 或 beepress.config.*。",
+      detail: "需要 package.json、docs/ 或 builderharness.config.*。",
     });
     return;
   }
@@ -633,7 +642,7 @@ function buildMenu() {
   const template = [
     ...(isMac
       ? [{
-          label: "Bee Press",
+          label: "BuilderHarness",
           submenu: [
             { role: "about" },
             { type: "separator" },
@@ -650,8 +659,8 @@ function buildMenu() {
     {
       label: "文件",
       submenu: [
-        { label: "导入项目…", accelerator: "CmdOrCtrl+O", click: () => openProjectFromMenu().catch((error) => dialog.showErrorBox("Bee Press", error.message)) },
-        { label: "新建项目…", accelerator: "CmdOrCtrl+N", click: () => showProjectPicker("new-project").catch((error) => dialog.showErrorBox("Bee Press", error.message)) },
+        { label: "导入项目…", accelerator: "CmdOrCtrl+O", click: () => openProjectFromMenu().catch((error) => dialog.showErrorBox("BuilderHarness", error.message)) },
+        { label: "新建项目…", accelerator: "CmdOrCtrl+N", click: () => showProjectPicker("new-project").catch((error) => dialog.showErrorBox("BuilderHarness", error.message)) },
         { type: "separator" },
         { role: "close" },
       ],
@@ -692,33 +701,33 @@ function buildMenu() {
     {
       role: "help",
       submenu: [
-        { label: "Bee Press 仓库", click: () => shell.openExternal("https://github.com/guoxuedong2018/BeePress") },
-        { label: "报告问题", click: () => shell.openExternal("https://github.com/guoxuedong2018/BeePress/issues") },
+        { label: "BuilderHarness 仓库", click: () => shell.openExternal("https://github.com/guoxuedong2018/BuilderHarness") },
+        { label: "报告问题", click: () => shell.openExternal("https://github.com/guoxuedong2018/BuilderHarness/issues") },
       ],
     },
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
-ipcMain.handle("beepress:recent", () => readConfig());
-ipcMain.handle("beepress:choose-parent", async () => {
+ipcMain.handle("builderharness:recent", () => readConfig());
+ipcMain.handle("builderharness:choose-parent", async () => {
   const result = await dialog.showOpenDialog(window, {
     title: "选择项目所在目录",
     properties: ["openDirectory", "createDirectory"],
   });
   return result.canceled ? null : result.filePaths[0];
 });
-ipcMain.handle("beepress:choose-existing", async () => {
+ipcMain.handle("builderharness:choose-existing", async () => {
   const result = await dialog.showOpenDialog(window, {
     title: "导入已有开发项目",
     properties: ["openDirectory"],
   });
   if (result.canceled) return null;
   const root = result.filePaths[0];
-  if (!(await isProject(root))) throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 beepress.config.*。");
+  if (!(await isProject(root))) throw new Error("这个目录不像一个项目：需要 package.json、docs/ 或 builderharness.config.*。");
   return root;
 });
-ipcMain.handle("beepress:create-project", async (_event, { parent, name }) => {
+ipcMain.handle("builderharness:create-project", async (_event, { parent, name }) => {
   const safeName = String(name || "").trim();
   if (!safeName || /[\\/:*?"<>|]/.test(safeName) || safeName.startsWith(".")) {
     throw new Error("项目名不能为空，也不能包含 \\ / : * ? \" < > |，或从 . 开头。");
@@ -731,8 +740,8 @@ ipcMain.handle("beepress:create-project", async (_event, { parent, name }) => {
     if (error.code !== "ENOENT") throw error;
   }
   await fs.promises.mkdir(root, { recursive: true });
-  const bin = path.join(KIT_ROOT, "bin", "beepress.mjs");
-  const nodeEnv = { ...process.env, ELECTRON_RUN_AS_NODE: "1", BEEPRESS_KIT_ROOT: KIT_ROOT };
+  const bin = path.join(KIT_ROOT, "bin", "builderharness.mjs");
+  const nodeEnv = { ...process.env, ELECTRON_RUN_AS_NODE: "1", BUILDERHARNESS_KIT_ROOT: KIT_ROOT };
   await execFileAsync(process.execPath, [bin, "init", "--target", root], {
     cwd: root,
     env: nodeEnv,
@@ -740,7 +749,7 @@ ipcMain.handle("beepress:create-project", async (_event, { parent, name }) => {
   });
   await execFileAsync(process.execPath, [bin, "kb-scaffold"], {
     cwd: root,
-    env: { ...nodeEnv, BEEPRESS_ROOT: root },
+    env: { ...nodeEnv, BUILDERHARNESS_ROOT: root },
     maxBuffer: 20 * 1024 * 1024,
   }).catch(() => {
     // The outline is optional; project creation should still succeed.
@@ -753,37 +762,37 @@ ipcMain.handle("beepress:create-project", async (_event, { parent, name }) => {
   } catch {
     pkg = { private: true, type: "module" };
   }
-  pkg.name = safeName.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase() || "bee-press-project";
-  pkg.dependencies = { ...(pkg.dependencies || {}), beepress: `file:${KIT_ROOT}` };
+  pkg.name = safeName.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase() || "builderharness-project";
+  pkg.dependencies = { ...(pkg.dependencies || {}), builderharness: `file:${KIT_ROOT}` };
   await fs.promises.writeFile(path.join(root, "package.json"), `${JSON.stringify(pkg, null, 2)}\n`);
   return root;
 });
-ipcMain.handle("beepress:choose-scan-root", async () => {
+ipcMain.handle("builderharness:choose-scan-root", async () => {
   const result = await dialog.showOpenDialog(window, {
     title: "授权 Agent 搜索本地项目",
     properties: ["openDirectory"],
   });
   return result.canceled ? null : result.filePaths[0];
 });
-ipcMain.handle("beepress:scan-projects", async (_event, root) => {
+ipcMain.handle("builderharness:scan-projects", async (_event, root) => {
   const projects = (await scanProjects(root)).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   return { root, projects };
 });
-ipcMain.handle("beepress:start", async (_event, root) => {
+ipcMain.handle("builderharness:start", async (_event, root) => {
   try {
     await loadHarness(root);
     return { ok: true };
   } catch (error) {
     await dialog.showMessageBox(window, {
       type: "error",
-      title: "Bee Press",
+      title: "BuilderHarness",
       message: "无法打开项目",
       detail: error instanceof Error ? error.message : String(error),
     });
     throw error;
   }
 });
-ipcMain.on("beepress:quit", () => app.quit());
+ipcMain.on("builderharness:quit", () => app.quit());
 
 app.whenReady().then(() => {
   if (process.platform === "darwin" && app.dock) {
@@ -801,11 +810,11 @@ app.whenReady().then(() => {
         )
         .catch(() => {});
       loadHarness(lastProject).catch(async (error) => {
-        console.warn(`[beepress-desktop] restore failed: ${error instanceof Error ? error.message : String(error)}`);
+        console.warn(`[builderharness-desktop] restore failed: ${error instanceof Error ? error.message : String(error)}`);
         await window.loadFile(ONBOARDING).catch(() => {});
         await dialog.showMessageBox(window, {
           type: "error",
-          title: "Bee Press",
+          title: "BuilderHarness",
           message: "无法打开上次项目",
           detail: error instanceof Error ? error.message : String(error),
         });

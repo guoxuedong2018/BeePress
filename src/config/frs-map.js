@@ -1,9 +1,9 @@
 /**
- * 需求区域 ↔ 界面区域映射（Bee Press 自身）
+ * 需求区域 ↔ 界面区域映射（BuilderHarness 自身）
  * ------------------------------------------------------------------
- * 被 `npx beepress check-frs` 和评审归档读取。保持零依赖纯 ESM。
+ * 被 `npx builderharness check-frs` 和评审归档读取。保持零依赖纯 ESM。
  *
- * Bee Press 的操作台是 DSH 主面板，没有 URL 路由；这里登记的是评审用的
+ * BuilderHarness 的操作台是 DSH 主面板，没有 URL 路由；这里登记的是评审用的
  * 逻辑界面 id，与 docs/features/<KEY>/FRS.json 的 spec[].route 对应。
  *
  * @typedef {"draft" | "confirmed" | "in_dev" | "accepting" | "archived"} FrsStatus

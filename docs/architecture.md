@@ -1,20 +1,24 @@
 # Architecture
 
-Bee Press is a set of dev-only Vite plugins plus a React UI mounted in an isolated root. It has no runtime presence in production.
+BuilderHarness is a set of dev-only Vite plugins plus a React UI mounted in an isolated root. It has no runtime presence in production.
+
+The core loop is **spec ↔ same-stack prototype ↔ review**. The studio is a
+downstream deliverable surface: it consumes the same workspace but is not part
+of the gate.
 
 ```text
 host prototype (Vue 2, React, …)
         │
-        ├── virtual:beepress/host ── business wiring (regions, toolbar controls, links)
+        ├── virtual:builderharness/host ── business wiring (regions, toolbar controls, links)
         │
-        ├── beepress/vite ────────── plugins (dev only)
+        ├── builderharness/vite ────────── plugins (dev only)
         │      ├── build/anchor-loc.js       source coordinates in SFC templates
         │      ├── server/review-server.js   /__proto_review  (comments → JSON)
         │      ├── server/studio-server.js   /__builder_studio (content workspace)
         │      └── host bridge               virtual module generated from config
         │
-        ├── beepress/vue2 ────────── Vue 2 adapter → mountKit → React UI
-        └── beepress/react ───────── React adapter → mountKit → React UI
+        ├── builderharness/vue2 ────────── Vue 2 adapter → mountKit → React UI
+        └── builderharness/react ───────── React adapter → mountKit → React UI
 ```
 
 ## Review suite
@@ -49,7 +53,7 @@ Relocation reports a confidence level:
 | geometry only | `approx` | “approximate location” |
 | nothing | `lost` | greyed out, “element no longer exists” |
 
-Comments are written to `docs/reviews/<REGION>.json` by the dev middleware. The file is the source of truth; the CLI (`beepress review …`) and the UI read and write the same shape.
+Comments are written to `docs/reviews/<REGION>.json` by the dev middleware. The file is the source of truth; the CLI (`builderharness review …`) and the UI read and write the same shape.
 
 ## Studio suite
 
@@ -64,7 +68,7 @@ The content model is described in [content-model.md](./content-model.md).
 Publishing keeps the workflow in the kit and the destination in the host:
 change detection, packaging, plan/confirm, resumable state and the studio UI
 live here; the actual API or CLI is a destination adapter selected with
-`BEEPRESS_PUBLISH_GATEWAY`. See [publishing.md](./publishing.md).
+`BUILDERHARNESS_PUBLISH_GATEWAY`. See [publishing.md](./publishing.md).
 
 ## Host bridge
 
@@ -73,14 +77,14 @@ Only two kinds of business data cross the boundary:
 1. The requirement-region registry (`FRS_REGISTRY`).
 2. Toolbar extensions and links (`barExtras`, `barLinks`), plus an optional `agentPrompt` prefix.
 
-`vite.mjs` generates `virtual:beepress/host` from the options. The toolkit never imports product code directly. Removing the `beePress()` line is enough to remove the entire tool layer.
+`vite.mjs` generates `virtual:builderharness/host` from the options. The toolkit never imports product code directly. Removing the `builderHarness()` line is enough to remove the entire tool layer.
 
 ## Dev-only guarantee
 
 The host entry uses a guarded dynamic import:
 
 ```js
-if (import.meta.env.DEV) import("beepress/react").then(/* … */);
+if (import.meta.env.DEV) import("builderharness/react").then(/* … */);
 ```
 
 Vite replaces `import.meta.env.DEV` with `false` in production, so the import and the entire toolkit branch are tree-shaken away. React, React Flow, valtio and mermaid never enter the production bundle.

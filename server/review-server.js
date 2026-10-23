@@ -65,7 +65,7 @@ function sendJson(res, code, obj) {
 export function reviewServer({ reviewsDir = DEFAULT_REVIEWS_DIR } = {}) {
   const storeDir = reviewsDir;
   return {
-    name: "beepress:review-server",
+    name: "builderharness:review-server",
     apply: "serve",
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {

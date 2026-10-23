@@ -46,7 +46,7 @@ const json = flags.has("--json");
 
 const COMMANDS = { status, shoot, ack: ackCmd, adopt, where, context, check, new: newPage };
 if (!COMMANDS[cmd]) {
-  console.log(`用法: npx beepress kb <命令>
+  console.log(`用法: npx builderharness kb <命令>
 
   status  [--json]                 哪些文档要审、哪些图该重拍、哪些页还没写
   shoot   [--stale | --all | <key>...]  重拍（画面没变不打扰文档）
@@ -93,7 +93,7 @@ async function status() {
   const now = s.reshoot.filter((r) => !r.following);
   const later = s.reshoot.filter((r) => r.following);
   if (now.length) {
-    console.log("\n该重拍（源码在抓完之后变过）——npx beepress kb shoot --stale");
+    console.log("\n该重拍（源码在抓完之后变过）——npx builderharness kb shoot --stale");
     for (const r of now) console.log(line(r));
   }
   if (later.length) {
@@ -150,7 +150,7 @@ async function shoot() {
       if (m.key.startsWith("images/")) shots.push(m.recipe);
       else clips.push(m.recipe);
     }
-    if (skipped.length) console.log(`跳过 ${skipped.length} 份只被「正在迭代」页面用到的物料；要拍就点名：beepress kb shoot ${skipped[0].recipe}`);
+    if (skipped.length) console.log(`跳过 ${skipped.length} 份只被「正在迭代」页面用到的物料；要拍就点名：builderharness kb shoot ${skipped[0].recipe}`);
   } else if (flags.has("--all")) {
     const { shots: S, clips: C } = await makeResolver().recipes();
     shots = Object.keys(S);
@@ -333,6 +333,6 @@ async function check() {
     console.log(`✗ ${broken.length} 处引用断了`);
     process.exitCode = 1;
   } else {
-    console.log(`✓ ${m.pages} 页引用完整，事实 ${m.facts} 条${tail ? `；${tail}——npx beepress kb status` : ""}`);
+    console.log(`✓ ${m.pages} 页引用完整，事实 ${m.facts} 条${tail ? `；${tail}——npx builderharness kb status` : ""}`);
   }
 }

@@ -15,5 +15,5 @@ coverage/
 
 integrations/desktop/release/
 
-# Bee Press per-workspace settings
-.beepress/
+# BuilderHarness per-workspace settings
+.builderharness/

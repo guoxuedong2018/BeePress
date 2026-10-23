@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { readEnv } from "./env.mjs";
 import { detectPrototype } from "./prototype.mjs";
 
 const MAX_SCAN_FILES = 400;
@@ -7,7 +8,7 @@ const MAX_CONTEXT_FILES = 20;
 const MAX_EXCERPT = 700;
 
 export function resolveRoot(input) {
-  return path.resolve(input || process.env.BEEPRESS_ROOT || process.env.BUILDER_KIT_ROOT || process.cwd());
+  return path.resolve(input || readEnv("ROOT") || process.cwd());
 }
 
 async function statSafe(file) {
@@ -70,7 +71,7 @@ async function readComments(file) {
   throw new Error(`Unrecognized review file: ${file}`);
 }
 
-export async function addReview(inputRoot, { frs = "APP_SHELL", route = "/", body, author = "Bee Press Agent", anchor = null } = {}) {
+export async function addReview(inputRoot, { frs = "APP_SHELL", route = "/", body, author = "BuilderHarness Agent", anchor = null } = {}) {
   const root = resolveRoot(inputRoot);
   const text = String(body || "").trim();
   if (!text) throw new Error("review body is required");
@@ -85,7 +86,7 @@ export async function addReview(inputRoot, { frs = "APP_SHELL", route = "/", bod
     route: String(route || "/"),
     anchor: anchor ? { loc: String(anchor) } : undefined,
     body: text,
-    author: String(author || "Bee Press Agent"),
+    author: String(author || "BuilderHarness Agent"),
     status: "open",
     createdAt: new Date().toISOString(),
     replies: [],
@@ -95,7 +96,7 @@ export async function addReview(inputRoot, { frs = "APP_SHELL", route = "/", bod
   return { file: path.relative(root, file), comment };
 }
 
-export async function resolveReview(inputRoot, { id, note = "", author = "Bee Press Agent" } = {}) {
+export async function resolveReview(inputRoot, { id, note = "", author = "BuilderHarness Agent" } = {}) {
   const root = resolveRoot(inputRoot);
   const target = String(id || "").trim();
   if (!target) throw new Error("review id is required");
@@ -112,7 +113,7 @@ export async function resolveReview(inputRoot, { id, note = "", author = "Bee Pr
       comment.resolvedAt = new Date().toISOString();
       if (String(note || "").trim()) {
         comment.replies = Array.isArray(comment.replies) ? comment.replies : [];
-        comment.replies.push({ author: String(author || "Bee Press Agent"), body: String(note).trim(), at: comment.resolvedAt });
+        comment.replies.push({ author: String(author || "BuilderHarness Agent"), body: String(note).trim(), at: comment.resolvedAt });
       }
       await writeJson(file, comments);
     }
@@ -166,8 +167,8 @@ export async function readStatus(inputRoot) {
   }
 
   const prototype = await detectPrototype(root);
-  const gateway = process.env.BEEPRESS_PUBLISH_GATEWAY || process.env.BUILDER_KIT_PUBLISH_GATEWAY || null;
-  const legacyDocsCli = process.env.BEEPRESS_DOCS_CLI || process.env.BUILDER_KIT_DOCS_CLI || null;
+  const gateway = readEnv("PUBLISH_GATEWAY") || null;
+  const legacyDocsCli = readEnv("DOCS_CLI") || null;
   const published = await readPublishedState(root);
 
   return {
@@ -235,8 +236,8 @@ export async function readPublishPlan(inputRoot) {
       dependsOnDestination: !previous,
     });
   }
-  const gateway = process.env.BEEPRESS_PUBLISH_GATEWAY || process.env.BUILDER_KIT_PUBLISH_GATEWAY || null;
-  const legacyDocsCli = process.env.BEEPRESS_DOCS_CLI || process.env.BUILDER_KIT_DOCS_CLI || null;
+  const gateway = readEnv("PUBLISH_GATEWAY") || null;
+  const legacyDocsCli = readEnv("DOCS_CLI") || null;
   return {
     root,
     configured: Boolean(gateway || legacyDocsCli),

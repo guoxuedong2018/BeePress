@@ -27,9 +27,9 @@
  *
  * ## 用法
  *
- *   npx beepress kb-publish --root <目标根 id>   # 首次，之后从状态文件读
- *   npx beepress kb-publish --dry-run                  # 只看计划，不动目标端
- *   npx beepress kb-publish --only evaluation/         # 只发某个前缀
+ *   npx builderharness kb-publish --root <目标根 id>   # 首次，之后从状态文件读
+ *   npx builderharness kb-publish --dry-run                  # 只看计划，不动目标端
+ *   npx builderharness kb-publish --only evaluation/         # 只发某个前缀
  *
  * 状态落在 docs/kb/_published.json：`viewId` 用来当爹，`docId` 用来被链接，
  * `anchors` 是深链的落点表。这份文件是派生物，但**必须入库**——它是下次发布与
@@ -51,7 +51,7 @@ import { compareMedia, hashMedia, storeBlob } from "./lib/media-ledger.mjs";
 import { loadPublishGateway } from "./lib/publish-gateway.mjs";
 
 const STATE_FILE = path.join(KB_DIR, "_published.json");
-const TMP_DIR = path.join(os.tmpdir(), "beepress-publish");
+const TMP_DIR = path.join(os.tmpdir(), "builderharness-publish");
 /**
  * 目标地址前缀。它是服务域名，按硬性规则 10 不写进仓库：
  * 从上次发布记下的页面地址里取，首次发布还没有任何地址时用 `--doc-base` 给一次。
@@ -294,7 +294,7 @@ async function main() {
   if (args.help) {
     console.log(
       [
-        "用法: npx beepress kb-publish [选项]",
+        "用法: npx builderharness kb-publish [选项]",
         "",
         "  --root <id>       目标根节点，首次必填，之后从状态文件读",
         "  --doc-base <前缀> 目标地址前缀，首次必填，之后从状态文件读取",

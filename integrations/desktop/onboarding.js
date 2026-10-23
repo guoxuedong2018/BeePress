@@ -40,9 +40,9 @@ function renderRecent(config) {
 }
 
 async function openWorkspace(root) {
-  setBusy(true, "正在打开工作区", "启动 DeepSeek Harness，加载 Bee Press 右侧栏…");
+  setBusy(true, "正在打开工作区", "启动 DeepSeek Harness，加载 BuilderHarness 右侧栏…");
   try {
-    await window.beepress.start(root);
+    await window.builderHarness.start(root);
   } catch (error) {
     setBusy(false);
     alert(error instanceof Error ? error.message : String(error));
@@ -50,7 +50,7 @@ async function openWorkspace(root) {
 }
 
 function showHome() {
-  window.beepress?.recent?.().then(renderRecent).catch(() => {});
+  window.builderHarness?.recent?.().then(renderRecent).catch(() => {});
 }
 
 function switchIntake(name) {
@@ -84,11 +84,11 @@ async function runAgentScan() {
     alert("先写一句要 Agent 找什么。");
     return;
   }
-  const root = await window.beepress.chooseScanRoot();
+  const root = await window.builderHarness.chooseScanRoot();
   if (!root) return;
   setBusy(true, "Agent 正在搜索本地项目", "只读取你授权的目录，不移动、不上传代码…");
   try {
-    const result = await window.beepress.scanProjects(root);
+    const result = await window.builderHarness.scanProjects(root);
     setBusy(false);
     const box = $("scan-results");
     if (!result.projects?.length) {
@@ -118,7 +118,7 @@ $("run-agent").addEventListener("click", runAgentScan);
 
 $("dropzone").addEventListener("click", async () => {
   try {
-    const root = await window.beepress.chooseExisting();
+    const root = await window.builderHarness.chooseExisting();
     if (root) await openWorkspace(root);
   } catch (error) {
     alert(error instanceof Error ? error.message : String(error));
@@ -135,7 +135,7 @@ $("dropzone").addEventListener("drop", async (event) => {
   const file = event.dataTransfer.files?.[0];
   if (!file) return;
   try {
-    const filePath = window.beepress.pathForFile(file);
+    const filePath = window.builderHarness.pathForFile(file);
     if (!filePath) throw new Error("无法读取拖入的路径，请改用目录选择。");
     $("drop-hint").textContent = filePath;
     await openWorkspace(filePath);
@@ -150,7 +150,7 @@ $("import-existing").addEventListener("click", (event) => {
 });
 
 $("choose-parent").addEventListener("click", async () => {
-  const selected = await window.beepress.chooseParent();
+  const selected = await window.builderHarness.chooseParent();
   if (!selected) return;
   parent = selected;
   parentPath.textContent = selected;
@@ -169,7 +169,7 @@ $("create-project").addEventListener("click", async () => {
   }
   setBusy(true, "正在创建项目", "复制 FRS 模板、知识库、Agent Skills 和 React starter…");
   try {
-    const root = await window.beepress.createProject({ parent, name: nameInput.value.trim() });
+    const root = await window.builderHarness.createProject({ parent, name: nameInput.value.trim() });
     await openWorkspace(root);
   } catch (error) {
     setBusy(false);
@@ -192,7 +192,7 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-window.beepress?.onMenu?.((command) => {
+window.builderHarness?.onMenu?.((command) => {
   if (command === "import-project") openExistingProject();
   else if (command === "new-project") {
     goHomeIntake("new");

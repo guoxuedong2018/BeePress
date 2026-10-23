@@ -1,4 +1,4 @@
-# Bee Press · Claude 入口
+# BuilderHarness · Claude 入口
 
 仓库约定与工作流见 [AGENTS.md](./AGENTS.md)。本文件只补充 Claude Code 的读取顺序：
 
